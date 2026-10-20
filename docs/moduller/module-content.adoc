@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Topics, videos, rule-based tagging and micro-questions.
+|Base package
+|`com.doping.prescription.content`
+|===

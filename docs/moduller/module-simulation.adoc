@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Simulated A/B impact panel (synthetic data only).
+|Base package
+|`com.doping.prescription.simulation`
+|===

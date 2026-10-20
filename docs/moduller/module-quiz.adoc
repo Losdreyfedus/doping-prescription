@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Micro-quiz tokens and server-side answer checking.
+|Base package
+|`com.doping.prescription.quiz`
+|===

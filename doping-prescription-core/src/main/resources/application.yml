@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: doping-prescription-core
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      # Demo setup: component details let the presenter verify postgres, redis and kafka at a glance.
+      show-details: always
+
+prescription:
+  timezone: Europe/Istanbul

@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Demo login, JWT issuing and the user directory.
+|Base package
+|`com.doping.prescription.auth`
+|===

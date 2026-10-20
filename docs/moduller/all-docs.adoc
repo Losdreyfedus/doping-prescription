@@ -1,0 +1,43 @@
+== PrescriptionApplication
+plantuml::components.puml[,,format=svg]
+
+== Admin
+plantuml::module-admin.puml[,,format=svg]
+include::module-admin.adoc[]
+
+== Auth
+plantuml::module-auth.puml[,,format=svg]
+include::module-auth.adoc[]
+
+== Content
+plantuml::module-content.puml[,,format=svg]
+include::module-content.adoc[]
+
+== Exam
+plantuml::module-exam.puml[,,format=svg]
+include::module-exam.adoc[]
+
+== Feed
+plantuml::module-feed.puml[,,format=svg]
+include::module-feed.adoc[]
+
+== Learner
+plantuml::module-learner.puml[,,format=svg]
+include::module-learner.adoc[]
+
+== Points
+plantuml::module-points.puml[,,format=svg]
+include::module-points.adoc[]
+
+== Quiz
+plantuml::module-quiz.puml[,,format=svg]
+include::module-quiz.adoc[]
+
+== Shared
+plantuml::module-shared.puml[,,format=svg]
+include::module-shared.adoc[]
+
+== Simulation
+plantuml::module-simulation.puml[,,format=svg]
+include::module-simulation.adoc[]
+

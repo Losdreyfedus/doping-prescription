@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Learner signals, topic mastery and the learner profile.
+|Base package
+|`com.doping.prescription.learner`
+|===
