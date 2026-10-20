@@ -25,7 +25,7 @@ Ana mesaj: **"Öğrenci hiçbir şey yapmadı; sistem denemeden eksiğini kendis
 ### Adım 1: Akış bugün böyle (yaklaşık 20 sn)
 
 - Deniz sol menüden Dopingle'ı açar.
-- Akışta farklı konulardan videolar vardır. Kart etiketleri genel ifadelerdir: "TYT'de sık çıkan konu", "Bu hafta en çok izlenen".
+- Akışta farklı konulardan videolar vardır. Kart etiketleri genel ifadelerdir: "TYT'de sık çıkan konu", "Bu hafta en çok izlenenlerden".
 - Anlatım: "Bugün Dopingle herkese benzer videolar gösteriyor. Sistem öğrencinin neyi bilmediğini bilmiyor."
 
 ### Adım 2: Öğrenci sadece denemesini çözer (yaklaşık 60 sn)
@@ -70,7 +70,7 @@ Ana mesaj: **"Öğrenci hiçbir şey yapmadı; sistem denemeden eksiğini kendis
 
 ### Adım 7: Nasıl çalışıyor? (soru gelirse)
 
-- `/admin/feed-debug?user=deniz`: her kartın skoru ve bileşenleri (zayıflık, sınav önemi, kalite, tazelik, zorluk uyumu), kartın hangi havuzdan geldiği ve Deniz'in en zayıf 5 konusu.
+- `/admin/feed-debug?slug=deniz`: her kartın skoru ve bileşenleri (zayıflık, sınav önemi, kalite, tazelik, zorluk uyumu), kartın hangi havuzdan geldiği ve Deniz'in en zayıf 5 konusu.
 - `/admin/impact`: simüle edilmiş 400 öğrenciyle kontrol ve deney grubunun 4 haftalık karşılaştırması. Ekranda her zaman "Simülasyon verisi" yazar.
 
 ## Senaryonun teknik şartları

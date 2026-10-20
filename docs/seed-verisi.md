@@ -39,9 +39,9 @@ Anahtar kelimeler normalize edilmiş biçimde yazılmıştır (`docs/algoritma.m
 
 ## Videolar
 
-Toplam 40 video: konu başına 4. Bunların 36'sı `LIVE` ve `MANUAL` etiketli (`weight 1.0`, `approved_by = admin`); 4'ü `DRAFT` ve etiketsiz (admin etiketleme demosu için; seed bunları kaydeder, sonra `content.created` event'i ile otomatik etiketleme çalışır ve `TAGGED` olurlar).
+Toplam 40 video: konu başına 4. Bunların 36'sı `LIVE` ve `MANUAL` etiketli (`weight 1.0`, `approved_by = admin`); 4'ü `DRAFT` ve etiketsiz kaydedilir (admin etiketleme demosu için). Kayıt sırasında `content` modülü içinde `ContentCreated` uygulama event'i yayınlanır (modül içi, `@ApplicationModuleListener`; Kafka'ya gitmez, bkz. `docs/mimari.md` §3), otomatik etiketleme çalışır ve bu 4 video `TAGGED` olur. **Seed sonrası beklenen durum: 36 `LIVE` + 4 `TAGGED`.**
 
-- `DRAFT` olacak videolar: konu 2, 5, 7 ve 10'un 4. videoları. Başlıklarında konunun ilk anahtar kelimesi geçsin ki etiket önerisi çıksın.
+- Etiketsiz kaydedilecek videolar: konu 2, 5, 7 ve 10'un 4. videoları. Başlıklarında konunun ilk anahtar kelimesi geçsin ki etiket önerisi çıksın (eşleşme kelime başı ile yapılır; örn. "Kümelerde" `kume` ile eşleşir, bkz. `docs/algoritma.md` §5).
 - `duration_sec` 35–85 arası; `difficulty` her konuda 1, 2, 3, 4; `content_kind` her konuda en az bir `CONCEPT`, bir `SOLVED_EXAMPLE`, bir `TIP`.
 - `quality_score` 0.55–0.95 arası, konu içinde farklı.
 - `teacher_name`: Ayşe Öğretmen, Burak Öğretmen, Can Öğretmen, Derya Öğretmen (döngüsel).
@@ -65,7 +65,7 @@ Diğer konuların başlık ve açıklamalarını aynı üslupla sen yaz.
 
 ## Mikro-sorular
 
-- Her `LIVE` videoya en az 1 mikro-soru; Olasılık ve Permütasyon-Kombinasyon videolarına 2'şer.
+- 40 videonun hepsine en az 1 mikro-soru; Olasılık ve Permütasyon-Kombinasyon videolarına 2'şer. 4 `TAGGED` videonun soruları da seed'de yazılır, çünkü admin onayıyla `LIVE` olduklarında demoda soru çıkmalıdır.
 - Soru, videonun başlığındaki fikri doğrudan ölçsün ve 60 saniyede çözülebilsin.
 - 4 şık (A–D), 1–2 cümlelik açıklama.
 - Olasılık 1. videonun ilk mikro-sorusu `docs/api.md` içindeki örnek olsun: zar, çift olduğu biliniyor, 4 olma olasılığı, doğru cevap 1/3.
@@ -105,6 +105,6 @@ Persona'lar gerçek servis akışıyla uygulanır (attempt aç, cevapları yaz, 
 | --- | --- |
 | `NEW` | Öğrencinin tüm verisi silinir. |
 | `SCRIPTED_EXAM` | Mini Deneme 1, yukarıdaki "senaryoda verilecek cevap" sütunuyla çözülür ve gönderilir. |
-| `WEAK_PROBLEMS` | 10 gün önce: Mini Deneme 1, Soru 11 yanlış (A), diğerleri doğru. 2 gün önce: Mini Deneme 2, Problemler sorularından 3'ü yanlış, 1'i doğru, diğer sorular doğru. Ayrıca 2 gün önce Problemler videolarından 2 mikro-soru yanlış cevaplanmış. |
+| `WEAK_PROBLEMS` | 10 gün önce: Mini Deneme 1, Soru 11 yanlış (A), diğerleri doğru. 2 gün önce: Mini Deneme 2, Problemler sorularından 3'ü yanlış, 1'i doğru, diğer sorular doğru. Persona yalnızca bu iki denemeyle kurulur; mikro-soru kaydı üretilmez. |
 
-`WEAK_PROBLEMS` sonrasında Mert'in en zayıf konusu Problemler olmalı ve 10 gün önceki denemede doğru yaptığı konular `REVIEW_DUE` havuzuna girebilmeli (mastery ≥ 0.6 ve son sinyal ≥ 7 gün). Bunu bir entegrasyon testiyle doğrula.
+`WEAK_PROBLEMS` sonrasında Mert'in en zayıf konusu Problemler olmalı ve yalnızca 10 gün önceki denemede bulunan, doğru yaptığı konular (örn. Permütasyon-Kombinasyon) `REVIEW_DUE` havuzuna girebilmeli (bant `MEDIUM` veya `STRONG` ve son sinyal ≥ 7 gün). Bunu bir entegrasyon testiyle doğrula.

@@ -76,7 +76,7 @@ Ekran kaydındaki Doping Hafıza düzeni:
 | `/app/puan` | Puan ve seri |
 | `/admin/demo` | Demo kontrolü |
 | `/admin/compare` | Yan yana iki öğrencinin akışı |
-| `/admin/feed-debug` | Akış skor dökümü |
+| `/admin/feed-debug?slug=deniz` | Akış skor dökümü |
 | `/admin/content` | İçerik, etiket onayı, anahtar kelimeler |
 | `/admin/impact` | Etki paneli (simülasyon) |
 
@@ -180,6 +180,7 @@ Ekran kaydında karşılığı yok; aynı görsel dille tasarla.
 - Sayfa başlığı "Eksiklerim", alt başlık "Deneme ve soru sonuçlarına göre konu durumun".
 - Konular mastery'ye göre artan sırada, her biri beyaz yuvarlak kart satırı: konu adı, bant renginde yatay çubuk, yüzde, trend oku, "Bu konudan 6 video hazır" ve **Çalış** butonu (`--ink` dolgu).
 - Verisi olmayan konular gri ve en altta: "Henüz veri yok, bir deneme çöz".
+- Bant renkleri API'deki `band` alanından gelir, arayüzde eşik hesaplanmaz. Kırmızı (`WEAK`) bant, akışta reçete olarak gelen konularla birebir aynıdır (bkz. `docs/algoritma.md` §1).
 - Sayfa açılışında çubuklar 0'dan değerlerine animasyonla dolar; son ziyaretten beri artan konu kısa bir vurgu animasyonu alır.
 
 ## Puanlarım

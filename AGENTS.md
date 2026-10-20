@@ -57,7 +57,7 @@ Başarı ölçütleri:
 | Katman | Seçim |
 | --- | --- |
 | Backend dili | **Java 21 (LTS)** |
-| Backend framework | **Spring Boot** (güncel kararlı sürüm), Spring Web MVC, Spring Security, Spring Data JPA, Spring Data Redis, Spring Kafka |
+| Backend framework | **Spring Boot 4.1** (Spring Framework 7, Jackson 3), Spring Web MVC, Spring Security, Spring Data JPA, Spring Data Redis, Spring Kafka |
 | Modül sınırları | **Spring Modulith** (modüller arası bağımlılıklar testle doğrulanır, event publication registry = outbox) |
 | Build | **Maven** (`./mvnw` wrapper ile) |
 | Veritabanı | PostgreSQL 16, şema **Flyway** migration'larıyla |
@@ -67,7 +67,7 @@ Başarı ölçütleri:
 | API sözleşmesi | springdoc-openapi ile üretilen OpenAPI 3; frontend tipleri bundan üretilir |
 | Backend test | JUnit 5, AssertJ, Mockito, **Testcontainers** (PostgreSQL, Redis, Kafka), Spring Modulith test desteği, ArchUnit |
 | Kod kalitesi (backend) | Spotless (palantir-java-format), Checkstyle, SpotBugs, JaCoCo |
-| Frontend | **React 18 + TypeScript (strict) + Vite**, React Router, TanStack Query, Tailwind CSS, React Hook Form + zod, Recharts |
+| Frontend | **React 19 + TypeScript (strict) + Vite**, React Router, TanStack Query, Tailwind CSS, React Hook Form + zod, Recharts |
 | Frontend API istemcisi | `openapi-typescript` ile OpenAPI'den üretilen tipler + ince bir `fetch` sarmalayıcısı |
 | Frontend test | Vitest, React Testing Library, MSW |
 | Kod kalitesi (frontend) | ESLint (typescript-eslint strict, react-hooks, jsx-a11y), Prettier |
@@ -190,7 +190,7 @@ Her aşama bir öncekine dayanır. Bir aşamanın kabul kriterleri geçmeden son
 
 - Kurulum komutları temiz bir makinede çalışır.
 - `./mvnw verify`, `npm run check` ve e2e testleri geçer; CI yeşil.
-- Domain paketlerinde satır kapsamı en az %80 (JaCoCo kuralı build'i kırar).
+- `domain` ve `application` paketlerinde satır kapsamı en az %80 (JaCoCo kuralı build'i kırar).
 - Demo senaryosu elle oynatıldığında her adımda beklenen ekran görünür.
 - README ve ADR'ler günceldir.
 - Tüm `TODO(spec):` notları listelenmiştir.

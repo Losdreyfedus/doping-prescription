@@ -7,16 +7,16 @@ Genel kurallar:
 - Şema Flyway migration'larıyla oluşturulur (`doping-prescription-core/src/main/resources/db/migration`), her modülün tabloları ayrı migration dosyalarında. JPA `ddl-auto=validate`.
 - Tüm tablolarda `created_at timestamptz not null default now()`; değişen tablolarda ayrıca `updated_at`.
 - Enum'lar veritabanında `varchar` + `CHECK` kısıtı, Java'da `enum` (`EnumType.STRING`).
-- Aşağıdaki tablolarda `Decimal(p,s)` PostgreSQL `numeric(p,s)` demektir; Java tarafında `BigDecimal`. Ustalık skorları `numeric(4,3)` (0,000–1,000). Domain hesapları `double` ile yapılır ve kalıcılaştırılırken 3 ondalığa yuvarlanır (`RoundingMode.HALF_UP`).
+- Aşağıdaki tablolarda `Decimal(p,s)` PostgreSQL `numeric(p,s)` demektir; Java tarafında `BigDecimal`. İstisna: ustalık skorları (`mastery`, `confidence`) `double precision` (Java `double`) olarak tam hassasiyetle saklanır; ara değer yuvarlanmaz, 3 ondalığa yuvarlama (`RoundingMode.HALF_UP`) yalnızca API yanıtında ve gösterimde yapılır (bkz. `docs/algoritma.md` §1).
 - `uuid` id'ler uygulamada üretilir (`UUID.randomUUID()`), `serial`/`bigserial` id'ler veritabanında.
-- Foreign key'ler yalnızca aynı modülün tabloları arasında tanımlanır. Başka modüle ait id'ler (örn. `learner_signal.topic_id`) foreign key'siz, indeksli kolonlardır; modüller arası bütünlük uygulama katmanında sağlanır.
+- Foreign key'ler yalnızca aynı modülün tabloları arasında tanımlanır. Başka modüle ait id'ler (örn. `learner_signal.topic_id`, `exam_attempt.user_id`) foreign key'siz, indeksli kolonlardır; modüller arası bütünlük uygulama katmanında sağlanır. Aşağıdaki tablolarda bu kolonlar "modül dışı" olarak işaretlidir (bkz. `docs/adr/0005-modul-sinirlari-netlestirme.md`).
 - Her `user_id`, `topic_id`, `content_id` kolonu ve sık sorgulanan bileşik kolonlar indekslidir.
 - `learner_topic_mastery` iyimser kilitleme için `version bigint not null default 0` kolonu taşır.
 - Silme işlemi yok; içerik `status` ile emekliye ayrılır. İstisna: admin "Sıfırla" işlemi demo öğrencisinin verilerini fiziksel olarak siler.
 - Üretimde `learner_signal` ve `feed_interaction` partition'lanır; demoda gerekmez, ama migration'da bir yorumla belirt.
 - Spring Modulith'in outbox tablosu `event_publication` kendi şemasıyla, ayrı bir migration'da oluşturulur (aşağıdaki listeye dahil değildir).
 
-17 tablo, sahibi olan modüle göre gruplanmıştır. `processed_event` tablosu `shared` modülüne aittir.
+18 tablo, sahibi olan modüle göre gruplanmıştır. `processed_event` tablosu `shared` modülüne aittir.
 
 ## auth
 
@@ -86,7 +86,7 @@ Dopingle'daki her kısa video.
 | weight | Decimal(3,2) | Videonun bu konuyu kapsama oranı |
 | tag_source | enum `MANUAL`, `KEYWORD_RULE` | |
 | confidence | Decimal(3,2) | Anahtar kelime eşleşme skoru; `MANUAL` için 1 |
-| approved_by | uuid null FK → users | `KEYWORD_RULE` etiketi onaylanmadan video `LIVE` olmaz |
+| approved_by | uuid null, modül dışı (users) | `KEYWORD_RULE` etiketi onaylanmadan video `LIVE` olmaz |
 | approved_at | timestamptz null | |
 
 ### `micro_question`
@@ -122,7 +122,7 @@ Dopingle'daki her kısa video.
 | id | serial PK | |
 | exam_id | int FK | |
 | order_no | smallint | 1'den başlar |
-| topic_id | int FK | |
+| topic_id | int, modül dışı (topic) | |
 | stem | text | |
 | options | jsonb | 5 şık (A–E), TYT formatı |
 | correct_key | char(1) | Öğrenciye sonuç ekranına kadar dönmez |
@@ -135,7 +135,7 @@ Dopingle'daki her kısa video.
 | Kolon | Tip | Açıklama |
 | --- | --- | --- |
 | id | uuid PK | |
-| user_id | uuid FK | |
+| user_id | uuid, modül dışı (users) | |
 | exam_id | int FK | |
 | status | enum `IN_PROGRESS`, `SUBMITTED` | |
 | started_at | timestamptz | |
@@ -177,8 +177,8 @@ Append-only sinyal günlüğü. Ustalık skoru her zaman bu tablodan yeniden hes
 | --- | --- | --- |
 | user_id | uuid | PK (user_id, topic_id) |
 | topic_id | int | |
-| mastery | Decimal(4,3) | 0 = bilmiyor, 1 = hakim; ilk değer 0,5 |
-| confidence | Decimal(4,3) | Kaç sinyale dayandığı |
+| mastery | double precision | 0 = bilmiyor, 1 = hakim; ilk değer 0,5; yuvarlanmadan saklanır |
+| confidence | double precision | Kaç sinyale dayandığı; yuvarlanmadan saklanır |
 | attempts | int | |
 | correct | int | |
 | last_signal_at | timestamptz | Decay için |
@@ -200,7 +200,7 @@ Kafka tüketicilerinin idempotency'si için.
 | event_id | uuid | |
 | processed_at | timestamptz | |
 
-## feed ve quiz
+## feed
 
 ### `feed_impression`
 
@@ -231,14 +231,18 @@ Kafka tüketicilerinin idempotency'si için.
 | watch_ms | int null | |
 | client_ts | timestamptz | |
 
+Oturumda gösterilen içerik id'leri ayrıca Redis'te `feed:session:{sessionId}` setinde tutulur (bkz. `docs/algoritma.md` §4); Redis yoksa `session_id` üzerinden bu tablodan okunur, bu yüzden `(session_id)` indekslidir.
+
+## quiz
+
 ### `micro_quiz_attempt`
 
 | Kolon | Tip | Açıklama |
 | --- | --- | --- |
 | id | uuid PK | |
 | user_id | uuid | |
-| micro_question_id | int FK | |
-| impression_id | uuid FK | |
+| micro_question_id | int, modül dışı (content) | |
+| impression_id | uuid, modül dışı (feed) | |
 | selected_key | char(1) | |
 | is_correct | bool | Sunucuda hesaplanır |
 | response_ms | int | |
@@ -257,4 +261,17 @@ Kafka tüketicilerinin idempotency'si için.
 | reason | enum `QUIZ_CORRECT`, `QUIZ_CORRECT_WEAK`, `STREAK_BONUS` | |
 | ref_id | varchar(64) unique | Örn. `quiz:{quizAttemptId}`, `streak:{quizAttemptId}` |
 
-Toplam puan = `sum(amount)`; seri bilgisi `micro_quiz_attempt` üzerinden hesaplanır.
+Toplam puan = `sum(amount)`. Günlük toplam `prescription.timezone` gününe göre hesaplanır.
+
+### `points_streak`
+
+Seri, `points` modülünün kendi verisidir; quiz modülünün tablolarından türetilmez (bkz. `docs/adr/0005-modul-sinirlari-netlestirme.md`).
+
+| Kolon | Tip | Açıklama |
+| --- | --- | --- |
+| user_id | uuid PK | |
+| current | int | Art arda doğru sayısı; yanlışta 0 |
+| best | int | En iyi seri |
+| last_ref_id | varchar(64) null | Son işlenen cevabın `refId`'si; aynı cevap seriyi iki kez değiştirmez |
+| version | bigint not null default 0 | İyimser kilitleme |
+| updated_at | timestamptz | |

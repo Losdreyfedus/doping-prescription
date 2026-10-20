@@ -46,15 +46,18 @@ Kök paket: `com.doping.prescription`. Her modül bu kökün altında bir pakett
 | `learner` | Sinyaller, ustalık skoru, profil | learner_signal, learner_topic_mastery | `MasteryChanged` | `ExamResultPublished`, `InteractionRecorded` | `LearnerProfileQuery`, `LearnerSignalRecorder` |
 | `feed` | Aday üretimi, sıralama, kuyruk, etkileşimler | feed_impression, feed_interaction | `InteractionRecorded` | `MasteryChanged` | `ImpressionQuery`, `FeedPreview` (admin), `FeedRanker` (simülasyon) |
 | `quiz` | Mikro-soru token'ı, cevap kontrolü | micro_quiz_attempt | `QuizAnswered` | — | — |
-| `points` | Puan defteri, seri | points_ledger | — | — | `PointsLedger` |
+| `points` | Puan defteri, seri | points_ledger, points_streak | — | — | `PointsLedger` |
 | `admin` | Demo kontrolü, debug, içerik yönetimi ekranlarının API'si | — | — | — | — |
 | `simulation` | Etki paneli simülasyonu | — | — | — | — |
-| `shared` | Ortak altyapı: hata modeli, event zarfı, saat, idempotency | processed_event | — | — | `UserDataEraser`, `DomainEvent` |
+| `shared` | Ortak altyapı: hata modeli, event zarfı, saat, idempotency. **Açık (OPEN) modül**, iş mantığı içermez | processed_event | — | — | `UserDataEraser`, `DomainEvent` |
 
 Kurallar:
 
 - Bir modül başka bir modülün yalnızca `api` paketindeki tiplerini ve event'lerini kullanır. Repository, entity, iç servis kullanımı yasaktır. `ModularityTests` içinde `ApplicationModules.of(PrescriptionApplication.class).verify()` bunu zorlar; ayrıca Spring Modulith dokümantasyon üreticisiyle `docs/moduller/` altına modül diyagramı üretilir.
-- Döngüsel modül bağımlılığı yoktur.
+- Döngüsel modül bağımlılığı yoktur. Örneğin `quiz` → `points` bağımlılığı tek yönlüdür: seri `points` içinde tutulur, `points` hiçbir zaman `quiz` verisini okumaz.
+- `shared`, `@ApplicationModule(type = OPEN)` ile işaretlidir: hata modeli (`shared.error`), event zarfı, idempotency ve saat altyapısını tüm modüller `api` paketi dışından da kullanabilir. Bu ayrıcalık yalnızca bu dört alan için geçerlidir; `shared` içine iş mantığı girmez.
+- Modüller arası veritabanı foreign key'i yoktur; başka modüle ait id'ler indeksli, FK'siz kolonlardır.
+- Gerekçeler: `docs/adr/0005-modul-sinirlari-netlestirme.md`.
 - `admin` demo sıfırlamayı her modülün uyguladığı `shared.api.UserDataEraser` arayüzü üzerinden yapar (her modül kendi tablolarını siler); kendisi hiçbir tabloya doğrudan yazmaz.
 
 ## 2. Paket yapısı (modül içi)
@@ -104,7 +107,7 @@ com.doping.prescription.learner
 | Akış | Yol | Neden |
 | --- | --- | --- |
 | Deneme gönder → profil güncelle → akış kuyruğunu sil | Asenkron (Kafka) | Deneme modülü profil ve akıştan habersiz olmalı; ileride ayrı servis olabilir. Gecikme hedefi 2 sn. |
-| Video izleme / geçme → `last_served_at`, içerik kalitesi | Asenkron (Kafka) | Kullanıcı sonucu beklemiyor. |
+| Video izleme / geçme → `last_served_at` | Asenkron (Kafka) | Kullanıcı sonucu beklemiyor. v1'de `InteractionRecorded`'ı yalnızca learner dinler; içerik kalite skoru statiktir (seed). |
 | Mikro-soru cevabı → ustalık değişimi + puan | **Senkron** (`LearnerSignalRecorder`, `PointsLedger`) | Kullanıcı sonucu aynı yanıtta görmeli ("%17 → %27", "+15 puan"). Ardından `QuizAnswered` analitik için yayınlanır; learner bu event'i **dinlemez** (sinyal zaten senkron yazıldı, çift sayım olmaz). |
 | Akış isteği → profil okuma | Senkron (`LearnerProfileQuery`, Redis önbellekli) | Okuma işlemi. |
 
@@ -114,7 +117,8 @@ com.doping.prescription.learner
 | --- | --- | --- |
 | `mastery:{userId}` | Hash: topicId → mastery, confidence, lastSignalAt | 24 saat; her yazımda yenilenir |
 | `feed:queue:{userId}` | Liste: hazırlanmış kartlar (JSON) | `prescription.feed.queue-ttl` |
-| `feed:session:{sessionId}` | Oturum içi geçme sayaçları | 30 dk |
+| `feed:session:{sessionId}` | Set: oturumda gösterilen içerik id'leri (kuyruk yeniden kurulurken hariç tutulur) | 30 dk |
+| `feed:session:{sessionId}:skips` | Hash: konu başına oturum içi geçme sayaçları | 30 dk |
 | `quiz:token-used:{jti}` | Tek kullanımlık token işareti | token ömrü |
 
 Redis erişilemezse: profil PostgreSQL'den okunur, akış kuyruksuz (her istekte hesaplanarak) döner. Redis hiçbir zaman tek doğruluk kaynağı değildir.
@@ -140,4 +144,4 @@ Redis erişilemezse: profil PostgreSQL'den okunur, akış kuyruksuz (her istekte
 
 ## 9. Saat
 
-Zamana bağlı tüm kod `java.time.Clock` bean'ini kullanır; `Instant.now()` doğrudan çağrılmaz. Testler sabit saat kullanır. Persona'lar geçmiş tarihli kayıt üretmek için servislerin `Clock` parametresi alan dahili metotlarını `Clock.offset(...)` ile çağırır; global saat değiştirilmez.
+Zamana bağlı tüm kod `java.time.Clock` bean'ini kullanır; `Instant.now()` doğrudan çağrılmaz. Takvim günü gerektiren hesaplar (günlük puan sınırı gibi) `prescription.timezone` (varsayılan `Europe/Istanbul`) saat dilimini kullanır; zaman damgaları `timestamptz`/`Instant` olarak saklanır. Testler sabit saat kullanır. Persona'lar geçmiş tarihli kayıt üretmek için servislerin `Clock` parametresi alan dahili metotlarını `Clock.offset(...)` ile çağırır; global saat değiştirilmez.

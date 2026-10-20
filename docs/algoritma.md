@@ -22,7 +22,7 @@ m_yeni = m + alpha * w * (y - m)
 | EXAM_CORRECT / EXAM_WRONG | 1.0 | Evet |
 | EXAM_BLANK | 0.8 | Evet (y = 0) |
 | QUIZ_CORRECT / QUIZ_WRONG | 0.4 | Evet |
-| VIDEO_COMPLETED | — | Hayır; yalnızca `last_served_at` ve içerik kalite verisi |
+| VIDEO_COMPLETED | — | Hayır; yalnızca `last_served_at` (v1'de içerik kalite skoru statiktir, seed'den gelir) |
 | VIDEO_SKIPPED | — | Hayır; yalnızca oturum içi erteleme kuralı |
 
 Mastery'yi etkileyen her sinyalde `attempts` 1 artar, doğruysa `correct` da artar ve:
@@ -41,19 +41,32 @@ m_etkin = m * exp(-mastery.decay_lambda * gün)     (gün = now - last_signal_at
 
 **Hızlı cevap:** `responseMs < quiz.min_response_ms` olan mikro-soru cevapları sinyal üretmez ve puan almaz.
 
+**Hassasiyet:** `mastery` ve `confidence` hesapta ve veritabanında (`double precision`) tam hassasiyetle tutulur; ara değerler yuvarlanmaz, çünkü yuvarlanıp saklanan değerler her sinyalde hata biriktirir. 3 ondalığa yuvarlama (`RoundingMode.HALF_UP`) yalnızca API yanıtında ve gösterimde yapılır.
+
+### Ustalık bandı
+
+Tek bir tanım vardır (`domain` paketinde `MasteryBand`) ve hem Eksiklerim ekranındaki renk bandı hem akışın `WEAK_TOPIC` havuzu bunu kullanır. Böylece "kırmızı konu = akışta reçete olarak gelen konu" kuralı her zaman tutarlıdır. Bant, decay uygulanmış `m_etkin` üzerinden hesaplanır.
+
+| Bant | Koşul |
+| --- | --- |
+| `UNKNOWN` | Konuda mastery'yi etkileyen hiç sinyal yok (`attempts = 0`) |
+| `WEAK` | `m_etkin < mastery.band.weak_threshold` (0.6) |
+| `MEDIUM` | `m_etkin < mastery.band.strong_threshold` (0.8) |
+| `STRONG` | Diğer durumlar |
+
 ### Örnek (demo senaryosu, varsayılan config)
 
 Deniz, Olasılık konusundaki 3 deneme sorusunu yanlış yapar:
 
-| Adım | Hesap | mastery |
-| --- | --- | --- |
-| Başlangıç | | 0.500 |
-| 1. yanlış | 0.5 + 0.3·1·(0 − 0.5) | 0.350 |
-| 2. yanlış | 0.35 + 0.3·(0 − 0.35) | 0.245 |
-| 3. yanlış | 0.245 + 0.3·(0 − 0.245) | 0.171 |
-| Mikro-soru doğru | 0.171 + 0.3·0.4·(1 − 0.171) | 0.271 |
+| Adım | Hesap | mastery (saklanan) | API'de |
+| --- | --- | --- | --- |
+| Başlangıç | | 0.5 | 0.500 |
+| 1. yanlış | 0.5 + 0.3·1·(0 − 0.5) | 0.35 | 0.350 |
+| 2. yanlış | 0.35 + 0.3·(0 − 0.35) | 0.245 | 0.245 |
+| 3. yanlış | 0.245 + 0.3·(0 − 0.245) | 0.1715 | 0.172 |
+| Mikro-soru doğru | 0.1715 + 0.3·0.4·(1 − 0.1715) | 0.27092 | 0.271 |
 
-`confidence` 3 denemeden sonra 0.451, mikro-sorudan sonra 0.551 olur. Bu değerler birim testinde birebir doğrulanmalıdır (3 ondalık).
+`confidence` 3 denemeden sonra 0.4512 (API'de 0.451), mikro-sorudan sonra 0.5507 (API'de 0.551) olur. Ekranda "%17 → %27" görünür. Birim testi saklanan değerleri `1e-9` toleransla, API değerlerini 3 ondalık olarak birebir doğrular.
 
 ## 2. Aday havuzları
 
@@ -61,12 +74,12 @@ Akış sayfası (`feed.page_size`, varsayılan 10) dört havuzdan doldurulur. Ak
 
 | Havuz | Seçim kuralı | Kota |
 | --- | --- | --- |
-| `WEAK_TOPIC` | `confidence > 0` ve `m_etkin < feed.weak_threshold` (0.6) olan konular, `m_etkin` artan sırada ilk `feed.weak_topic_count` (5) konu; bu konuların videoları | 0.60 |
-| `REVIEW_DUE` | `mastery ≥ 0.6` ve son sinyalin üzerinden `feed.review_after_days` (7) gün geçmiş konuların videoları | 0.15 |
+| `WEAK_TOPIC` | Bandı `WEAK` olan konular (§1, `MasteryBand`), `m_etkin` artan sırada ilk `feed.weak_topic_count` (5) konu; bu konuların videoları | 0.60 |
+| `REVIEW_DUE` | Bandı `MEDIUM` veya `STRONG` olan ve son sinyalin üzerinden `feed.review_after_days` (7) gün geçmiş konuların videoları | 0.15 |
 | `EXPLORE` | Hiç sinyali olmayan konular, `exam_weight` azalan sırada; bu konuların videoları | 0.15 |
 | `POPULAR` | Tüm LIVE videolar, `quality_score` azalan sırada | 0.10 |
 
-Kota sayıları yuvarlanır (10 kartta 6 / 1–2 / 1–2 / 1). Bir havuzda yeterli aday yoksa eksik kota sırayla `WEAK_TOPIC → EXPLORE → POPULAR` havuzlarına aktarılır.
+Kart sayıları **en büyük kalan yöntemiyle** dağıtılır: her havuz `floor(kota · sayfa)` kart alır, kalan kartlar kesir kısmı en büyük olan havuzlara birer birer verilir; eşitlikte havuz sırası `WEAK_TOPIC, REVIEW_DUE, EXPLORE, POPULAR` geçerlidir. 10 kartlık sayfada sonuç 6 / 2 / 1 / 1'dir. Bir havuzda yeterli aday yoksa eksik kota sırayla `WEAK_TOPIC → EXPLORE → POPULAR` havuzlarına aktarılır.
 
 **Hiç sinyali olmayan öğrenci:** `EXPLORE` %70, `POPULAR` %30; yanıt `personalized: false`.
 
@@ -82,7 +95,7 @@ Her aday için 0–1 arasında bileşenler hesaplanır:
 | examImportance | `topic.exam_weight` |
 | quality | `content_item.quality_score` |
 | freshness | Öğrenci videoyu hiç izlememişse 1.0, izlemişse 0.2 |
-| difficultyFit | `1 − |(difficulty − 1) / 4 − m_etkin|` |
+| difficultyFit | `1 − abs((difficulty − 1) / 4 − m_etkin)` |
 
 ```
 skor = 0.45·weakness + 0.20·examImportance + 0.15·quality + 0.10·freshness + 0.10·difficultyFit
@@ -92,7 +105,7 @@ Ağırlıklar `feed.rank_weights` içindedir. `users.exam_date` 60 günden yakı
 
 Havuz kotalarıyla seçilen adaylar skor azalan sırada dizilir, sonra §4'teki kurallar açgözlü (greedy) biçimde uygulanır: sıradaki aday bir kuralı bozuyorsa atlanır ve bir sonraki denenir. Atlanan aday, ceza bilgisiyle `score_breakdown.diversityPenalty` alanına yazılır.
 
-Demo kontrolü: senaryodaki deneme sonrası Olasılık için weakness = (1 − 0.171) · 0.451 ≈ 0.374, Permütasyon-Kombinasyon (1 doğru + 1 boş, mastery ≈ 0.494, confidence ≈ 0.330) için ≈ 0.167 olur; ilk kart Olasılık videosudur.
+Demo kontrolü: senaryodaki deneme sonrası Olasılık için weakness = (1 − 0.1715) · 0.4512 ≈ 0.374, Permütasyon-Kombinasyon (1 doğru + 1 boş, mastery ≈ 0.494, confidence ≈ 0.330) için ≈ 0.167 olur; ilk kart Olasılık videosudur.
 
 ## 4. Kurallar
 
@@ -101,13 +114,17 @@ Demo kontrolü: senaryodaki deneme sonrası Olasılık için weakness = (1 − 0
 3. Aynı oturumda aynı konudan `feed.skip_defer_count` (3) video ilk 3 saniyede geçildiyse, o konu oturumun geri kalanında bir sonraki sayfaya ertelenir.
 4. Aynı sayfada aynı video iki kez yer almaz.
 
-Akış Redis'te kullanıcı başına bir kuyruk olarak tutulur (`feed:queue:{userId}`, en fazla 30 kart, TTL 30 dk). Kuyrukta `feed.queue_refill_threshold` (5) karttan az kalırsa yeniden doldurulur. `learner.mastery-changed` event'i geldiğinde kuyruk silinir.
+Akış Redis'te kullanıcı başına bir kuyruk olarak tutulur (`feed:queue:{userId}`, en fazla `feed.queue_size` (30) kart, ömrü `feed.queue_ttl` (30m)). Kuyrukta `feed.queue_refill_threshold` (5) karttan az kalırsa yeniden doldurulur. `learner.mastery-changed` event'i geldiğinde kuyruk silinir.
+
+**Oturum bütünlüğü:** Oturumda gösterilen içerik id'leri Redis'te `feed:session:{sessionId}` altında bir set olarak tutulur. Kuyruk oturum ortasında silinip yeniden kurulduğunda (örn. mikro-soru cevabından sonra) bu setteki videolar aday dışı bırakılır; böylece aynı oturumda bir video iki kez gelmez. `cursor`, `sessionId` ve sonraki pozisyonu taşır. Redis yoksa set, `feed_impression` kayıtlarından (`session_id`) okunur.
 
 ## 5. Kural tabanlı etiketleme
 
 **Normalizasyon:** Türkçe küçük harfe çevir (`toLocaleLowerCase('tr')`), `ç→c, ğ→g, ı→i, ö→o, ş→s, ü→u`, noktalama işaretlerini boşluğa çevir, birden fazla boşluğu teke indir.
 
-**Eşleşme:** Her `topic_keyword` için, normalize edilmiş anahtar kelime başlıkta tam kelime olarak geçiyorsa `weight · 1.0`, açıklamada geçiyorsa `weight · 0.5` eklenir. Konu skoru 1 ile sınırlıdır. Negatif anahtar kelime eşleşirse konu skoru 0 olur.
+**Eşleşme (kelime başı):** Türkçe eklemeli bir dil olduğu için tam kelime eşleşmesi kullanılmaz ("kume" → "kumeler", "olasilik" → "olasiligin" eşleşmeli). Normalize edilmiş anahtar kelime token'lara bölünür; anahtar kelimenin her token'ı, metindeki **ardışık** token'ların başı (prefix) olmalıdır. Örn. `tanim kumesi`, "tanım kümesini bulma" metnine eşleşir. 4 karakterden kısa token'lar tam eşleşmelidir (örn. `us`, "ustalık" kelimesine eşleşmez, "üs" kelimesine eşleşir). Bu kurallar parametreli birim testleriyle doğrulanır.
+
+Anahtar kelime başlıkta eşleşiyorsa `weight · 1.0`, yalnızca açıklamada eşleşiyorsa `weight · 0.5` eklenir. Konu skoru 1 ile sınırlıdır. Negatif anahtar kelime eşleşirse konu skoru 0 olur.
 
 **Sonuç:** Skoru `tagging.min_confidence` (0.5) ve üstündeki konular `content_topic_map`'e `tag_source = KEYWORD_RULE`, `weight = skor`, `confidence = skor` ile yazılır, video `TAGGED` olur. Hiç eşleşme yoksa video `DRAFT` kalır. Admin onayıyla (`POST /api/admin/content/:id/tags`) etiket kesinleşir ve video `LIVE` olur.
 
@@ -136,7 +153,9 @@ Türkçe ek uyumu gerektiren kalıplardan kaçınıldı; şablonlara ek ekleme.
 | Aynı soruya ikinci cevap | | 0 |
 | Hızlı cevap (`quiz.min_response_ms` altı) | | 0, sinyal yok |
 
-Kartta görünen `pointsAvailable`, havuz `WEAK_TOPIC` ise 15, değilse 10'dur. Günlük sınıra ulaşan öğrenci soru çözmeye devam edebilir; mastery güncellenir, sadece puan yazılmaz.
+Kartta görünen `pointsAvailable`, havuz `WEAK_TOPIC` ise 15, değilse 10'dur. Günlük sınıra ulaşan öğrenci soru çözmeye devam edebilir; mastery güncellenir, sadece puan yazılmaz. "Gün" `prescription.timezone` (Europe/Istanbul) saat dilimine göre hesaplanır.
+
+Seri `points` modülünün kendi defterinde tutulur (`points_streak`). Quiz modülü her cevapta `PointsLedger`'a sonucu (doğru/yanlış, havuz, `refId`) iletir; yanıt olarak kazanılan puanı ve güncel seriyi alır.
 
 Suistimal önlemleri: soru yalnız `quiz.min_watch_ratio` izlendikten sonra açılır (izleme süresi `feed_interaction` kayıtlarından doğrulanır); `quizToken` tek kullanımlıktır ve kullanıcıya bağlıdır; şıklar her gösterimde karıştırılır; puan yazma `ref_id` ile idempotenttir.
 
@@ -155,22 +174,23 @@ Ekranda ve API yanıtında "Simülasyon verisi; sonuçlar model varsayımlarınd
 
 ## 9. Config
 
-Değerler `doping-prescription-core/src/main/resources/application.yml` içinde `prescription.` önekiyle ve Spring'in kebab-case biçimiyle yazılır (örn. `feed.weak_threshold` → `prescription.feed.weak-threshold`). `@ConfigurationProperties(prefix = "prescription")` ile bağlanan, `@Validated` iç içe record'lar (`PrescriptionProperties.Mastery`, `.Feed`, `.Quiz`, `.Points`, `.Tagging`, `.Demo`, `.Impact`) üzerinden okunur; geçersiz değerde (örn. toplamı 1 olmayan kotalar) uygulama başlamaz. Ortam değişkeniyle ezilebilir. Algoritma sınıfları config record'unu değil, kendi ihtiyaç duyduğu değerleri taşıyan küçük parametre nesnelerini alır; böylece domain paketi Spring'e bağımlı olmaz.
+Değerler `doping-prescription-core/src/main/resources/application.yml` içinde `prescription.` önekiyle ve Spring'in kebab-case biçimiyle yazılır (örn. `feed.weak_threshold` → `prescription.feed.weak-threshold`). `@ConfigurationProperties(prefix = "prescription")` ile bağlanan, `@Validated` iç içe record'lar (`PrescriptionProperties.Mastery`, `.Feed`, `.Quiz`, `.Points`, `.Tagging`, `.Demo`, `.Impact`) üzerinden okunur; geçersiz değerde (örn. toplamı 1 olmayan kotalar) uygulama başlamaz. Ortam değişkeniyle ezilebilir. Süreler `java.time.Duration` tipindedir ve yml'de `30m`, `5m` biçiminde yazılır. Algoritma sınıfları config record'unu değil, kendi ihtiyaç duyduğu değerleri taşıyan küçük parametre nesnelerini alır; böylece domain paketi Spring'e bağımlı olmaz.
 
 | Anahtar | Varsayılan |
 | --- | --- |
+| timezone | Europe/Istanbul |
 | mastery.alpha | 0.3 |
 | mastery.initial | 0.5 |
 | mastery.confidence_k | 5 |
 | mastery.decay_lambda | 0.01 |
 | mastery.signal_weights | EXAM 1.0, EXAM_BLANK 0.8, QUIZ 0.4 |
 | mastery.change_event_threshold | 0.05 |
+| mastery.band.weak_threshold / mastery.band.strong_threshold | 0.6 / 0.8 |
 | feed.page_size / feed.page_size_max | 10 / 20 |
-| feed.queue_size / feed.queue_ttl_sec | 30 / 1800 |
+| feed.queue_size / feed.queue_ttl | 30 / 30m |
 | feed.queue_refill_threshold | 5 |
 | feed.quota | WEAK 0.60, REVIEW 0.15, EXPLORE 0.15, POPULAR 0.10 |
 | feed.cold_start_quota | EXPLORE 0.70, POPULAR 0.30 |
-| feed.weak_threshold | 0.6 |
 | feed.weak_topic_count | 5 |
 | feed.review_after_days | 7 |
 | feed.rank_weights | 0.45 / 0.20 / 0.15 / 0.10 / 0.10 |
@@ -180,7 +200,7 @@ Değerler `doping-prescription-core/src/main/resources/application.yml` içinde 
 | feed.skip_defer_count | 3 |
 | quiz.min_watch_ratio | 0.70 |
 | quiz.time_limit_sec | 60 |
-| quiz.token_ttl_sec | 300 |
+| quiz.token_ttl | 5m |
 | quiz.min_response_ms | 2000 |
 | quiz.rate_limit_per_min | 30 |
 | points.correct / points.weak_topic_correct | 10 / 15 |

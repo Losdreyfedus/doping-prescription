@@ -115,7 +115,7 @@ Tek transaction'da sonuçları hesaplar, `exam_attempt` ve `exam_answer` kayıtl
 
 | Parametre | Tip | Varsayılan | Açıklama |
 | --- | --- | --- | --- |
-| cursor | string | — | Önceki yanıtın `nextCursor`'ı |
+| cursor | string | — | Önceki yanıtın `nextCursor`'ı; opak, `sessionId` ve sonraki pozisyonu taşır |
 | limit | int | 10 | En çok 20 |
 | topicId | int | — | Yalnız bu konunun videoları (Eksiklerim → Çalış); bkz. `docs/arayuz.md` |
 | refresh | bool | false | true ise yeni oturum açılır ve kuyruk yeniden kurulur |
@@ -152,6 +152,8 @@ Yanıt `200`:
 
 `personalized: false` → fallback akış (kişiselleştirme kapalı, hiç sinyal yok veya hata). Akış her zaman `200` döner.
 
+Kuyruk oturum ortasında yeniden kurulsa bile (örn. mikro-soru cevabından sonra gelen `learner.mastery-changed`) aynı `sessionId` içinde daha önce gösterilmiş bir video tekrar dönmez (bkz. `docs/algoritma.md` §4, oturum bütünlüğü).
+
 ### POST /api/feed/interactions
 
 Web event'leri biriktirip 5 saniyede bir, sekme değişince ve sayfa kapanırken gönderir.
@@ -187,7 +189,7 @@ Yanıt `200` → `MicroQuiz`:
 
 Şıklar her istekte karıştırılır; harfler yeniden atanır ve eşleme token'ın içinde taşınır. Videonun `quiz.min_watch_ratio` kadarı izlenmediyse `409 VIDEO_NOT_WATCHED`. Videoya bağlı soru yoksa `204`. Öğrenci bu soruyu daha önce cevapladıysa aynı videonun başka sorusu, o da yoksa `204`.
 
-`quizToken`: `{ userId, impressionId, microQuestionId, optionMap, exp }` içeren, `PRESCRIPTION_QUIZ_TOKEN_SECRET` ile imzalı (oturum JWT'sinden ayrı anahtar), `jti` alanlı, `quiz.token_ttl_sec` ömürlü token.
+`quizToken`: `{ userId, impressionId, microQuestionId, optionMap, exp }` içeren, `PRESCRIPTION_QUIZ_TOKEN_SECRET` ile imzalı (oturum JWT'sinden ayrı anahtar), `jti` alanlı, `prescription.quiz.token-ttl` (varsayılan `5m`) ömürlü token.
 
 ### POST /api/quiz/:microQuestionId/answer
 
@@ -205,11 +207,11 @@ Yanıt `200` → `QuizResult`:
   "pointsAwarded": 15,
   "totalPoints": 135,
   "streak": { "current": 1, "bonusAt": 5 },
-  "masteryChange": { "topicId": 9, "name": "Olasılık", "before": 0.171, "after": 0.271 }
+  "masteryChange": { "topicId": 9, "name": "Olasılık", "before": 0.172, "after": 0.271 }
 }
 ```
 
-Kullanıcı sonucu aynı yanıtta görmeli, bu yüzden bu akış senkrondur (`docs/mimari.md` §4). Quiz modülü tek bir transaction içinde: cevabı `micro_quiz_attempt`'e yazar, `learner.api.LearnerSignalRecorder` ile sinyali kaydedip önceki/sonraki ustalık değerini alır, `points.api.PointsLedger` ile puanı yazar ve `QuizAnswered` event'ini outbox'a ekler. Unique kısıt ihlali (aynı soruya ikinci cevap veya eşzamanlı iki istek) yakalanır ve `pointsAwarded: 0` sonucuna çevrilir.
+Kullanıcı sonucu aynı yanıtta görmeli, bu yüzden bu akış senkrondur (`docs/mimari.md` §4). Quiz modülü tek bir transaction içinde: cevabı `micro_quiz_attempt`'e yazar, `learner.api.LearnerSignalRecorder` ile sinyali kaydedip önceki/sonraki ustalık değerini alır, `points.api.PointsLedger`'a sonucu (doğru/yanlış, havuz, `refId`) iletip kazanılan puanı ve güncel seriyi alır ve `QuizAnswered` event'ini outbox'a ekler. Unique kısıt ihlali (aynı soruya ikinci cevap veya eşzamanlı iki istek) yakalanır ve `pointsAwarded: 0` sonucuna çevrilir.
 
 ## Öğrenci profili
 
@@ -237,7 +239,7 @@ Kullanıcı sonucu aynı yanıtta görmeli, bu yüzden bu akış senkrondur (`do
 }
 ```
 
-`topics` mastery'ye göre artan sıralıdır; hiç sinyali olmayan konular `band: "UNKNOWN"` ile en sonda gelir. `band`: mastery < 0,4 `WEAK`, < 0,7 `MEDIUM`, diğerleri `STRONG`. `trend`: son 3 sinyalin yönü (`UP`, `DOWN`, `FLAT`).
+`topics` mastery'ye göre artan sıralıdır; hiç sinyali olmayan konular `band: "UNKNOWN"` ile en sonda gelir. `band` tek kaynaktan, domain'deki `MasteryBand`'den gelir (bkz. `docs/algoritma.md` §1): decay uygulanmış mastery < 0,6 `WEAK`, < 0,8 `MEDIUM`, diğerleri `STRONG`. `WEAK` konular akışta `WEAK_TOPIC` havuzunu besleyen konulardır. `mastery` ve `confidence` yanıtta 3 ondalığa yuvarlanır (HALF_UP). `trend`: son 3 sinyalin yönü (`UP`, `DOWN`, `FLAT`).
 
 ## Puan
 
@@ -263,7 +265,7 @@ Kullanıcı sonucu aynı yanıtta görmeli, bu yüzden bu akış senkrondur (`do
 
 ### GET /api/admin/impact
 
-Simülasyon sonuçları (bkz. `docs/algoritma.md` §7). Yanıtta `"isSimulation": true` alanı zorunludur.
+Simülasyon sonuçları (bkz. `docs/algoritma.md` §8). Yanıtta `"isSimulation": true` alanı zorunludur.
 
 ## Hata kodları
 
@@ -354,7 +356,7 @@ Topic'ler uygulama başlangıcında `NewTopic` bean'leriyle oluşturulur; demo i
   "occurredAt": "2026-10-19T10:06:12+03:00",
   "userId": "…",
   "trigger": "QUIZ_CORRECT",
-  "changes": [ { "topicId": 9, "before": 0.171, "after": 0.271, "confidence": 0.551 } ]
+  "changes": [ { "topicId": 9, "before": 0.172, "after": 0.271, "confidence": 0.551 } ]
 }
 ```
 
