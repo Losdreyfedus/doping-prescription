@@ -11,16 +11,17 @@ import com.tngtech.archunit.lang.ArchRule;
 @AnalyzeClasses(packagesOf = PrescriptionApplication.class, importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTests {
 
+    // Fully qualified: a pattern like "..auth.." would also match third-party packages (e.g. Kafka's security.auth).
     private static final String[] BUSINESS_MODULES = {
-        "..auth..",
-        "..content..",
-        "..exam..",
-        "..learner..",
-        "..feed..",
-        "..quiz..",
-        "..points..",
-        "..admin..",
-        "..simulation.."
+        "com.doping.prescription.auth..",
+        "com.doping.prescription.content..",
+        "com.doping.prescription.exam..",
+        "com.doping.prescription.learner..",
+        "com.doping.prescription.feed..",
+        "com.doping.prescription.quiz..",
+        "com.doping.prescription.points..",
+        "com.doping.prescription.admin..",
+        "com.doping.prescription.simulation.."
     };
 
     @ArchTest

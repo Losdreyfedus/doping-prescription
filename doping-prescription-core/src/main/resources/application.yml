@@ -1,6 +1,17 @@
 spring:
   application:
     name: doping-prescription-core
+  # Defaults match docker-compose.yml; override with environment variables outside local development.
+  datasource:
+    url: ${PRESCRIPTION_DB_URL:jdbc:postgresql://localhost:5432/prescription}
+    username: ${PRESCRIPTION_DB_USER:prescription}
+    password: ${PRESCRIPTION_DB_PASSWORD:prescription}
+  data:
+    redis:
+      host: ${PRESCRIPTION_REDIS_HOST:localhost}
+      port: ${PRESCRIPTION_REDIS_PORT:6379}
+  kafka:
+    bootstrap-servers: ${PRESCRIPTION_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
 server:
   port: 8080
@@ -13,7 +24,11 @@ management:
   endpoint:
     health:
       # Demo setup: component details let the presenter verify postgres, redis and kafka at a glance.
+      # TODO(spec): restrict to ADMIN once Spring Security is configured in phase 2.
       show-details: always
 
 prescription:
   timezone: Europe/Istanbul
+  health:
+    kafka:
+      timeout: 2s
