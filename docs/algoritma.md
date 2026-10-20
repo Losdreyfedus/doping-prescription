@@ -1,0 +1,192 @@
+# Algoritma
+
+v1 makine öğrenmesi ve LLM kullanmaz. Her karar açıklanabilir olmalı: debug ekranı her kartın neden orada olduğunu sayılarla gösterebilmeli. Tüm sayısal değerler §9'daki config anahtarlarından okunur.
+
+## 1. Ustalık (mastery) güncellemesi
+
+Her konu için ilk değer `mastery = 0.5`, `confidence = 0`, `attempts = 0`.
+
+Her sinyal, mastery'yi sonuca doğru bir adım çeker:
+
+```
+m_yeni = m + alpha * w * (y - m)
+```
+
+- `m`: mevcut mastery
+- `y`: sonuç (doğru = 1, yanlış veya boş = 0)
+- `w`: sinyal ağırlığı (aşağıdaki tablo)
+- `alpha`: öğrenme hızı (`mastery.alpha`, varsayılan 0.3)
+
+| Sinyal | w | Mastery'yi etkiler mi? |
+| --- | --- | --- |
+| EXAM_CORRECT / EXAM_WRONG | 1.0 | Evet |
+| EXAM_BLANK | 0.8 | Evet (y = 0) |
+| QUIZ_CORRECT / QUIZ_WRONG | 0.4 | Evet |
+| VIDEO_COMPLETED | — | Hayır; yalnızca `last_served_at` ve içerik kalite verisi |
+| VIDEO_SKIPPED | — | Hayır; yalnızca oturum içi erteleme kuralı |
+
+Mastery'yi etkileyen her sinyalde `attempts` 1 artar, doğruysa `correct` da artar ve:
+
+```
+confidence = 1 - exp(-attempts / mastery.confidence_k)     (k varsayılan 5)
+```
+
+Bir denemedeki sinyaller soru sırasıyla, tek transaction içinde uygulanır. Deneme işlenirken konu başına `last_exam_attempt_id`, `last_exam_total`, `last_exam_correct` de yazılır.
+
+**Unutma (decay):** Okuma anında uygulanır, tabloya yazılmaz:
+
+```
+m_etkin = m * exp(-mastery.decay_lambda * gün)     (gün = now - last_signal_at, gün cinsinden)
+```
+
+**Hızlı cevap:** `responseMs < quiz.min_response_ms` olan mikro-soru cevapları sinyal üretmez ve puan almaz.
+
+### Örnek (demo senaryosu, varsayılan config)
+
+Deniz, Olasılık konusundaki 3 deneme sorusunu yanlış yapar:
+
+| Adım | Hesap | mastery |
+| --- | --- | --- |
+| Başlangıç | | 0.500 |
+| 1. yanlış | 0.5 + 0.3·1·(0 − 0.5) | 0.350 |
+| 2. yanlış | 0.35 + 0.3·(0 − 0.35) | 0.245 |
+| 3. yanlış | 0.245 + 0.3·(0 − 0.245) | 0.171 |
+| Mikro-soru doğru | 0.171 + 0.3·0.4·(1 − 0.171) | 0.271 |
+
+`confidence` 3 denemeden sonra 0.451, mikro-sorudan sonra 0.551 olur. Bu değerler birim testinde birebir doğrulanmalıdır (3 ondalık).
+
+## 2. Aday havuzları
+
+Akış sayfası (`feed.page_size`, varsayılan 10) dört havuzdan doldurulur. Akışa yalnızca `status = LIVE` videolar girer; bir videonun konusu, `content_topic_map` içinde en yüksek `weight`'e sahip konudur.
+
+| Havuz | Seçim kuralı | Kota |
+| --- | --- | --- |
+| `WEAK_TOPIC` | `confidence > 0` ve `m_etkin < feed.weak_threshold` (0.6) olan konular, `m_etkin` artan sırada ilk `feed.weak_topic_count` (5) konu; bu konuların videoları | 0.60 |
+| `REVIEW_DUE` | `mastery ≥ 0.6` ve son sinyalin üzerinden `feed.review_after_days` (7) gün geçmiş konuların videoları | 0.15 |
+| `EXPLORE` | Hiç sinyali olmayan konular, `exam_weight` azalan sırada; bu konuların videoları | 0.15 |
+| `POPULAR` | Tüm LIVE videolar, `quality_score` azalan sırada | 0.10 |
+
+Kota sayıları yuvarlanır (10 kartta 6 / 1–2 / 1–2 / 1). Bir havuzda yeterli aday yoksa eksik kota sırayla `WEAK_TOPIC → EXPLORE → POPULAR` havuzlarına aktarılır.
+
+**Hiç sinyali olmayan öğrenci:** `EXPLORE` %70, `POPULAR` %30; yanıt `personalized: false`.
+
+**Kişiselleştirme kapalı:** Tüm LIVE videolardan, `sessionId` ile tohumlanan karıştırma; havuz `FALLBACK`; yanıt `personalized: false`.
+
+## 3. Sıralama
+
+Her aday için 0–1 arasında bileşenler hesaplanır:
+
+| Bileşen | Hesap |
+| --- | --- |
+| weakness | Hedef konu için `(1 − m_etkin) · max(confidence, 0.3)`; `EXPLORE` ve `POPULAR` adaylarında 0 |
+| examImportance | `topic.exam_weight` |
+| quality | `content_item.quality_score` |
+| freshness | Öğrenci videoyu hiç izlememişse 1.0, izlemişse 0.2 |
+| difficultyFit | `1 − |(difficulty − 1) / 4 − m_etkin|` |
+
+```
+skor = 0.45·weakness + 0.20·examImportance + 0.15·quality + 0.10·freshness + 0.10·difficultyFit
+```
+
+Ağırlıklar `feed.rank_weights` içindedir. `users.exam_date` 60 günden yakınsa examImportance ağırlığı `feed.exam_near_weight` (0.30) olur.
+
+Havuz kotalarıyla seçilen adaylar skor azalan sırada dizilir, sonra §4'teki kurallar açgözlü (greedy) biçimde uygulanır: sıradaki aday bir kuralı bozuyorsa atlanır ve bir sonraki denenir. Atlanan aday, ceza bilgisiyle `score_breakdown.diversityPenalty` alanına yazılır.
+
+Demo kontrolü: senaryodaki deneme sonrası Olasılık için weakness = (1 − 0.171) · 0.451 ≈ 0.374, Permütasyon-Kombinasyon (1 doğru + 1 boş, mastery ≈ 0.494, confidence ≈ 0.330) için ≈ 0.167 olur; ilk kart Olasılık videosudur.
+
+## 4. Kurallar
+
+1. Aynı konudan art arda en fazla `feed.max_same_topic_in_row` (2) kart.
+2. Son `feed.rewatch_block_days` (14) gün içinde tamamlanmış video tekrar gösterilmez; `REVIEW_DUE` havuzu hariç.
+3. Aynı oturumda aynı konudan `feed.skip_defer_count` (3) video ilk 3 saniyede geçildiyse, o konu oturumun geri kalanında bir sonraki sayfaya ertelenir.
+4. Aynı sayfada aynı video iki kez yer almaz.
+
+Akış Redis'te kullanıcı başına bir kuyruk olarak tutulur (`feed:queue:{userId}`, en fazla 30 kart, TTL 30 dk). Kuyrukta `feed.queue_refill_threshold` (5) karttan az kalırsa yeniden doldurulur. `learner.mastery-changed` event'i geldiğinde kuyruk silinir.
+
+## 5. Kural tabanlı etiketleme
+
+**Normalizasyon:** Türkçe küçük harfe çevir (`toLocaleLowerCase('tr')`), `ç→c, ğ→g, ı→i, ö→o, ş→s, ü→u`, noktalama işaretlerini boşluğa çevir, birden fazla boşluğu teke indir.
+
+**Eşleşme:** Her `topic_keyword` için, normalize edilmiş anahtar kelime başlıkta tam kelime olarak geçiyorsa `weight · 1.0`, açıklamada geçiyorsa `weight · 0.5` eklenir. Konu skoru 1 ile sınırlıdır. Negatif anahtar kelime eşleşirse konu skoru 0 olur.
+
+**Sonuç:** Skoru `tagging.min_confidence` (0.5) ve üstündeki konular `content_topic_map`'e `tag_source = KEYWORD_RULE`, `weight = skor`, `confidence = skor` ile yazılır, video `TAGGED` olur. Hiç eşleşme yoksa video `DRAFT` kalır. Admin onayıyla (`POST /api/admin/content/:id/tags`) etiket kesinleşir ve video `LIVE` olur.
+
+## 6. "Neden bu video?" şablonları
+
+| Havuz | Koşul | Şablon |
+| --- | --- | --- |
+| WEAK_TOPIC | Konuda son deneme verisi var | `Son denemende {konu}: {total} soruda {correct} doğru` |
+| WEAK_TOPIC | Deneme verisi yok (mikro-sorulardan zayıf) | `{konu} sorularında zorlanıyorsun` |
+| REVIEW_DUE | | `{konu} konusunu {gün} gündür tekrar etmedin` |
+| EXPLORE | | `TYT'de sık çıkan konu: {konu}` |
+| POPULAR | | `Bu hafta en çok izlenenlerden` |
+| FALLBACK | | `Dopingle'da yeni` |
+
+Türkçe ek uyumu gerektiren kalıplardan kaçınıldı; şablonlara ek ekleme.
+
+## 7. Puan kuralları
+
+| Kural | Config | Varsayılan |
+| --- | --- | --- |
+| Doğru cevap | `points.correct` | 10 |
+| `WEAK_TOPIC` kartındaki soruya doğru cevap | `points.weak_topic_correct` | 15 |
+| Art arda doğru serisi bonusu | `points.streak_length` / `points.streak_bonus` | 5 doğruda +20 |
+| Yanlış cevap | | 0, seri sıfırlanır |
+| Günlük üst sınır | `points.daily_cap` | 200 |
+| Aynı soruya ikinci cevap | | 0 |
+| Hızlı cevap (`quiz.min_response_ms` altı) | | 0, sinyal yok |
+
+Kartta görünen `pointsAvailable`, havuz `WEAK_TOPIC` ise 15, değilse 10'dur. Günlük sınıra ulaşan öğrenci soru çözmeye devam edebilir; mastery güncellenir, sadece puan yazılmaz.
+
+Suistimal önlemleri: soru yalnız `quiz.min_watch_ratio` izlendikten sonra açılır (izleme süresi `feed_interaction` kayıtlarından doğrulanır); `quizToken` tek kullanımlıktır ve kullanıcıya bağlıdır; şıklar her gösterimde karıştırılır; puan yazma `ref_id` ile idempotenttir.
+
+## 8. Etki simülasyonu
+
+Etki paneli, gerçek veri olmadığı için **açıkça etiketlenmiş bir simülasyon** gösterir. Amaç, "ölçüm böyle yapılacak" sorusunu görsel olarak cevaplamaktır, etki iddia etmek değil.
+
+- `impact.student_count` (400) sentetik öğrenci, `impact.seed` (42) ile deterministik üretilir; yarısı kontrol, yarısı deney grubu.
+- Her öğrencinin 10 konuda gizli bir "gerçek beceri" değeri vardır (0.2–0.9 arası rastgele).
+- 4 hafta boyunca her hafta: 12 soruluk bir deneme (doğru olasılığı = beceri), ardından `impact.videos_per_week` (15) video izleme.
+- Deney grubu videolarını mevcut algoritmayla seçer (simüle mastery üzerinden); kontrol grubu rastgele seçer.
+- Bir video, izlendiği konunun becerisini `impact.gain_per_video` (0.01) kadar artırır, en fazla 0.95'e kadar.
+- Çıktı: haftalık ortalama net (iki çizgi), başlangıçtaki en zayıf 2 konudaki doğru oranı değişimi (iki çubuk), grup büyüklükleri.
+
+Ekranda ve API yanıtında "Simülasyon verisi; sonuçlar model varsayımlarından gelir, gerçek kullanıcı etkisi değildir" notu bulunur.
+
+## 9. Config
+
+Değerler `doping-prescription-core/src/main/resources/application.yml` içinde `prescription.` önekiyle ve Spring'in kebab-case biçimiyle yazılır (örn. `feed.weak_threshold` → `prescription.feed.weak-threshold`). `@ConfigurationProperties(prefix = "prescription")` ile bağlanan, `@Validated` iç içe record'lar (`PrescriptionProperties.Mastery`, `.Feed`, `.Quiz`, `.Points`, `.Tagging`, `.Demo`, `.Impact`) üzerinden okunur; geçersiz değerde (örn. toplamı 1 olmayan kotalar) uygulama başlamaz. Ortam değişkeniyle ezilebilir. Algoritma sınıfları config record'unu değil, kendi ihtiyaç duyduğu değerleri taşıyan küçük parametre nesnelerini alır; böylece domain paketi Spring'e bağımlı olmaz.
+
+| Anahtar | Varsayılan |
+| --- | --- |
+| mastery.alpha | 0.3 |
+| mastery.initial | 0.5 |
+| mastery.confidence_k | 5 |
+| mastery.decay_lambda | 0.01 |
+| mastery.signal_weights | EXAM 1.0, EXAM_BLANK 0.8, QUIZ 0.4 |
+| mastery.change_event_threshold | 0.05 |
+| feed.page_size / feed.page_size_max | 10 / 20 |
+| feed.queue_size / feed.queue_ttl_sec | 30 / 1800 |
+| feed.queue_refill_threshold | 5 |
+| feed.quota | WEAK 0.60, REVIEW 0.15, EXPLORE 0.15, POPULAR 0.10 |
+| feed.cold_start_quota | EXPLORE 0.70, POPULAR 0.30 |
+| feed.weak_threshold | 0.6 |
+| feed.weak_topic_count | 5 |
+| feed.review_after_days | 7 |
+| feed.rank_weights | 0.45 / 0.20 / 0.15 / 0.10 / 0.10 |
+| feed.exam_near_days / feed.exam_near_weight | 60 / 0.30 |
+| feed.max_same_topic_in_row | 2 |
+| feed.rewatch_block_days | 14 |
+| feed.skip_defer_count | 3 |
+| quiz.min_watch_ratio | 0.70 |
+| quiz.time_limit_sec | 60 |
+| quiz.token_ttl_sec | 300 |
+| quiz.min_response_ms | 2000 |
+| quiz.rate_limit_per_min | 30 |
+| points.correct / points.weak_topic_correct | 10 / 15 |
+| points.streak_length / points.streak_bonus | 5 / 20 |
+| points.daily_cap | 200 |
+| tagging.min_confidence | 0.5 |
+| demo.video_speed | 4 |
+| impact.student_count / impact.seed | 400 / 42 |
+| impact.videos_per_week / impact.gain_per_video | 15 / 0.01 |
