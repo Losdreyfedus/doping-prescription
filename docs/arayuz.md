@@ -51,7 +51,7 @@ Ustalık bantları için: `WEAK` = `--danger`, `MEDIUM` = `--orange`, `STRONG` =
 
 ### Logo ve görseller
 
-- Doping'in logo dosyalarını internetten indirme. Sol üstte geçici bir yazı logosu kullan: "doping" `--brand-blue-ink`, "hafıza" `--brand-red`, altında küçük gri "Prescription demo". Gerçek logo `doping-prescription-ui/public/brand/logo.svg` olarak eklenirse onu göstersin.
+- Logo, şirketin kendi sağladığı `doping-prescription-ui/public/brand/logo.svg` dosyasıdır; sol üstte bu dosya, altında küçük gri "Prescription demo" yazısı gösterilir (`shared/ui/BrandLogo`). Dopingle kartındaki filigran da aynı dosyayı kullanır. Başka logo veya görsel internetten indirilmez.
 - Öğrenci avatarı: baş harfli yuvarlak rozet (renkli arka plan). 3B avatar çizme.
 
 ## Uygulama kabuğu
