@@ -15,7 +15,8 @@ class TextNormalizerTest {
                 "Olasılığın temeli: istenen bölü tüm durumlar | olasiligin temeli istenen bolu tum durumlar",
                 "ÜSLÜ ve KÖKLÜ Sayılar | uslu ve koklu sayilar",
                 "Işık, İğne, Çiçek, Şeker | isik igne cicek seker",
-                "Zar ve para atışında olasılık, 3 örnek | zar ve para atisinda olasilik 3 ornek"
+                "Zar ve para atışında olasılık, 3 örnek | zar ve para atisinda olasilik 3 ornek",
+                "Kâr ve zarar hâlâ önemli, İngilizce dînî | kar ve zarar hala onemli ingilizce dini"
             })
     void foldsTurkishLettersAndPunctuation(String input, String expected) {
         assertThat(TextNormalizer.normalize(input)).isEqualTo(expected);

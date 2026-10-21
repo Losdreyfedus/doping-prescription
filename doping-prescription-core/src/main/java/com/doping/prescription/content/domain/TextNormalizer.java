@@ -14,8 +14,9 @@ public final class TextNormalizer {
 
     private static final Locale TURKISH = Locale.forLanguageTag("tr");
     private static final Pattern NON_ALPHANUMERIC = Pattern.compile("[^a-z0-9]+");
-    private static final String TURKISH_LETTERS = "çğıöşü";
-    private static final String ASCII_LETTERS = "cgiosu";
+    // Circumflex vowels (kâr, hâlâ) are folded too; otherwise the punctuation step would split the word.
+    private static final String TURKISH_LETTERS = "çğıöşüâîû";
+    private static final String ASCII_LETTERS = "cgiosuaiu";
 
     private TextNormalizer() {}
 
