@@ -10,8 +10,6 @@ import java.util.Objects;
  */
 public final class MasteryCalculator {
 
-    private static final double SECONDS_PER_DAY = Duration.ofDays(1).toSeconds();
-
     private final MasteryParameters parameters;
 
     public MasteryCalculator(MasteryParameters parameters) {
@@ -41,9 +39,14 @@ public final class MasteryCalculator {
         return new MasteryState(clamp(mastery), confidence, attempts, state.correct() + (correct ? 1 : 0));
     }
 
-    /** {@code m_effective = m * exp(-lambda * days since the last signal)}; never stored (§1, Unutma). */
+    /**
+     * {@code m_effective = m * exp(-lambda * days since the last signal)}; never stored (§1, Unutma). Days are whole
+     * elapsed days, so mastery read minutes after an exam equals the stored value and matches the documented examples.
+     */
+    // TODO(spec): §1 does not say whether "days" is fractional; whole days keep 0.1715 from showing as 0.171 seconds
+    // after the exam, when a fractional day count would already have decayed it below the rounding boundary.
     public double effectiveMastery(double mastery, Instant lastSignalAt, Instant now) {
-        double days = Math.max(0, Duration.between(lastSignalAt, now).toSeconds() / SECONDS_PER_DAY);
+        long days = Math.max(0, Duration.between(lastSignalAt, now).toDays());
         return mastery * Math.exp(-parameters.decayLambda() * days);
     }
 

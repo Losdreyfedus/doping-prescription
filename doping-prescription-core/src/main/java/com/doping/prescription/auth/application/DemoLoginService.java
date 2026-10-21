@@ -59,6 +59,12 @@ public class DemoLoginService implements UserDirectory {
         return users.findBySlug(slug).map(DemoLoginService::summary);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UserSummary> findById(UUID userId) {
+        return users.findById(userId).map(DemoLoginService::summary);
+    }
+
     private static UserSummary summary(UserAccount user) {
         return new UserSummary(
                 user.getId(),

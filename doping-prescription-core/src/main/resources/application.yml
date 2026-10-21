@@ -23,6 +23,9 @@ spring:
     redis:
       host: ${PRESCRIPTION_REDIS_HOST:localhost}
       port: ${PRESCRIPTION_REDIS_PORT:6379}
+      # Short timeouts: a Redis outage must degrade to PostgreSQL reads, not stall requests (docs/mimari.md §5).
+      timeout: 500ms
+      connect-timeout: 500ms
   kafka:
     bootstrap-servers: ${PRESCRIPTION_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
@@ -31,6 +34,11 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
       acks: all
+    consumer:
+      # Listeners read the raw JSON and map it to the publishing module's api event themselves.
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
+      auto-offset-reset: earliest
 
 server:
   port: 8080
@@ -70,3 +78,18 @@ prescription:
   content:
     tagging:
       min-confidence: 0.5
+  learner:
+    mastery:
+      alpha: 0.3
+      initial: 0.5
+      confidence-k: 5
+      decay-lambda: 0.01
+      signal-weights:
+        exam: 1.0
+        exam-blank: 0.8
+        quiz: 0.4
+      change-event-threshold: 0.05
+      band:
+        weak-threshold: 0.6
+        strong-threshold: 0.8
+    cache-ttl: 24h

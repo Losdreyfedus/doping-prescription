@@ -70,6 +70,16 @@ class MasteryCalculatorTest {
                 .isCloseTo(0.8, within(EXACT));
     }
 
+    @Test
+    void decayCountsWholeDaysSoTheExamValueHoldsOnTheSameDay() {
+        Instant examAt = Instant.parse("2026-10-01T10:00:00Z");
+
+        assertThat(calculator.effectiveMastery(0.1715, examAt, examAt.plus(Duration.ofHours(23))))
+                .isEqualTo(0.1715);
+        assertThat(calculator.effectiveMastery(0.1715, examAt, examAt.plus(Duration.ofHours(25))))
+                .isCloseTo(0.1715 * Math.exp(-0.01), within(EXACT));
+    }
+
     @ParameterizedTest(name = "mastery {0} with {1} signal(s) -> {2}")
     @CsvSource({
         "0.5, 0, UNKNOWN",
