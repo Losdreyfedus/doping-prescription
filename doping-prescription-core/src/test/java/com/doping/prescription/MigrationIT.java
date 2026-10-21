@@ -27,7 +27,11 @@ class MigrationIT {
             "topic_keyword",
             "content_item",
             "content_topic_map",
-            "micro_question");
+            "micro_question",
+            "exam",
+            "exam_question",
+            "exam_attempt",
+            "exam_answer");
 
     @Autowired
     private Flyway flyway;
