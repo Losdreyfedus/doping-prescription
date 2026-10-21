@@ -1,5 +1,6 @@
 package com.doping.prescription.auth.web;
 
+import com.doping.prescription.auth.domain.Role;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -14,9 +15,9 @@ final class AuthDtos {
     /**
      * A user offered on the demo login screen.
      *
-     * @param role {@code STUDENT} or {@code ADMIN}
+     * @param role the user's role
      */
-    record DemoUserResponse(String slug, String displayName, String role) {}
+    record DemoUserResponse(String slug, String displayName, Role role) {}
 
     record DemoLoginRequest(@NotBlank @Size(max = 32) String slug) {}
 
@@ -32,7 +33,7 @@ final class AuthDtos {
             UUID userId,
             String slug,
             String displayName,
-            String role,
+            Role role,
             boolean personalizationEnabled,
             @Schema(nullable = true) LocalDate examDate) {}
 }

@@ -133,7 +133,8 @@
             "type" : "string"
           },
           "role" : {
-            "type" : "string"
+            "type" : "string",
+            "enum" : [ "STUDENT", "ADMIN" ]
           },
           "slug" : {
             "type" : "string"
@@ -156,7 +157,8 @@
             "type" : "boolean"
           },
           "role" : {
-            "type" : "string"
+            "type" : "string",
+            "enum" : [ "STUDENT", "ADMIN" ]
           },
           "slug" : {
             "type" : "string"
