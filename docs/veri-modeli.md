@@ -262,6 +262,7 @@ Oturumda gösterilen içerik id'leri ayrıca Redis'te `feed:session:{sessionId}`
 | amount | int | |
 | reason | enum `QUIZ_CORRECT`, `QUIZ_CORRECT_WEAK`, `STREAK_BONUS` | |
 | ref_id | varchar(64) unique | Örn. `quiz:{quizAttemptId}`, `streak:{quizAttemptId}` |
+| created_at | timestamptz not null | Veritabanı varsayılanı değil, uygulamanın `Clock`'u yazar: günlük sınır `prescription.timezone` takvim gününe göre hesaplanır ve testler sabit saat kullanır |
 
 Toplam puan = `sum(amount)`. Günlük toplam `prescription.timezone` gününe göre hesaplanır.
 
