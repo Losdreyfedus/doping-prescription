@@ -155,3 +155,13 @@ Açık `TODO(spec)` notu yok.
 - UI: üretilen tipler + `openapi-fetch`, `sessionStorage` oturumu, giriş ekranı, sol menülü kabuk (Dopingle, Testler ve Denemeler, Eksiklerim), giriş sonrası Dopingle.
 - `ContentTagger` genişleme noktası; `KeywordTagger` onu uyguluyor.
 - Kabul: öğrenci seçilince sol menülü uygulama açılır (Vitest), admin uç noktası öğrenciye 403 (`AuthIT`), yenilemede oturum korunur (Vitest).
+
+## 3. aşama: Deneme modülü
+
+**Branch:** `feat/03-exam-module` · **Tarih:** 2026-10-21
+
+- `ExamGrader` (saf Java): doğru/yanlış/boş, net = doğru − yanlış/4, konu dökümü; senaryo 8/3/1, 7,25 birim testinde.
+- API: liste, başlat/devam et, deneme getir (yeni: çözme ekranı yenilenince), cevap kaydet/boşalt, gönder, sonuç. Cevap anahtarı yalnız gönderilmiş denemenin sonucunda; başkasının denemesi 404; gönderilmiş denemeye yazma ve ikinci (eşzamanlı dahil) gönderim 409.
+- `ExamResultPublished` outbox üzerinden `exam.result-published`'a (anahtar `userId`). `ExamSubmissionIT` gerçek Kafka'da tam bir kez yayınlandığını ve cevap anahtarı taşımadığını doğruluyor.
+- UI: deneme listesi, çözme ekranı (cevap kâğıdı, bitirme onayı), sonuç ekranı (konu analizi, soru inceleme).
+- Kararlar: Modulith olayı kendisi JSON'a çeviriyor, producer değeri `ByteArraySerializer` ile olduğu gibi yazıyor; uygulama katmanının okuma modelleri (`ExamViews`) doğrudan API gövdesi olarak kullanılıyor (entity'ler dışarı çıkmıyor); modül diyagramı artık `-Dmodulith.docs=true` ile isteğe bağlı üretiliyor.
