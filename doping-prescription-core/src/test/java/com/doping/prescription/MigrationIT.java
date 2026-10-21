@@ -9,20 +9,17 @@ import org.flywaydb.core.api.MigrationInfo;
 import org.flywaydb.core.api.MigrationState;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 /**
  * Applies all Flyway migrations to an empty PostgreSQL. Starting the context also runs Hibernate's schema validation
  * ({@code ddl-auto=validate}), so every entity, including Spring Modulith's event publication, matches the migrations.
  */
-@SpringBootTest
-@Import(TestcontainersConfiguration.class)
+@IntegrationTest
 class MigrationIT {
 
     /** Every table from docs/veri-modeli.md plus Spring Modulith's outbox table. */
-    static final List<String> EXPECTED_TABLES = List.of("processed_event", "event_publication");
+    static final List<String> EXPECTED_TABLES = List.of("processed_event", "event_publication", "users");
 
     @Autowired
     private Flyway flyway;
