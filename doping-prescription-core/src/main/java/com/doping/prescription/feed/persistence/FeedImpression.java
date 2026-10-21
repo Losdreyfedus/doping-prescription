@@ -1,6 +1,6 @@
 package com.doping.prescription.feed.persistence;
 
-import com.doping.prescription.feed.domain.CandidatePool;
+import com.doping.prescription.feed.domain.PoolType;
 import com.doping.prescription.feed.domain.ScoreBreakdown;
 import com.doping.prescription.feed.domain.ServedCard;
 import jakarta.persistence.Column;
@@ -32,7 +32,7 @@ public class FeedImpression {
     private int position;
 
     @Enumerated(EnumType.STRING)
-    private CandidatePool pool;
+    private PoolType pool;
 
     private Integer targetTopicId;
 

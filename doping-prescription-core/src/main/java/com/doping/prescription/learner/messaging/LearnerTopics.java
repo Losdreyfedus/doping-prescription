@@ -25,6 +25,14 @@ class LearnerTopics {
     }
 
     @Bean
+    NewTopic interactionRecordedDeadLetterTopic() {
+        return TopicBuilder.name(InteractionListener.TOPIC + "-dlt")
+                .partitions(PARTITIONS)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
     NewTopic examResultDeadLetterTopic() {
         return TopicBuilder.name(ExamResultPublished.TOPIC + "-dlt")
                 .partitions(PARTITIONS)

@@ -93,3 +93,38 @@ prescription:
         weak-threshold: 0.6
         strong-threshold: 0.8
     cache-ttl: 24h
+  feed:
+    page-size: 10
+    page-size-max: 20
+    queue-size: 30
+    queue-ttl: 30m
+    queue-refill-threshold: 5
+    session-ttl: 30m
+    quota:
+      weak-topic: 0.60
+      review-due: 0.15
+      explore: 0.15
+      popular: 0.10
+    cold-start-quota:
+      explore: 0.70
+      popular: 0.30
+    weak-topic-count: 5
+    review-after-days: 7
+    rank-weights:
+      weakness: 0.45
+      exam-importance: 0.20
+      quality: 0.15
+      freshness: 0.10
+      difficulty-fit: 0.10
+    exam-near-days: 60
+    exam-near-weight: 0.30
+    max-same-topic-in-row: 2
+    rewatch-block-days: 14
+    skip-defer-count: 3
+    demo-video-speed: 4
+  points:
+    correct: 10
+    weak-topic-correct: 15
+    streak-length: 5
+    streak-bonus: 20
+    daily-cap: 200

@@ -17,7 +17,7 @@ import java.util.Objects;
 public record ServedCard(
         Integer contentId,
         int position,
-        CandidatePool pool,
+        PoolType pool,
         Integer targetTopicId,
         BigDecimal score,
         ScoreBreakdown breakdown,

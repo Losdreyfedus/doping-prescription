@@ -105,6 +105,17 @@ public class MasteryService {
         publishSignificantChanges(userId, EXAM_TRIGGER, before, rows, now);
     }
 
+    /**
+     * A feed card of the topic was watched or skipped (docs/mimari.md §4). Only topics the learner already has a
+     * mastery row for are touched; serving a video is no learning evidence.
+     */
+    @Transactional
+    public void recordServed(UUID eventId, UUID userId, Integer topicId, Instant servedAt) {
+        if (processedEvents.firstDelivery(CONSUMER, eventId)) {
+            masteries.findById(new TopicMasteryId(userId, topicId)).ifPresent(row -> row.recordServed(servedAt));
+        }
+    }
+
     private void publishSignificantChanges(
             UUID userId, String trigger, Map<Integer, Double> before, Map<Integer, TopicMastery> rows, Instant now) {
         double threshold = properties.mastery().changeEventThreshold();

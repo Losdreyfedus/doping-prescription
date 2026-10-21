@@ -9,7 +9,6 @@ import com.doping.prescription.auth.seed.AuthDemoDataLoader;
 import com.doping.prescription.content.seed.ContentDemoDataLoader;
 import com.doping.prescription.exam.seed.ExamDemoDataLoader;
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
@@ -35,7 +35,6 @@ import tools.jackson.databind.json.JsonMapper;
 class LearnerProfileFlowIT {
 
     private static final String SLUG = "selin";
-    private static final String USER_ID = "select id from users where slug = :slug";
     private static final Duration PROFILE_DEADLINE = Duration.ofSeconds(2);
     private static final Duration LISTENER_STARTUP = Duration.ofSeconds(60);
 
@@ -63,6 +62,9 @@ class LearnerProfileFlowIT {
     private JdbcClient jdbc;
 
     @Autowired
+    private StringRedisTemplate redis;
+
+    @Autowired
     private KafkaListenerEndpointRegistry listeners;
 
     @Autowired
@@ -80,14 +82,7 @@ class LearnerProfileFlowIT {
         content.load();
         exams.load();
         // other tests in this shared context may have used the same learner
-        for (String table : List.of("exam_answer", "exam_attempt", "learner_signal", "learner_topic_mastery")) {
-            String userAttempts = "attempt_id in (select id from exam_attempt where user_id = (%s))";
-            String condition =
-                    table.equals("exam_answer") ? userAttempts.formatted(USER_ID) : "user_id = (" + USER_ID + ")";
-            jdbc.sql("delete from " + table + " where " + condition)
-                    .param("slug", SLUG)
-                    .update();
-        }
+        StudentReset.reset(jdbc, redis, SLUG);
         // warm-up: the 2-second budget is for a running system, not for the consumer group's first rebalance
         await().atMost(LISTENER_STARTUP)
                 .until(() -> listeners.getListenerContainers().stream()

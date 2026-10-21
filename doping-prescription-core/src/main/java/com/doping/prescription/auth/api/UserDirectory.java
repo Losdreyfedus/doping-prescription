@@ -1,5 +1,6 @@
 package com.doping.prescription.auth.api;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,6 +21,13 @@ public interface UserDirectory {
      * @param displayName            name shown in the UI
      * @param role                   {@code STUDENT} or {@code ADMIN}
      * @param personalizationEnabled whether the feed is personalized for this user
+     * @param examDate               the learner's exam date, if set
      */
-    record UserSummary(UUID userId, String slug, String displayName, String role, boolean personalizationEnabled) {}
+    record UserSummary(
+            UUID userId,
+            String slug,
+            String displayName,
+            String role,
+            boolean personalizationEnabled,
+            Optional<LocalDate> examDate) {}
 }
