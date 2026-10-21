@@ -60,3 +60,167 @@ export function LogoutIcon() {
     </Icon>
   );
 }
+
+export function HomeIcon() {
+  return (
+    <Icon>
+      <rect x="4" y="4" width="7" height="7" rx="1.5" />
+      <rect x="13" y="4" width="7" height="7" rx="1.5" />
+      <rect x="4" y="13" width="7" height="7" rx="1.5" />
+      <rect x="13" y="13" width="7" height="7" rx="1.5" />
+    </Icon>
+  );
+}
+
+export function BookIcon() {
+  return (
+    <Icon>
+      <rect x="5" y="3" width="14" height="18" rx="2" />
+      <path d="M5 16h14" />
+    </Icon>
+  );
+}
+
+export function SparkIcon() {
+  return (
+    <Icon>
+      <path d="M12 3v18M5 8l7 4 7-4M5 16l7-4 7 4" />
+    </Icon>
+  );
+}
+
+export function ScreenIcon() {
+  return (
+    <Icon>
+      <rect x="3" y="4" width="18" height="13" rx="2" />
+      <path d="M10 9l4 2.5-4 2.5z" />
+    </Icon>
+  );
+}
+
+export function PulseIcon() {
+  return (
+    <Icon>
+      <path d="M3 12h4l2-6 4 12 2-6h6" />
+    </Icon>
+  );
+}
+
+export function BoardIcon() {
+  return (
+    <Icon>
+      <rect x="3" y="3" width="18" height="13" rx="2" />
+      <path d="M8 12V9M12 12V7M16 12v-2M9 21l3-5 3 5" />
+    </Icon>
+  );
+}
+
+export function PhoneIcon() {
+  return (
+    <Icon>
+      <rect x="7" y="2" width="10" height="20" rx="2" />
+      <path d="M11 18h2" />
+    </Icon>
+  );
+}
+
+export function HelpIcon() {
+  return (
+    <Icon>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6M12 17h.01" />
+    </Icon>
+  );
+}
+
+export function LiveIcon() {
+  return (
+    <Icon>
+      <rect x="3" y="6" width="13" height="12" rx="2" />
+      <path d="M16 10l5-3v10l-5-3" />
+    </Icon>
+  );
+}
+
+export function PlayCircleIcon() {
+  return (
+    <Icon>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M10 8.5l5 3.5-5 3.5z" />
+    </Icon>
+  );
+}
+
+export function BoltIcon() {
+  return (
+    <Icon>
+      <path d="M13 2L4 14h7l-1 8 9-12h-7z" />
+    </Icon>
+  );
+}
+
+export function MailIcon() {
+  return (
+    <Icon>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3 7l9 6 9-6" />
+    </Icon>
+  );
+}
+
+export function CalendarIcon() {
+  return (
+    <Icon>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4" />
+    </Icon>
+  );
+}
+
+export function BellIcon() {
+  return (
+    <Icon>
+      <path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4" />
+    </Icon>
+  );
+}
+
+export function ChevronDownIcon() {
+  return (
+    <Icon>
+      <path d="M6 9l6 6 6-6" />
+    </Icon>
+  );
+}
+
+export function CloseIcon() {
+  return (
+    <Icon>
+      <path d="M6 6l12 12M18 6L6 18" />
+    </Icon>
+  );
+}
+
+export function FilterIcon() {
+  return (
+    <Icon>
+      <path d="M6 4v16M12 4v16M18 4v16M4 9h4M10 15h4M16 8h4" />
+    </Icon>
+  );
+}
+
+export function BookmarkIcon() {
+  return (
+    <Icon>
+      <path d="M6 3h12v18l-6-4-6 4z" />
+    </Icon>
+  );
+}
+
+export function MegaphoneIcon() {
+  return (
+    <Icon>
+      <path d="M3 10v4h4l8 5V5L7 10zM18 9a4 4 0 0 1 0 6" />
+    </Icon>
+  );
+}

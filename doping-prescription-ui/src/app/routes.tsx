@@ -6,13 +6,14 @@ import { DopinglePage } from '@/features/dopingle/DopinglePage';
 import { ExamResultPage } from '@/features/exams/ExamResultPage';
 import { ExamSolvePage } from '@/features/exams/ExamSolvePage';
 import { ExamsPage } from '@/features/exams/ExamsPage';
+import { HomePage } from '@/features/home/HomePage';
 import { WeakTopicsPage } from '@/features/learner/WeakTopicsPage';
 
 import { AppShell } from './layout/AppShell';
 import { RouteError } from './layout/RouteError';
 import { RequireRole } from './session/RequireRole';
 
-/** Routes of docs/arayuz.md in MVP scope; after login a student lands on Dopingle. */
+/** Routes of docs/arayuz.md in MVP scope; after login a student lands on Ana Sayfa and opens Dopingle from the top bar. */
 export const routes: RouteObject[] = [
   { path: '/', element: <LoginPage />, errorElement: <RouteError /> },
   {
@@ -24,7 +25,7 @@ export const routes: RouteObject[] = [
     ),
     errorElement: <RouteError />,
     children: [
-      { index: true, element: <Navigate to="dopingle" replace /> },
+      { index: true, element: <HomePage /> },
       { path: 'dopingle', element: <DopinglePage /> },
       { path: 'denemeler', element: <ExamsPage /> },
       { path: 'denemeler/:attemptId', element: <ExamSolvePage /> },

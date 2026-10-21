@@ -39,7 +39,23 @@
   /* Menu icon tiles (docs/arayuz.md, Uygulama kabuğu) */
   --menu-dopingle: #e23b4a;
   --menu-exams: #2ec27e;
+  --menu-home: #8098f4;
+  --menu-lessons: #e39648;
+  --menu-way: #a58cf2;
+  --menu-guidance: #4fb8e6;
+  --menu-stats: #f6c344;
+  --menu-panel: #4a5fe0;
+  --menu-one-to-one: #b8336a;
+  --menu-help: #1fae8c;
+  --menu-live: #e23b4a;
+  --menu-stories: #29a9f0;
   --menu-weak-topics: #f6c344;
+  /* Home page decorations, drawn with CSS instead of images (AGENTS.md rule 11) */
+  --task-blue: #1590e0;
+  --sky: #e6f3fb;
+  --grass: #4cae3c;
+  --grass-dark: #2f8a2c;
+  --sun: #f9c623;
   --text-muted: #6b7a85;
   --border: #e3e8ea;
 }
@@ -76,6 +92,21 @@
   --color-menu-dopingle: var(--menu-dopingle);
   --color-menu-exams: var(--menu-exams);
   --color-menu-weak-topics: var(--menu-weak-topics);
+  --color-menu-home: var(--menu-home);
+  --color-menu-lessons: var(--menu-lessons);
+  --color-menu-way: var(--menu-way);
+  --color-menu-guidance: var(--menu-guidance);
+  --color-menu-stats: var(--menu-stats);
+  --color-menu-panel: var(--menu-panel);
+  --color-menu-one-to-one: var(--menu-one-to-one);
+  --color-menu-help: var(--menu-help);
+  --color-menu-live: var(--menu-live);
+  --color-menu-stories: var(--menu-stories);
+  --color-task-blue: var(--task-blue);
+  --color-sky: var(--sky);
+  --color-grass: var(--grass);
+  --color-grass-dark: var(--grass-dark);
+  --color-sun: var(--sun);
   --color-text-muted: var(--text-muted);
   --color-border: var(--border);
 

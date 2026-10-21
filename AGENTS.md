@@ -42,7 +42,7 @@ Başarı ölçütleri:
 - Mikro-soru ve puan (üst çubukta ve mikro-soru panelinde)
 - Admin (minimum): demo kontrolü (sıfırla, persona yükle), sunum cevap anahtarı, "neden bu akış" debug API'si
 
-**Ertelenenler** (MVP sonrası; gerekçeler `docs/backlog.md`'de): Ana Sayfa ve Puanlarım ekranları, etki paneli, admin etiket onay ekranı ve anahtar kelime API'si, karşılaştırma ekranı, debug ekranının arayüzü, Mert ve Selin persona'ları, kafka-ui.
+**Ertelenenler** (MVP sonrası; gerekçeler `docs/backlog.md`'de): Puanlarım ekranı, etki paneli, admin etiket onay ekranı ve anahtar kelime API'si, karşılaştırma ekranı, debug ekranının arayüzü, Mert ve Selin persona'ları, kafka-ui.
 
 **Kapsam dışı:**
 
@@ -152,7 +152,7 @@ Her aşama bir öncekine dayanır. Bir aşamanın kabul kriterleri geçmeden son
     - `docs/veri-modeli.md` içindeki tüm tablolar (Flyway), JPA entity'leri, `docs/seed-verisi.md` içindeki içerik.
     - Kabul: migration'lar Testcontainers üzerinde temiz veritabanına uygulanır; seed tekrar çalıştırıldığında veriyi çoğaltmaz; seed sonrası 10 konu, 40 video, 2 mini deneme ve 4 kullanıcı vardır.
 2. **Kimlik ve uygulama kabuğu**
-    - Demo giriş (`auth` modülü, JWT), Spring Security yapılandırması, rol bazlı yetki; Doping benzeri uygulama kabuğu: sol menü (**Dopingle**, **Testler ve Denemeler**, **Eksiklerim**), üst çubuk (öğrenci adı ve toplam puan), tasarım değişkenleri, yazı tipleri, API istemcisi üretimi. Giriş sonrası doğrudan Dopingle açılır.
+    - Demo giriş (`auth` modülü, JWT), Spring Security yapılandırması, rol bazlı yetki; Doping benzeri uygulama kabuğu: Doping Hafıza menüsü (çalışan öğeler **Ana Sayfa**, **Testler ve Denemeler**, **Eksiklerim**), üst çubuk (Dopingle'ı açan şimşek butonu, öğrenci adı ve toplam puan), tasarım değişkenleri, yazı tipleri, API istemcisi üretimi. Giriş sonrası Ana Sayfa açılır; Dopingle tam ekran katman olarak şimşek butonundan açılır.
     - Kabul: öğrenci seçilince sol menülü uygulama açılır; admin endpoint'leri öğrenciye 403 döner; sayfa yenilenince oturum korunur.
 3. **Deneme modülü**
     - Deneme listesi, çözme ekranı, gönderme, sonuç ekranı, `exam.result-published` event'i (outbox üzerinden Kafka'ya).

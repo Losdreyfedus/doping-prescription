@@ -27,7 +27,7 @@ Sunumun tamamı 10–12 dakikadır; deneme canlı çözülmez, böylece demo bö
 
 ### Adım 1: Akış bugün böyle (yaklaşık 20 sn)
 
-- Giriş sonrası doğrudan Dopingle açılır (Ana Sayfa MVP'de yok).
+- Giriş sonrası Ana Sayfa açılır; sunucu sağ üstteki pembe şimşek butonuna basarak Dopingle'ı açar.
 - Akışta farklı konulardan videolar vardır. Kart etiketleri genel ifadelerdir: "TYT'de sık çıkan konu", "Bu hafta en çok izlenenlerden".
 - Anlatım: "Bugün Dopingle herkese benzer videolar gösteriyor. Sistem öğrencinin neyi bilmediğini bilmiyor."
 
