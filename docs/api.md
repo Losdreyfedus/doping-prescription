@@ -128,6 +128,7 @@ Yanıt `200`:
   "sessionId": "c0a8...",
   "personalized": true,
   "algoVersion": "v1",
+  "demoVideoSpeed": 4,
   "nextCursor": "eyJwIjoxMH0",
   "cards": [
     {
@@ -286,13 +287,13 @@ Aynı soruya ikinci cevap hata değildir: `200` döner, `pointsAwarded: 0`.
 
 ## Event'ler
 
-Modüller arası event'ler Kafka üzerinden, transactional outbox ile yayınlanır (bkz. `docs/mimari.md` §3, `docs/adr/0002-kafka-ve-outbox.md`). Tüm event'ler JSON'dur ve `eventId`, `schemaVersion`, `occurredAt`, `userId` alanlarını taşır. Mesaj anahtarı `userId`'dir. Tüketiciler `processed_event` tablosuyla idempotenttir; 3 başarısız denemeden sonra mesaj `<topic>.DLT` topic'ine gider.
+Modüller arası event'ler Kafka üzerinden, transactional outbox ile yayınlanır (bkz. `docs/mimari.md` §3, `docs/adr/0002-kafka-ve-outbox.md`). Tüm event'ler JSON'dur ve `eventId`, `schemaVersion`, `occurredAt`, `userId` alanlarını taşır. Mesaj anahtarı `userId`'dir. Tüketiciler `processed_event` tablosuyla idempotenttir; 3 başarısız denemeden sonra mesaj `<topic>-dlt` topic'ine gider (Spring Kafka 4 adlandırması).
 
 | Topic | Java event'i | Yayınlayan | Dinleyen | Partition |
 | --- | --- | --- | --- | --- |
 | `exam.result-published` | `ExamResultPublished` | exam | learner | 3 |
 | `learner.mastery-changed` | `MasteryChanged` | learner | feed (kuyruğu geçersiz kıl) | 3 |
-| `feed.interaction-recorded` | `InteractionRecorded` | feed | learner (`last_served_at`) | 3 |
+| `feed.interaction-recorded` | `InteractionRecorded` | feed | learner (`last_served_at`; feed zaten learner API'sine bağlı olduğu için learner bu event'i kendi yerel kaydıyla okur, modül döngüsü oluşmaz) | 3 |
 | `quiz.answered` | `QuizAnswered` | quiz | — (analitik için yayınlanır; learner dinlemez, sinyal senkron yazılır) | 3 |
 
 `ContentCreated` yalnızca `content` modülü içinde kullanılır (otomatik etiketleme) ve Kafka'ya gitmez.
