@@ -33,7 +33,9 @@ class MigrationIT {
             "exam_attempt",
             "exam_answer",
             "learner_signal",
-            "learner_topic_mastery");
+            "learner_topic_mastery",
+            "feed_impression",
+            "feed_interaction");
 
     @Autowired
     private Flyway flyway;
