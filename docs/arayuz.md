@@ -58,9 +58,9 @@ Ustalık bantları için: `WEAK` = `--danger`, `MEDIUM` = `--orange`, `STRONG` =
 
 Ekran kaydındaki Doping Hafıza düzeni:
 
-- **Sol menü** (yaklaşık 300 px, beyaz): üstte logo; altında her biri **pastel renkli, yuvarlak kare ikon karosu** + metin olan menü öğeleri. Aktif öğenin arka planı `--surface-muted` ve yuvarlak köşeli. Dopingle sayfasında menü yalnızca ikonlara daralır (~72 px) ve üzerine gelince ipucu (tooltip) gösterir.
-- Menü öğeleri: **Ana Sayfa**, **Dopingle**, **Testler ve Denemeler**, **Eksiklerim**, **Puanlarım**. İkon karosu renkleri sırasıyla `#8098f4`, `#e23b4a`, `#2ec27e`, `#f6c344`, `#e39648` (beyaz ikon; ilki ve sonuncusu ekran kaydından ölçüldü, diğerleri yaklaşık).
-- **Üst çubuk:** solda geniş, `--surface-muted` arka planlı, yuvarlak köşeli arama kutusu ("Ders, ünite ya da konu ara" yer tutucusu; demoda işlevsiz olabilir); sağda `--accent-pink` yuvarlak buton, bildirim ikonu ve avatar + öğrenci adı.
+- **Sol menü** (yaklaşık 300 px, beyaz): üstte logo; altında her biri **pastel renkli, yuvarlak kare ikon karosu** + metin olan menü öğeleri. Aktif öğenin arka planı `--surface-muted` ve yuvarlak köşeli. Dopingle katmanında menü yalnızca ikonlara daralır (~92 px) ve üzerine gelince ipucu (tooltip) gösterir.
+- Menü öğeleri Doping Hafıza'nın gerçek menüsüyle aynıdır (Ana Sayfa, Dersler, Testler ve Denemeler, WAY Evreni, Rehberlik Videoları, İstatistikler, Akıllı Değerlendirme Paneli, Bire Bir Uygulamalar, Yardım Merkezi, Canlı Etkinlikler, Öğrencilerimizden Dinleyin) ve Testler ve Denemeler'in altına **Eksiklerim** eklenir. Yalnızca **Ana Sayfa**, **Testler ve Denemeler** ve **Eksiklerim** ekran açar; diğerleri tıklanmayan görünüm öğeleridir. Dopingle menüde yoktur.
+- **Üst çubuk:** solda geniş, `--surface-muted` arka planlı, yuvarlak köşeli arama kutusu ("Ders, ünite ya da konu ara" yer tutucusu; demoda işlevsiz olabilir); sağda **Dopingle'ı açan** `--accent-pink` yuvarlak şimşek butonu, görünüm amaçlı mesaj, takvim ve bildirim ikonları, avatar + öğrenci adı.
 
 ## Sayfalar
 
@@ -82,13 +82,11 @@ Ekran kaydındaki Doping Hafıza düzeni:
 
 ## Ana Sayfa
 
-Senaryoda zorunlu değil, ama giriş sonrası açılan ilk ekran olduğu için Doping'e benzemeli. Düşük öncelik; diğer ekranlar bitince yap.
-
-- Üstte geniş `--navy` profil kartı: avatar, öğrenci adı (beyaz, kalın), altında toplam puan rozeti (sarı daire ikon + sayı).
-- Altında "Reçeten" başlıklı kart: en zayıf 3 konu, her biri renkli çubukla, ve **Dopingle'da çalış** butonu. Hiç verisi olmayan öğrencide: "İlk denemeni çöz, sana özel reçeteni hazırlayalım."
-- Sağ sütunda "Son Aktivitelerim": son deneme, son mikro-soru, son puan hareketleri.
+Giriş sonrası açılan ilk ekran; Doping Hafıza'nın ana sayfasıyla aynı düzende. Yalnızca öğrenci adı canlıdır; diğer kartlar (profil kartı rozetleri, Günlük Görevlerim, Günlük Çalışma Performansı, Duyurular, Son Aktivitelerim, sağ sütunda haftalık takvim ve "YKS Yolculuğunu Başlat!" kartı) görünüm amaçlıdır. Görseller indirilmez, CSS ile çizilir (AGENTS.md §5.11).
 
 ## Dopingle
+
+Sağ üstteki şimşek butonuyla açılan **tam ekran katmandır** (`/app/dopingle`); kapat butonu veya Escape, açıldığı sayfaya döndürür.
 
 Ekran kaydındaki Dopingle sayfasının birebir benzeri olmalı:
 
