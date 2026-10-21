@@ -1,10 +1,6 @@
 == PrescriptionApplication
 plantuml::components.puml[,,format=svg]
 
-== Content
-plantuml::module-content.puml[,,format=svg]
-include::module-content.adoc[]
-
 == Exam
 plantuml::module-exam.puml[,,format=svg]
 include::module-exam.adoc[]
@@ -40,4 +36,8 @@ include::module-admin.adoc[]
 == Auth
 plantuml::module-auth.puml[,,format=svg]
 include::module-auth.adoc[]
+
+== Content
+plantuml::module-content.puml[,,format=svg]
+include::module-content.adoc[]
 

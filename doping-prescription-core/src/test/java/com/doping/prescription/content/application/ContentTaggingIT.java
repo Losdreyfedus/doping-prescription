@@ -94,13 +94,17 @@ class ContentTaggingIT {
         // Then
         await().atMost(LISTENER_TIMEOUT)
                 .until(() -> contents.findById(videoId).orElseThrow().getStatus() == ContentStatus.TAGGED);
-        assertThat(linksOf(videoId)).singleElement().satisfies(link -> {
-            assertThat(link.getId().topicId()).isEqualTo(kumeler.getId());
-            assertThat(link.getTagSource()).isEqualTo(TagSource.KEYWORD_RULE);
-            assertThat(link.getWeight()).isEqualByComparingTo("1.00");
-            assertThat(link.getConfidence()).isEqualByComparingTo("1.00");
-            assertThat(link.getApprovedBy()).isEmpty();
-        });
+        // Seed topics in the shared database may match too (e.g. the seeded Kümeler topic); check our own topic.
+        assertThat(linksOf(videoId))
+                .filteredOn(link -> link.getId().topicId().equals(kumeler.getId()))
+                .singleElement()
+                .satisfies(link -> {
+                    assertThat(link.getId().topicId()).isEqualTo(kumeler.getId());
+                    assertThat(link.getTagSource()).isEqualTo(TagSource.KEYWORD_RULE);
+                    assertThat(link.getWeight()).isEqualByComparingTo("1.00");
+                    assertThat(link.getConfidence()).isEqualByComparingTo("1.00");
+                    assertThat(link.getApprovedBy()).isEmpty();
+                });
     }
 
     @Test
@@ -120,13 +124,14 @@ class ContentTaggingIT {
         Integer videoId = createVideo("Kümeler, 3 örnek");
         await().atMost(LISTENER_TIMEOUT)
                 .until(() -> contents.findById(videoId).orElseThrow().getStatus() == ContentStatus.TAGGED);
+        List<ContentTopic> linksBeforeReplay = linksOf(videoId);
 
         // When
         transaction.executeWithoutResult(status -> events.publishEvent(new ContentCreated(videoId)));
         awaitAllEventsHandled();
 
         // Then
-        assertThat(linksOf(videoId)).hasSize(1);
+        assertThat(linksOf(videoId)).hasSameSizeAs(linksBeforeReplay);
     }
 
     private Integer createVideo(String title) {
