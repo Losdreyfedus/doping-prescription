@@ -2,4 +2,7 @@
 export const queryKeys = {
   demoUsers: (): readonly ['auth', 'demo-users'] => ['auth', 'demo-users'],
   me: (): readonly ['auth', 'me'] => ['auth', 'me'],
+  exams: (): readonly ['exams'] => ['exams'],
+  attempt: (attemptId: string): readonly ['exam-attempt', string] => ['exam-attempt', attemptId],
+  result: (attemptId: string): readonly ['exam-result', string] => ['exam-result', attemptId],
 };

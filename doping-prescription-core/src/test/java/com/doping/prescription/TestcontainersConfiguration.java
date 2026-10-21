@@ -22,6 +22,9 @@ public class TestcontainersConfiguration {
             // silently using a locally running docker compose stack.
             registry.add("spring.data.redis.port", () -> UNREACHABLE_PORT);
             registry.add("spring.kafka.bootstrap-servers", () -> "localhost:" + UNREACHABLE_PORT);
+            // Without a broker: skip topic creation at startup and give up sending quickly instead of after 60 s.
+            registry.add("spring.kafka.admin.auto-create", () -> "false");
+            registry.add("spring.kafka.producer.properties.max.block.ms", () -> "1000");
         };
     }
 }

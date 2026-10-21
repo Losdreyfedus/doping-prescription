@@ -3,6 +3,8 @@ import { Navigate, type RouteObject } from 'react-router';
 import { AdminDemoPage } from '@/features/admin/AdminDemoPage';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { DopinglePage } from '@/features/dopingle/DopinglePage';
+import { ExamResultPage } from '@/features/exams/ExamResultPage';
+import { ExamSolvePage } from '@/features/exams/ExamSolvePage';
 import { ExamsPage } from '@/features/exams/ExamsPage';
 import { WeakTopicsPage } from '@/features/learner/WeakTopicsPage';
 
@@ -25,6 +27,8 @@ export const routes: RouteObject[] = [
       { index: true, element: <Navigate to="dopingle" replace /> },
       { path: 'dopingle', element: <DopinglePage /> },
       { path: 'denemeler', element: <ExamsPage /> },
+      { path: 'denemeler/:attemptId', element: <ExamSolvePage /> },
+      { path: 'denemeler/:attemptId/sonuc', element: <ExamResultPage /> },
       { path: 'eksiklerim', element: <WeakTopicsPage /> },
     ],
   },

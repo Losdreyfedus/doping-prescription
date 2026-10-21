@@ -14,7 +14,7 @@ import org.testcontainers.utility.DockerImageName;
  * PostgreSQL never starts Kafka. The containers are not Spring beans; Spring Boot stops container beans when a context
  * closes, which would break the other cached contexts. Testcontainers' Ryuk removes them when the JVM exits.
  */
-final class TestContainers {
+public final class TestContainers {
 
     static final int REDIS_PORT = 6379;
 
@@ -32,11 +32,11 @@ final class TestContainers {
         registry.add("spring.datasource.password", () -> PostgresHolder.CONTAINER.getPassword());
     }
 
-    static GenericContainer<?> redis() {
+    public static GenericContainer<?> redis() {
         return RedisHolder.CONTAINER;
     }
 
-    static KafkaContainer kafka() {
+    public static KafkaContainer kafka() {
         return KafkaHolder.CONTAINER;
     }
 
