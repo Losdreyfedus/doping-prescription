@@ -35,6 +35,13 @@
   --band-medium: var(--orange);
   --band-strong: var(--success);
   --band-unknown: #c0c7ca;
+
+  /* Menu icon tiles (docs/arayuz.md, Uygulama kabuğu) */
+  --menu-dopingle: #e23b4a;
+  --menu-exams: #2ec27e;
+  --menu-weak-topics: #f6c344;
+  --text-muted: #6b7a85;
+  --border: #e3e8ea;
 }
 
 @theme inline {
@@ -66,13 +73,21 @@
   --color-band-medium: var(--band-medium);
   --color-band-strong: var(--band-strong);
   --color-band-unknown: var(--band-unknown);
+  --color-menu-dopingle: var(--menu-dopingle);
+  --color-menu-exams: var(--menu-exams);
+  --color-menu-weak-topics: var(--menu-weak-topics);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
 
   --radius-card: 1.125rem;
   --radius-button: 0.6875rem;
+
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-display: 'Barlow Semi Condensed', 'Plus Jakarta Sans', sans-serif;
 }
 
 body {
-  @apply bg-surface text-ink antialiased;
+  @apply bg-surface font-sans text-ink antialiased;
   /* Projector readability: body text is at least 15px (docs/arayuz.md). */
   font-size: 15px;
 }

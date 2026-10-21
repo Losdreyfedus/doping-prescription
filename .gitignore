@@ -28,3 +28,6 @@ doping-prescription-ui/public/videos/
 
 # Logs
 *.log
+
+# Generated from doping-prescription-ui/openapi.json by npm run gen:api
+doping-prescription-ui/src/shared/api/generated/
