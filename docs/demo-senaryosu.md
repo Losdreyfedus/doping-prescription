@@ -9,15 +9,15 @@ Ana mesaj: **"Öğrenci hiçbir şey yapmadı; sistem denemeden eksiğini kendis
 | Kod | İsim | Durum | Kullanım |
 | --- | --- | --- | --- |
 | `deniz` | Deniz | Hiç denemesi yok, kişiselleştirme açık | Sunumun ana öğrencisi |
-| `mert` | Mert | Geçmişte 2 deneme çözmüş, Problemler konusunda zayıf | Yedek; hazır profil göstermek için |
-| `selin` | Selin | Deniz ile aynı deneme sonucu, kişiselleştirme **kapalı** | Karşılaştırma (kontrol grubu) |
+| `mert` | Mert | Geçmişte 2 deneme çözmüş, Problemler konusunda zayıf | Yedek; hazır profil göstermek için (**MVP sonrası**) |
+| `selin` | Selin | Deniz ile aynı deneme sonucu, kişiselleştirme **kapalı** | Karşılaştırma (kontrol grubu) (**MVP sonrası**) |
 
-İsimler kurgusaldır. Kişilerin seed verisi `docs/seed-verisi.md` içindedir.
+İsimler kurgusaldır. Kişilerin seed verisi `docs/seed-verisi.md` içindedir. **MVP:** Mert ve Selin kullanıcı olarak seed'de durur, ama persona'ları ve karşılaştırma adımı ertelendi (`docs/backlog.md`); MVP demosu Deniz ile adım 1–5'tir.
 
 ## Hazırlık (sunumdan önce, izleyici görmez)
 
 1. Admin panelinde `/admin/demo` ekranını aç.
-2. Deniz için **Sıfırla**'ya bas: denemeleri, sinyalleri, ustalık skorları, akış geçmişi ve puanları silinir. Selin, Deniz'in sunumda yapacağı deneme sonucuyla hazır yüklenir.
+2. Deniz için **Sıfırla**'ya bas: denemeleri, sinyalleri, ustalık skorları, akış geçmişi ve puanları silinir. (MVP sonrası: Selin, Deniz'in sunumda yapacağı deneme sonucuyla hazır yüklenir.)
 3. Deniz için **Persona yükle** → `SCRIPTED_IN_PROGRESS`: Mini Deneme 1 başlatılmış, 12 cevabın hepsi senaryo cevaplarıyla işaretli, ama deneme **gönderilmemiş** durumda hazırlanır. Deniz'in hâlâ hiç sinyali yoktur, bu yüzden 1. adımdaki akış kişiselleştirilmemiş kalır.
 4. Öğrenci uygulamasını ayrı bir sekmede aç, Deniz ile giriş yap.
 
@@ -27,7 +27,7 @@ Sunumun tamamı 10–12 dakikadır; deneme canlı çözülmez, böylece demo bö
 
 ### Adım 1: Akış bugün böyle (yaklaşık 20 sn)
 
-- Deniz sol menüden Dopingle'ı açar.
+- Giriş sonrası doğrudan Dopingle açılır (Ana Sayfa MVP'de yok).
 - Akışta farklı konulardan videolar vardır. Kart etiketleri genel ifadelerdir: "TYT'de sık çıkan konu", "Bu hafta en çok izlenenlerden".
 - Anlatım: "Bugün Dopingle herkese benzer videolar gösteriyor. Sistem öğrencinin neyi bilmediğini bilmiyor."
 
@@ -64,17 +64,16 @@ Sunumun tamamı 10–12 dakikadır; deneme canlı çözülmez, böylece demo bö
 
 - Deniz sol menüden Eksiklerim'e geçer.
 - Olasılık en üstte, kırmızı bölgededir; çubuğu az önceki artışla birlikte animasyonla yükselir ve yanında yukarı ok vardır.
-- Her konunun yanında "Bu konudan 6 video hazır" gibi bir bilgi ve **Çalış** butonu vardır.
+- Her konunun yanında "Bu konudan 4 video hazır" gibi bir bilgi ve **Çalış** butonu vardır.
 
-### Adım 6: Karşılaştırma (isteğe bağlı, yaklaşık 20 sn)
+### Adım 6: Karşılaştırma (MVP sonrası)
 
-- `/admin/compare` ekranı: yan yana iki koyu akış sütunu, solda Deniz, sağda Selin.
-- İkisi aynı deneme sonucuna sahiptir; Deniz'in akışı Olasılık ağırlıklı, Selin'inki (kişiselleştirme kapalı) karışıktır.
+Ertelendi (`docs/backlog.md`). Planlanan: `/admin/compare` ekranında yan yana iki koyu akış sütunu, solda Deniz, sağda Selin; ikisi aynı deneme sonucuna sahiptir, Deniz'in akışı Olasılık ağırlıklı, Selin'inki (kişiselleştirme kapalı) karışıktır.
 
 ### Adım 7: Nasıl çalışıyor? (soru gelirse)
 
-- `/admin/feed-debug?slug=deniz`: her kartın skoru ve bileşenleri (zayıflık, sınav önemi, kalite, tazelik, zorluk uyumu), kartın hangi havuzdan geldiği ve Deniz'in en zayıf 5 konusu.
-- `/admin/impact`: simüle edilmiş 400 öğrenciyle kontrol ve deney grubunun 4 haftalık karşılaştırması. Ekranda her zaman "Simülasyon verisi" yazar.
+- **MVP:** `GET /api/admin/feed-debug?slug=deniz` API'si her kartın skorunu ve bileşenlerini (zayıflık, sınav önemi, kalite, tazelik, zorluk uyumu), kartın hangi havuzdan geldiğini ve Deniz'in en zayıf 5 konusunu JSON olarak döner; soru gelirse sunucu bunu Swagger UI'dan (`/swagger-ui.html`, admin token'ıyla) çağırır. Debug ekranı MVP sonrası.
+- **MVP sonrası:** `/admin/impact` etki paneli (simüle edilmiş 400 öğrenciyle kontrol ve deney grubunun 4 haftalık karşılaştırması, her yerde "Simülasyon verisi" etiketiyle).
 
 ## Senaryonun teknik şartları
 

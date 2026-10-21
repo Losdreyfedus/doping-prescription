@@ -145,3 +145,21 @@ Redis erişilemezse: profil PostgreSQL'den okunur, akış kuyruksuz (her istekte
 ## 9. Saat
 
 Zamana bağlı tüm kod `java.time.Clock` bean'ini kullanır; `Instant.now()` doğrudan çağrılmaz. Takvim günü gerektiren hesaplar (günlük puan sınırı gibi) `prescription.timezone` (varsayılan `Europe/Istanbul`) saat dilimini kullanır; zaman damgaları `timestamptz`/`Instant` olarak saklanır. Testler sabit saat kullanır. Persona'lar geçmiş tarihli kayıt üretmek için servislerin `Clock` parametresi alan dahili metotlarını `Clock.offset(...)` ile çağırır; global saat değiştirilmez.
+
+## 10. Genişleme noktaları
+
+MVP'de ertelenen özellikler (`docs/backlog.md`) sonradan **mevcut kodu değiştirmeden** eklenebilsin diye, değişmesi beklenen davranışlar arayüzlerin arkasındadır (open-closed). Her arayüzün uygulamaları Spring bean'idir; kullanan servis `List<...>` olarak hepsini alır ve tür/isim üzerinden seçer. Yeni bir davranış = yeni bir bean; çağıran kod değişmez. Arayüzler modülün `domain` paketinde saf Java'dır; bean olan uygulamalar `application` paketindedir.
+
+| Arayüz | Modül | Sözleşme | Bugünkü uygulamalar (MVP) | Sonra eklenebilecekler |
+| --- | --- | --- | --- | --- |
+| `CandidatePool` | feed | Bir havuzun türünü (`PoolType`) ve öğrenci profili ile katalogdan aday kartlarını verir; kotalar config'den havuz türüne göre okunur | `WeakTopicPool`, `ReviewDuePool`, `ExplorePool`, `PopularPool`, `FallbackPool` | Sınıf arkadaşlarının izledikleri, öğretmen önerileri, sınav yaklaşınca tekrar havuzu |
+| `FeedRanker` | feed | Adayları skorlar ve sıralar; kartın skor bileşenlerini (`ScoreBreakdown`) döner | `WeightedLinearRanker` (docs/algoritma.md §3) | Gerçek veriyle öğrenen bir sıralama modeli (ADR 0003); A/B için config ile seçim |
+| `ReasonTemplate` | feed | Bir havuz türü için kartın "neden bu video" metnini üretir | Havuz başına bir şablon (docs/algoritma.md §6) | Yeni havuzların şablonları, kişiselleştirilmiş/çok dilli metinler |
+| `DemoPersona` | admin | Persona adı ve öğrenciyi o duruma getiren adımlar (gerçek servis akışıyla) | `NewPersona`, `ScriptedInProgressPersona` | `ScriptedExamPersona` (Selin), `WeakProblemsPersona` (Mert) |
+| `ContentTagger` | content | Videonun başlık ve açıklamasından konu önerileri (`TagSuggestion`) üretir | `KeywordTagger` (docs/algoritma.md §5) | Müfredat kodu eşleyici, editör kural seti. Çalışma zamanında LLM kullanılmaz (AGENTS.md kural 1) |
+
+Notlar:
+
+- 1. aşamadaki `feed.domain.CandidatePool` enum'u (havuz türü) 5. aşamada `PoolType` olarak yeniden adlandırılır; `CandidatePool` adı arayüze geçer. Veritabanındaki `feed_impression.pool` değerleri değişmez.
+- `KeywordTagger` 2. aşamadan sonra `ContentTagger`'ı uygular; `ContentTagging` servisi somut sınıf yerine arayüze bağlanır.
+- Persona'lar `POST /api/admin/demo/persona` isteğindeki `persona` adına göre seçilir; tanınmayan ad `400` döner. Yeni persona eklemek yalnızca yeni bir bean'dir.

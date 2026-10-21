@@ -35,13 +35,14 @@ Başarı ölçütleri:
 **Kapsam içi:**
 
 - Tek sınav ve tek ders: **TYT Matematik**, 10 konu
-- Öğrenci uygulaması (Doping Hafıza'nın mevcut web arayüzüne benzeyen masaüstü web; bkz. `docs/arayuz.md`): Ana Sayfa, Dopingle, Testler ve Denemeler, Eksiklerim, Puanlarım
+- Öğrenci uygulaması (Doping Hafıza'nın mevcut web arayüzüne benzeyen masaüstü web; bkz. `docs/arayuz.md`): Dopingle, Testler ve Denemeler, Eksiklerim
 - Deneme modülü: hazır mini denemeler, çözme, gönderme, sonuç
 - Öğrenci profili: konu bazlı ustalık skoru
 - Kişiselleştirilmiş akış ve "neden bu video" açıklaması
-- Mikro-soru ve puan
-- Admin paneli: demo kontrolü, "neden bu akış" debug ekranı, kural tabanlı içerik etiketleme
-- Etki paneli: simüle edilmiş öğrenci verisiyle A/B karşılaştırması (her yerde "Simülasyon" etiketiyle)
+- Mikro-soru ve puan (üst çubukta ve mikro-soru panelinde)
+- Admin (minimum): demo kontrolü (sıfırla, persona yükle), sunum cevap anahtarı, "neden bu akış" debug API'si
+
+**Ertelenenler** (MVP sonrası; gerekçeler `docs/backlog.md`'de): Ana Sayfa ve Puanlarım ekranları, etki paneli, admin etiket onay ekranı ve anahtar kelime API'si, karşılaştırma ekranı, debug ekranının arayüzü, Mert ve Selin persona'ları, kafka-ui.
 
 **Kapsam dışı:**
 
@@ -142,6 +143,8 @@ API `http://localhost:8080`, web `http://localhost:5173`, OpenAPI arayüzü `htt
 
 Her aşama bir öncekine dayanır. Bir aşamanın kabul kriterleri geçmeden sonrakine geçme. Her aşama sonunda testleri çalıştır ve kısa bir ilerleme notu yaz (`docs/ilerleme.md`).
 
+**MVP odağı (2. aşamadan itibaren):** Amaç demo senaryosunun ana yolunu en kısa sürede uçtan uca çalıştırmaktır. Kalite kuralları (testler, kalite kapıları, modül sınırları, Conventional Commits) aynen geçerlidir; yalnızca kapsam daralmıştır. Ertelenen işler gerekçeleriyle `docs/backlog.md`'dedir ve `docs/mimari.md` "Genişleme noktaları" bölümündeki arayüzler üzerinden mevcut kodu değiştirmeden eklenebilecek şekilde tasarlanır. 1. aşamada yapılanlar (etiketleme, Mini Deneme 2, 48 mikro-soru, Mert ve Selin kullanıcıları) olduğu gibi kalır.
+
 0. **Kalite altyapısı ve iskelet**
     - Repo düzeni, Docker Compose, Spring Boot ve Vite uygulamaları, `GET /actuator/health`, Spotless, Checkstyle, SpotBugs, JaCoCo, ESLint, Prettier, GitHub Actions. `docs/adr/` altındaki dört ADR hazırdır; onlarla çelişen bir karar alırsan yeni ADR yaz, eskisini "Yerini aldı" olarak işaretle.
     - Kabul: kurulum komutları temiz bir makinede çalışır; health endpoint'i postgres, redis ve kafka durumunu raporlar; CI yeşil; `ApplicationModules.verify()` testi boş modüllerle geçer.
@@ -149,29 +152,26 @@ Her aşama bir öncekine dayanır. Bir aşamanın kabul kriterleri geçmeden son
     - `docs/veri-modeli.md` içindeki tüm tablolar (Flyway), JPA entity'leri, `docs/seed-verisi.md` içindeki içerik.
     - Kabul: migration'lar Testcontainers üzerinde temiz veritabanına uygulanır; seed tekrar çalıştırıldığında veriyi çoğaltmaz; seed sonrası 10 konu, 40 video, 2 mini deneme ve 4 kullanıcı vardır.
 2. **Kimlik ve uygulama kabuğu**
-    - Demo giriş (`auth` modülü, JWT), Spring Security yapılandırması, rol bazlı yetki; Doping benzeri uygulama kabuğu (sol menü, üst çubuk), tasarım değişkenleri, yazı tipleri, API istemcisi üretimi.
+    - Demo giriş (`auth` modülü, JWT), Spring Security yapılandırması, rol bazlı yetki; Doping benzeri uygulama kabuğu: sol menü (**Dopingle**, **Testler ve Denemeler**, **Eksiklerim**), üst çubuk (öğrenci adı ve toplam puan), tasarım değişkenleri, yazı tipleri, API istemcisi üretimi. Giriş sonrası doğrudan Dopingle açılır.
     - Kabul: öğrenci seçilince sol menülü uygulama açılır; admin endpoint'leri öğrenciye 403 döner; sayfa yenilenince oturum korunur.
 3. **Deneme modülü**
     - Deneme listesi, çözme ekranı, gönderme, sonuç ekranı, `exam.result-published` event'i (outbox üzerinden Kafka'ya).
     - Kabul: deneme gönderildiğinde event tam bir kez yayınlanır (entegrasyon testi); sonuç ekranında konu bazlı doğru/yanlış/boş görünür.
-4. **Öğrenci profili**
+4. **Öğrenci profili ve Eksiklerim**
     - Kafka consumer, sinyal işleme, ustalık hesabı, decay, Redis önbelleği, `learner.mastery-changed`, Eksiklerim ekranı.
     - Kabul: `docs/algoritma.md` §1'deki örnek değerler birim testinde birebir çıkar; deneme gönderildikten sonra en geç 2 saniye içinde Eksiklerim ekranı güncellenir; aynı event iki kez gelince skor değişmez.
-5. **Kişiselleştirilmiş akış**
-    - Aday havuzları, sıralama, kurallar, "neden bu video" şablonları, Redis kuyruğu, fallback, Dopingle ekranı, simüle oynatıcı, etkileşim kaydı.
+5. **Kişiselleştirilmiş akış ve Dopingle ekranı**
+    - Aday havuzları (`CandidatePool` bean'leri), sıralama (`FeedRanker`), kurallar, "neden bu video" şablonları (`ReasonTemplate`), Redis kuyruğu, fallback, Dopingle ekranı, simüle oynatıcı, etkileşim kaydı.
     - Kabul: demo senaryosunun 3. adımında akışın ilk 5 kartından en az 3'ü zayıf konudandır; aynı konudan art arda en fazla 2 kart gelir; kişiselleştirme kapalı öğrenci rastgele akış görür; Redis kapalıyken akış yine döner.
 6. **Mikro-soru ve puan**
-    - Quiz token'ı, mikro-soru penceresi, cevap, açıklama, puan, seri, Puanlarım ekranı, suistimal kuralları.
+    - Quiz token'ı, mikro-soru penceresi, cevap, açıklama, puan, seri, suistimal kuralları. Puan üst çubukta ve mikro-soru panelinde görünür (Puanlarım ekranı ertelendi).
     - Kabul: `docs/api.md` hata kodları tablosundaki her durum için entegrasyon testi vardır; aynı soruya ikinci cevap 0 puan alır; eşzamanlı iki cevap isteği çift puan üretmez.
-7. **Admin paneli**
-    - Demo kontrolü (sıfırla, persona yükle), "neden bu akış" debug ekranı, karşılaştırma, anahtar kelime ve etiket onay ekranı.
-    - Kabul: "Sıfırla" sonrası demo senaryosu baştan oynatılabilir; debug ekranı her kartın skor bileşenlerini gösterir.
-8. **Etki paneli (simülasyon)**
-    - Sentetik öğrenci üretimi, kontrol ve deney grupları, karşılaştırma grafikleri.
-    - Kabul: ekranın başlığında ve her grafikte "Simülasyon verisi" yazar; üretim deterministiktir (sabit seed).
-9. **Demo cilası, e2e ve dokümantasyon**
-    - Demo senaryosunu Playwright testine dök, yükleme ve boş durumlar, animasyonlar, README.
-    - Kabul: e2e testi senaryonun tamamını geçer; README `docs/kod-standartlari.md` §6'daki içeriği kapsar.
+7. **Admin (minimum)**
+    - Demo kontrolü: Sıfırla ve Persona yükle (`DemoPersona` bean'leri; bu aşamada `NEW` ve `SCRIPTED_IN_PROGRESS`), sunum cevap anahtarı kartı; "neden bu akış" yalnızca API olarak (`GET /api/admin/feed-debug`).
+    - Kabul: "Sıfırla" + `SCRIPTED_IN_PROGRESS` sonrası demo senaryosunun ana yolu baştan oynatılabilir; feed debug API'si her kartın skor bileşenlerini döner.
+8. **E2E ve README**
+    - Demo senaryosunun ana yolunu (adım 1–5) Playwright testine dök, yükleme ve boş durumlar, README.
+    - Kabul: e2e testi ana yolu geçer; README `docs/kod-standartlari.md` §6'daki içeriği kapsar.
 
 ## 8. Dokümanlar
 
@@ -186,6 +186,7 @@ Her aşama bir öncekine dayanır. Bir aşamanın kabul kriterleri geçmeden son
 | `docs/algoritma.md` | Ustalık skoru, akış sıralaması, kurallar, şablonlar, config |
 | `docs/arayuz.md` | Ekranlar, tasarım değişkenleri, bileşenler, simüle oynatıcı |
 | `docs/seed-verisi.md` | Konular, videolar, denemeler, mikro-sorular, demo öğrenciler |
+| `docs/backlog.md` | MVP dışında bırakılan işler ve gerekçeleri |
 
 ## 9. Bitti tanımı
 
