@@ -17,8 +17,6 @@ import tools.jackson.databind.json.JsonMapper;
  * Keeps each learner's snapshot as one JSON string under {@code mastery:{userId}} (docs/mimari.md §5). If Redis is
  * unreachable the profile is read from PostgreSQL, so errors are logged and swallowed.
  */
-// TODO(spec): docs/mimari.md §5 describes a hash per topic; one JSON value per learner is read and replaced as a whole,
-// which keeps the snapshot consistent without a Redis transaction.
 @Component
 class RedisSnapshotCache implements SnapshotCache {
 
