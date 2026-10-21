@@ -144,3 +144,14 @@ Açık `TODO(spec)` notu yok.
 - Health ayrıntılarının ADMIN'e bağlanması (2. aşama, yukarıda).
 - Persona'lar (`WEAK_PROBLEMS`, `SCRIPTED_EXAM`, `SCRIPTED_IN_PROGRESS`) 7. aşamada; şu an tüm kullanıcılar boş durumda seed'leniyor.
 - Seed sorularının editör kontrolü: testler hesabı ve tek doğru cevabı doğruluyor, sorunun metninin ifadeyle aynı şeyi sorduğunu doğrulayamaz.
+
+## 2. aşama: Kimlik ve uygulama kabuğu
+
+**Branch:** `feat/02-auth-and-shell` · **Tarih:** 2026-10-21
+
+- Demo giriş (`/api/auth/demo-users`, `/api/auth/demo-login`, `/api/me`), HS256 JWT (Spring Security resource server), `/api/admin/**` yalnız ADMIN, 401/403 dahil tüm hatalar `ProblemDetail` + `code`, `X-Request-Id`.
+- `auth.api.CurrentUser` (token'dan çözülür) ve `UserDirectory`; ilk admin uç noktası `GET /api/admin/users`. Health ayrıntıları artık ADMIN token'ıyla görünür (0. aşamadan kalan açık iş kapandı).
+- OpenAPI sözleşmesi `doping-prescription-ui/openapi.json`; `OpenApiContractIT` sapmayı yakalar. Alanlar varsayılan zorunlu, yalnız `@Schema(nullable = true)` olanlar boş olabilir (OpenAPI 3.0).
+- UI: üretilen tipler + `openapi-fetch`, `sessionStorage` oturumu, giriş ekranı, sol menülü kabuk (Dopingle, Testler ve Denemeler, Eksiklerim), giriş sonrası Dopingle.
+- `ContentTagger` genişleme noktası; `KeywordTagger` onu uyguluyor.
+- Kabul: öğrenci seçilince sol menülü uygulama açılır (Vitest), admin uç noktası öğrenciye 403 (`AuthIT`), yenilemede oturum korunur (Vitest).
