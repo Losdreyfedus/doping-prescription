@@ -87,7 +87,35 @@ function examApi(savedBodies: unknown[]) {
       return new HttpResponse(null, { status: 204 });
     }),
     http.post(`${API}/api/exam-attempts/${ATTEMPT_ID}/submit`, () => HttpResponse.json(result)),
+    http.get(`${API}/api/learner/profile`, () => HttpResponse.json(profileAfter(ATTEMPT_ID))),
   );
+}
+
+const weakTopic = (
+  topicId: number,
+  name: string,
+  readyContentCount: number,
+): Schemas['TopicProfileView'] => ({
+  topicId,
+  code: `TYT.MAT.${String(topicId)}`,
+  name,
+  mastery: 0.2,
+  confidence: 0.45,
+  band: 'WEAK',
+  trend: 'DOWN',
+  lastSignalAt: '2026-10-21T10:04:00Z',
+  readyContentCount,
+});
+
+/** The profile once it reflects the given attempt (null: before the first exam). */
+function profileAfter(attemptId: string | null): Schemas['ProfileView'] {
+  return {
+    userId: meOf('deniz').userId,
+    personalizationEnabled: true,
+    lastExamAttemptId: attemptId,
+    updatedAt: null,
+    topics: attemptId ? [weakTopic(9, 'Olasılık', 6), weakTopic(8, 'Permütasyon-Kombinasyon', 2)] : [],
+  };
 }
 
 describe('exam flow', () => {
@@ -115,6 +143,31 @@ describe('exam flow', () => {
     const weakRow = screen.getByText('Sayı Basamakları').closest('tr');
     expect(weakRow).toHaveAttribute('data-weak', 'true');
     expect(screen.getByText('Temel Kavramlar').closest('tr')).toHaveAttribute('data-weak', 'false');
+  });
+
+  it('polls the profile on the result screen until it reflects the attempt', async () => {
+    examApi([]);
+    let calls = 0;
+    server.use(
+      http.get(`${API}/api/exam-attempts/${ATTEMPT_ID}/result`, () => HttpResponse.json(result)),
+      http.get(`${API}/api/learner/profile`, () => {
+        calls += 1;
+        return HttpResponse.json(profileAfter(calls < 2 ? null : ATTEMPT_ID));
+      }),
+    );
+    writeSession({ token: 'token-deniz', user: meOf('deniz') });
+    renderApp(`/app/denemeler/${ATTEMPT_ID}/sonuc`);
+
+    expect(await screen.findByText('Eksiklerin analiz ediliyor…')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Dopingle akışın bu sonuca göre güncellendi.', {}, { timeout: 2000 }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Olasılık ve Permütasyon-Kombinasyon için 8 video hazır\./)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Reçeteni gör' })).toHaveAttribute(
+      'href',
+      '/app/dopingle?refresh=1',
+    );
+    expect(calls).toBe(2);
   });
 
   it('clears an answer when the selected option is clicked again', async () => {

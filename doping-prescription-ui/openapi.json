@@ -248,6 +248,24 @@
         "tags" : [ "exam-controller" ]
       }
     },
+    "/api/learner/profile" : {
+      "get" : {
+        "operationId" : "profile",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProfileView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "learner-controller" ]
+      }
+    },
     "/api/me" : {
       "get" : {
         "operationId" : "me",
@@ -488,6 +506,35 @@
           }
         }
       },
+      "ProfileView" : {
+        "required" : [ "personalizationEnabled", "topics", "userId" ],
+        "type" : "object",
+        "properties" : {
+          "lastExamAttemptId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "nullable" : true
+          },
+          "personalizationEnabled" : {
+            "type" : "boolean"
+          },
+          "topics" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TopicProfileView"
+            }
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "nullable" : true
+          },
+          "userId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }
+      },
       "QuestionResult" : {
         "required" : [ "correctKey", "explanation", "options", "orderNo", "questionId", "result", "stem" ],
         "type" : "object",
@@ -575,6 +622,47 @@
           "selectedKey" : {
             "type" : "string",
             "nullable" : true
+          }
+        }
+      },
+      "TopicProfileView" : {
+        "required" : [ "band", "code", "confidence", "mastery", "name", "readyContentCount", "topicId", "trend" ],
+        "type" : "object",
+        "properties" : {
+          "band" : {
+            "type" : "string",
+            "enum" : [ "UNKNOWN", "WEAK", "MEDIUM", "STRONG" ]
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "confidence" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "lastSignalAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "nullable" : true
+          },
+          "mastery" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "readyContentCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "topicId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "trend" : {
+            "type" : "string",
+            "enum" : [ "UP", "DOWN", "FLAT" ]
           }
         }
       },

@@ -12,6 +12,8 @@ public interface UserDirectory {
 
     Optional<UserSummary> findBySlug(String slug);
 
+    Optional<UserSummary> findById(UUID userId);
+
     /**
      * @param userId                 the user's id
      * @param slug                   demo login name

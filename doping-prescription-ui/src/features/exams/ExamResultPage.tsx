@@ -5,6 +5,7 @@ import { tr } from '@/shared/i18n/tr';
 import { Avatar } from '@/shared/ui/Avatar';
 
 import { useExamResult } from './api';
+import { ProfileUpdateBanner } from './ProfileUpdateBanner';
 import { QuestionReview } from './QuestionReview';
 import { ResultSummary } from './ResultSummary';
 import { TopicAnalysis } from './TopicAnalysis';
@@ -41,13 +42,7 @@ export function ExamResultPage() {
       <div className="flex flex-col gap-6 bg-surface-result p-8">
         <h2 className="text-center text-2xl font-bold">{tr.result.successTitle}</h2>
         <ResultSummary result={result.data} />
-        <div role="status" className="flex items-center gap-3 rounded-card bg-navy px-6 py-4 text-surface">
-          <span
-            aria-hidden="true"
-            className="size-4 animate-spin rounded-full border-2 border-surface border-t-transparent"
-          />
-          {tr.result.analyzing}
-        </div>
+        <ProfileUpdateBanner attemptId={attemptId} />
         <TopicAnalysis topics={result.data.byTopic} />
         <QuestionReview questions={result.data.questions} />
       </div>

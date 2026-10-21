@@ -41,7 +41,7 @@ m_etkin = m * exp(-mastery.decay_lambda * gün)     (gün = now - last_signal_at
 
 **Hızlı cevap:** `responseMs < quiz.min_response_ms` olan mikro-soru cevapları sinyal üretmez ve puan almaz.
 
-**Hassasiyet:** `mastery` ve `confidence` hesapta ve veritabanında (`double precision`) tam hassasiyetle tutulur; ara değerler yuvarlanmaz, çünkü yuvarlanıp saklanan değerler her sinyalde hata biriktirir. 3 ondalığa yuvarlama (`RoundingMode.HALF_UP`) yalnızca API yanıtında ve gösterimde yapılır.
+**Hassasiyet:** `mastery` ve `confidence` hesapta ve veritabanında (`double precision`) tam hassasiyetle tutulur; ara değerler yuvarlanmaz, çünkü yuvarlanıp saklanan değerler her sinyalde hata biriktirir. 3 ondalığa yuvarlama (`RoundingMode.HALF_UP`) yalnızca API yanıtında ve gösterimde yapılır. Double değerler ondalık sayıları tam tutamadığı için (0,245 · 0,7 = 0,17149999999999999) yuvarlama iki adımdır: önce 9 ondalıkta kayan nokta gürültüsü temizlenir, sonra HALF_UP ile 3 ondalığa yuvarlanır (`MasteryRounding`); böylece 0,1715 → 0,172 olur.
 
 ### Ustalık bandı
 

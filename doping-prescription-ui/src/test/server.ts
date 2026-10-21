@@ -35,4 +35,7 @@ export const server = setupServer(
     const slug = typeof body === 'object' && body !== null && 'slug' in body ? String(body.slug) : '';
     return HttpResponse.json({ token: `token-${slug}`, user: meOf(slug) });
   }),
+  http.get(`${API}/api/learner/profile`, () =>
+    HttpResponse.json({ userId: meOf('deniz').userId, personalizationEnabled: true, topics: [] }),
+  ),
 );

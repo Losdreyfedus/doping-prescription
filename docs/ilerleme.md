@@ -165,3 +165,23 @@ Açık `TODO(spec)` notu yok.
 - `ExamResultPublished` outbox üzerinden `exam.result-published`'a (anahtar `userId`). `ExamSubmissionIT` gerçek Kafka'da tam bir kez yayınlandığını ve cevap anahtarı taşımadığını doğruluyor.
 - UI: deneme listesi, çözme ekranı (cevap kâğıdı, bitirme onayı), sonuç ekranı (konu analizi, soru inceleme).
 - Kararlar: Modulith olayı kendisi JSON'a çeviriyor, producer değeri `ByteArraySerializer` ile olduğu gibi yazıyor; uygulama katmanının okuma modelleri (`ExamViews`) doğrudan API gövdesi olarak kullanılıyor (entity'ler dışarı çıkmıyor); modül diyagramı artık `-Dmodulith.docs=true` ile isteğe bağlı üretiliyor.
+
+## 4. aşama: Öğrenci profili ve Eksiklerim
+
+**Branch:** `feat/04-learner-profile` · **Tarih:** 2026-10-21
+
+- `MasteryCalculator` (saf Java): §1 örnekleri birim testinde birebir (0,35 → 0,245 → 0,1715; API'de 0,172 / 0,451; PerKom 0,494 / 0,330). API yuvarlaması iki adımlı (`MasteryRounding`).
+- `ExamResultListener` (`learner` grubu) sonucu soru sırasıyla sinyallere çeviriyor; olay (`processed_event`) ve soru (`exam:{attemptId}:{questionId}`) düzeyinde idempotent. Eşik ≥ 0,05 olan değişimler `learner.mastery-changed` olarak outbox'a yazılıyor. Hatalarda 3 deneme, sonra `<topic>-dlt`.
+- Redis önbelleği (`mastery:{userId}`, decay uygulanmamış snapshot): okuyucu `SETNX`, yazan commit sonrası `SET`; böylece eski değer yeni değerin üzerine yazılamıyor. Redis yoksa PostgreSQL'den okunuyor (`MasteryServiceIT` Redis'siz context'te).
+- `GET /api/learner/profile`; UI: Eksiklerim ekranı ve sonuç ekranında profil sorgulamalı güncelleme bandı.
+- Kabul: `LearnerProfileFlowIT` gerçek Kafka + Redis ile gönderimden sonra 2 sn içinde profili doğruluyor; aynı olay iki kez gelince skor değişmiyor (`MasteryServiceIT`).
+
+### TODO(spec) notları
+
+- `Trend`: "son 3 sinyalin yönü" demo adım 5 ile çelişiyor; son sinyalin yönü kullanıldı.
+- Decay tam gün sayısıyla hesaplanıyor (kesirli gün, sınav anındaki 0,1715'i saniyeler içinde 0,171'e yuvarlatıyordu).
+- Redis'te konu başına hash yerine öğrenci başına tek JSON değeri.
+
+### Açık işler
+
+- Eksiklerim'de "son ziyaretten beri artan konu" vurgusu 8. aşamadaki cilaya bırakıldı.
