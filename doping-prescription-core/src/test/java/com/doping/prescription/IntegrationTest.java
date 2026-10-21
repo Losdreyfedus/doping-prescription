@@ -13,6 +13,10 @@ import org.springframework.context.annotation.Import;
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@SpringBootTest
+@SpringBootTest(properties = IntegrationTest.JWT_SECRET_PROPERTY)
 @Import(TestcontainersConfiguration.class)
-public @interface IntegrationTest {}
+public @interface IntegrationTest {
+
+    /** Test-only signing key; production reads PRESCRIPTION_JWT_SECRET. */
+    String JWT_SECRET_PROPERTY = "prescription.auth.jwt-secret=test-only-secret-0123456789-abcdefghij";
+}

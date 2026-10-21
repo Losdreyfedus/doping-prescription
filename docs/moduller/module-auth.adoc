@@ -4,4 +4,8 @@
 |Demo login, JWT issuing and the user directory.
 |Base package
 |`com.doping.prescription.auth`
+|Spring components
+|_Services_
+
+* `c.d.p.a.api.UserDirectory` (via `c.d.p.a.application.DemoLoginService` -- Demo login: pick a user, get a token. There are no passwords (AGENTS.md §3).)
 |===

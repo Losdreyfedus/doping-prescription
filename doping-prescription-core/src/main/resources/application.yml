@@ -43,6 +43,11 @@ management:
 
 prescription:
   timezone: Europe/Istanbul
+  auth:
+    # Required outside the demo profile; never logged (docs/mimari.md §6).
+    jwt-secret: ${PRESCRIPTION_JWT_SECRET}
+    token-ttl: 12h
+    cors-allowed-origin: http://localhost:5173
   health:
     kafka:
       timeout: 2s

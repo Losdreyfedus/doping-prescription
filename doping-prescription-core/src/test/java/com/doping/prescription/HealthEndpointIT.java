@@ -3,18 +3,20 @@ package com.doping.prescription;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import com.doping.prescription.auth.seed.AuthDemoDataLoader;
 import java.time.Duration;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
+import tools.jackson.databind.json.JsonMapper;
 
-// Details are ADMIN-only in application.yml; this test is about the indicators, not about who may see them.
-// TODO(phase 2): replace the override with an authenticated ADMIN request once Spring Security is configured.
-@SpringBootTest(properties = "management.endpoint.health.show-details=always")
+@SpringBootTest(properties = IntegrationTest.JWT_SECRET_PROPERTY)
 @AutoConfigureMockMvc
 @Import(InfrastructureContainersConfiguration.class)
 class HealthEndpointIT {
@@ -25,13 +27,24 @@ class HealthEndpointIT {
     @Autowired
     private MockMvcTester mvc;
 
-    @Test
-    void reportsPostgresRedisAndKafkaAsUp() {
-        await().atMost(INFRASTRUCTURE_READY_TIMEOUT).untilAsserted(() -> {
-            // When
-            MvcTestResult result = mvc.get().uri("/actuator/health").exchange();
+    @Autowired
+    private AuthDemoDataLoader users;
 
-            // Then
+    @Autowired
+    private JsonMapper json;
+
+    @BeforeEach
+    void seedUsers() {
+        users.load();
+    }
+
+    @Test
+    void adminSeesPostgresRedisAndKafkaAsUp() {
+        String adminToken = login("admin");
+
+        await().atMost(INFRASTRUCTURE_READY_TIMEOUT).untilAsserted(() -> {
+            MvcTestResult result = health(adminToken);
+
             assertThat(result).hasStatusOk();
             assertThat(result).bodyJson().extractingPath("$.status").isEqualTo("UP");
             assertThat(result)
@@ -51,5 +64,34 @@ class HealthEndpointIT {
                     .extractingPath("$.components.kafka.details.nodes")
                     .isEqualTo(1);
         });
+    }
+
+    @Test
+    void studentAndAnonymousSeeOnlyTheAggregateStatus() {
+        String studentToken = login("deniz");
+
+        await().atMost(INFRASTRUCTURE_READY_TIMEOUT).untilAsserted(() -> {
+            assertThat(health(studentToken)).bodyJson().doesNotHavePath("$.components");
+            assertThat(health(null)).bodyJson().doesNotHavePath("$.components");
+            assertThat(health(null)).bodyJson().extractingPath("$.status").isEqualTo("UP");
+        });
+    }
+
+    private MvcTestResult health(String token) {
+        var request = mvc.get().uri("/actuator/health");
+        return token == null
+                ? request.exchange()
+                : request.header("Authorization", "Bearer " + token).exchange();
+    }
+
+    private String login(String slug) {
+        MvcTestResult result = mvc.post()
+                .uri("/api/auth/demo-login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"slug\":\"" + slug + "\"}")
+                .exchange();
+        return json.readTree(result.getResponse().getContentAsByteArray())
+                .get("token")
+                .asString();
     }
 }

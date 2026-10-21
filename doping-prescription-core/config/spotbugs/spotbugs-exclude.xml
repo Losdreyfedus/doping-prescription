@@ -36,4 +36,9 @@
         <Class name="com.doping.prescription.shared.error.RequestIdFilter"/>
         <Bug pattern="HRS_REQUEST_PARAMETER_TO_HTTP_HEADER"/>
     </Match>
+    <!-- HttpSecurity.build() declares "throws Exception"; a SecurityFilterChain bean method cannot narrow it. -->
+    <Match>
+        <Class name="com.doping.prescription.auth.security.SecurityConfiguration"/>
+        <Bug pattern="THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION"/>
+    </Match>
 </FindBugsFilter>
