@@ -35,6 +35,17 @@ export const server = setupServer(
     const slug = typeof body === 'object' && body !== null && 'slug' in body ? String(body.slug) : '';
     return HttpResponse.json({ token: `token-${slug}`, user: meOf(slug) });
   }),
+  http.get(`${API}/api/feed`, () =>
+    HttpResponse.json({
+      sessionId: '00000000-0000-4000-8000-000000000099',
+      personalized: false,
+      algoVersion: 'v1',
+      nextCursor: 'end',
+      demoVideoSpeed: 4,
+      cards: [],
+    }),
+  ),
+  http.post(`${API}/api/feed/interactions`, () => new HttpResponse(null, { status: 202 })),
   http.get(`${API}/api/learner/profile`, () =>
     HttpResponse.json({ userId: meOf('deniz').userId, personalizationEnabled: true, topics: [] }),
   ),
