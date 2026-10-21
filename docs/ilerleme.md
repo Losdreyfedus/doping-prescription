@@ -208,3 +208,14 @@ Açık `TODO(spec)` notu yok.
 - Puan kuralları saf domain (`PointsRules`): zayıf konu 15, diğer 10, 5'li seri +20, günlük 200 sınırı (ödül ve bonus birlikte sınırlanıyor). `GET /api/points` üst çubuğu besliyor.
 - UI: "Soruyu çöz" butonu, video bitince kendiliğinden açılan panel, tek tıkla cevap, çözüm, puan, seri ve eski değerden yeniye büyüyen ustalık çubuğu; üst çubukta ve Ana Sayfa'da toplam puan.
 - Kabul: `QuizIT` api.md'deki quiz hata kodlarının hepsini (400, 403 QUIZ_TOKEN_INVALID, 404, 409 VIDEO_NOT_WATCHED, 410, 429), ikinci cevabın 0 puan aldığını ve eşzamanlı iki cevabın puanı bir kez yazdığını doğruluyor; 401, 403 FORBIDDEN ve 409 ATTEMPT_ALREADY_SUBMITTED önceki aşamaların testlerinde.
+
+## 7. aşama: Admin (minimum)
+
+**Branch:** `feat/07-admin-demo-control` · **Tarih:** 2026-10-21
+
+- Her modül kendi tablolarını ve Redis anahtarlarını `shared.api.UserDataEraser` ile siliyor; `POST /api/admin/demo/reset` hepsini çağırıyor (admin hiçbir tabloya yazmıyor).
+- `DemoPersona` bean'leri: `NEW` ve `SCRIPTED_IN_PROGRESS` (Mini Deneme 1 başlatılıyor, senaryo cevapları exam modülünün `ExamSubmission` API'siyle, öğrencinin kullandığı servis yolundan işaretleniyor; gönderilmiyor). Bilinmeyen persona `400`.
+- `GET /api/admin/demo/answer-key`, `/students`, `/personas`; `GET /api/admin/feed-debug?slug=` en zayıf 5 konu ve son oturumun kartlarını skor bileşenleriyle döndürüyor (Swagger UI'dan admin token'ıyla).
+- UI: `/admin` demo kontrolü (öğrenci kartları, Sıfırla, Persona yükle) ve sunum cevap anahtarı.
+- Kabul: `DemoControlIT` sıfırlamanın tüm modüllerin verisini 1 sn altında sildiğini, `SCRIPTED_IN_PROGRESS` sonrası 11 cevabın işaretli olduğunu ve henüz sinyal olmadığını, feed debug API'sinin bileşenleri döndürdüğünü doğruluyor. Senaryo (sıfırla → persona → Deniz → deneme → Dopingle → mikro-soru → Eksiklerim) tarayıcıda baştan sona oynatıldı.
+- Test düzeltmesi: `ContentTaggingIT` artık yalnız kendi outbox olaylarını bekliyor; Kafka'sız context'te diğer testlerin olayları tamamlanmadığı için sıra bağımlı kırılıyordu (6. aşamanın ilk CI koşusu buna takıldı).
