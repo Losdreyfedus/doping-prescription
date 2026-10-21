@@ -11,6 +11,137 @@
     "bearer" : [ ]
   } ],
   "paths" : {
+    "/api/admin/demo/answer-key" : {
+      "get" : {
+        "operationId" : "answerKey",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AnswerKeyRow"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "admin-demo-controller" ]
+      }
+    },
+    "/api/admin/demo/persona" : {
+      "post" : {
+        "operationId" : "persona",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PersonaRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [ "admin-demo-controller" ]
+      }
+    },
+    "/api/admin/demo/personas" : {
+      "get" : {
+        "operationId" : "personas",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "admin-demo-controller" ]
+      }
+    },
+    "/api/admin/demo/reset" : {
+      "post" : {
+        "operationId" : "reset",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ResetRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [ "admin-demo-controller" ]
+      }
+    },
+    "/api/admin/demo/students" : {
+      "get" : {
+        "operationId" : "students",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/StudentCard"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "admin-demo-controller" ]
+      }
+    },
+    "/api/admin/feed-debug" : {
+      "get" : {
+        "operationId" : "feedDebug",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "slug",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FeedDebug"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "admin-demo-controller" ]
+      }
+    },
     "/api/admin/users" : {
       "get" : {
         "operationId" : "users",
@@ -443,6 +574,26 @@
   },
   "components" : {
     "schemas" : {
+      "AnswerKeyRow" : {
+        "required" : [ "correctKey", "orderNo", "topic" ],
+        "type" : "object",
+        "properties" : {
+          "correctKey" : {
+            "type" : "string"
+          },
+          "orderNo" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "scenarioKey" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "topic" : {
+            "type" : "string"
+          }
+        }
+      },
       "AnswerRequest" : {
         "required" : [ "quizToken", "responseMs", "selectedKey" ],
         "type" : "object",
@@ -559,6 +710,63 @@
           "videoUrl" : {
             "type" : "string",
             "nullable" : true
+          }
+        }
+      },
+      "DebugCard" : {
+        "required" : [ "appliedRules", "contentId", "difficultyFit", "examImportance", "freshness", "impressionId", "pool", "position", "quality", "reasonText", "score", "topicId", "weakness" ],
+        "type" : "object",
+        "properties" : {
+          "appliedRules" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "contentId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "difficultyFit" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "examImportance" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "freshness" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "impressionId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "pool" : {
+            "type" : "string"
+          },
+          "position" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "quality" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "reasonText" : {
+            "type" : "string"
+          },
+          "score" : {
+            "type" : "number"
+          },
+          "topicId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "weakness" : {
+            "type" : "number",
+            "format" : "double"
           }
         }
       },
@@ -703,6 +911,27 @@
           },
           "title" : {
             "type" : "string"
+          }
+        }
+      },
+      "FeedDebug" : {
+        "required" : [ "cards", "slug", "weakestTopics" ],
+        "type" : "object",
+        "properties" : {
+          "cards" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DebugCard"
+            }
+          },
+          "slug" : {
+            "type" : "string"
+          },
+          "weakestTopics" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/WeakTopic"
+            }
           }
         }
       },
@@ -891,6 +1120,20 @@
           }
         }
       },
+      "PersonaRequest" : {
+        "required" : [ "persona", "slug" ],
+        "type" : "object",
+        "properties" : {
+          "persona" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "slug" : {
+            "minLength" : 1,
+            "type" : "string"
+          }
+        }
+      },
       "ProfileUpdate" : {
         "required" : [ "status" ],
         "type" : "object",
@@ -1018,6 +1261,16 @@
           }
         }
       },
+      "ResetRequest" : {
+        "required" : [ "slug" ],
+        "type" : "object",
+        "properties" : {
+          "slug" : {
+            "minLength" : 1,
+            "type" : "string"
+          }
+        }
+      },
       "SaveAnswerRequest" : {
         "type" : "object",
         "properties" : {
@@ -1071,6 +1324,28 @@
             "format" : "int32"
           },
           "current" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "StudentCard" : {
+        "required" : [ "displayName", "hasExam", "personalizationEnabled", "slug", "totalPoints" ],
+        "type" : "object",
+        "properties" : {
+          "displayName" : {
+            "type" : "string"
+          },
+          "hasExam" : {
+            "type" : "boolean"
+          },
+          "personalizationEnabled" : {
+            "type" : "boolean"
+          },
+          "slug" : {
+            "type" : "string"
+          },
+          "totalPoints" : {
             "type" : "integer",
             "format" : "int32"
           }
@@ -1212,6 +1487,30 @@
           "userId" : {
             "type" : "string",
             "format" : "uuid"
+          }
+        }
+      },
+      "WeakTopic" : {
+        "required" : [ "band", "confidence", "mastery", "name", "topicId" ],
+        "type" : "object",
+        "properties" : {
+          "band" : {
+            "type" : "string"
+          },
+          "confidence" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "mastery" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "topicId" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       }
