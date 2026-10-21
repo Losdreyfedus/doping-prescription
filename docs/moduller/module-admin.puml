@@ -17,8 +17,8 @@ top to bottom direction
 
 System_Boundary("PrescriptionApplication_boundary", "PrescriptionApplication", $tags="") {
   Container_Boundary("PrescriptionApplication.PrescriptionApplication_boundary", "PrescriptionApplication", $tags="") {
-    Component(PrescriptionApplication.PrescriptionApplication.Shared, "Shared", $techn="Module", $descr="", $tags="", $link="")
     Component(PrescriptionApplication.PrescriptionApplication.Admin, "Admin", $techn="Module", $descr="", $tags="", $link="")
+    Component(PrescriptionApplication.PrescriptionApplication.Shared, "Shared", $techn="Module", $descr="", $tags="", $link="")
   }
 
 }
