@@ -240,7 +240,7 @@ Kullanıcı sonucu aynı yanıtta görmeli, bu yüzden bu akış senkrondur (`do
 }
 ```
 
-`topics` mastery'ye göre artan sıralıdır; hiç sinyali olmayan konular `band: "UNKNOWN"` ile en sonda gelir. `band` tek kaynaktan, domain'deki `MasteryBand`'den gelir (bkz. `docs/algoritma.md` §1): decay uygulanmış mastery < 0,6 `WEAK`, < 0,8 `MEDIUM`, diğerleri `STRONG`. `WEAK` konular akışta `WEAK_TOPIC` havuzunu besleyen konulardır. `mastery` ve `confidence` yanıtta 3 ondalığa yuvarlanır (HALF_UP). `trend`: son 3 sinyalin yönü (`UP`, `DOWN`, `FLAT`).
+`topics` mastery'ye göre artan sıralıdır; hiç sinyali olmayan konular `band: "UNKNOWN"` ile en sonda gelir. `band` tek kaynaktan, domain'deki `MasteryBand`'den gelir (bkz. `docs/algoritma.md` §1): decay uygulanmış mastery < 0,6 `WEAK`, < 0,8 `MEDIUM`, diğerleri `STRONG`. `WEAK` konular akışta `WEAK_TOPIC` havuzunu besleyen konulardır. `mastery` ve `confidence` yanıtta 3 ondalığa yuvarlanır (HALF_UP). `trend`: konunun son ustalık sinyalinin yönü (`UP`, `DOWN`, `FLAT`; bkz. `docs/algoritma.md` §1).
 
 ## Puan
 

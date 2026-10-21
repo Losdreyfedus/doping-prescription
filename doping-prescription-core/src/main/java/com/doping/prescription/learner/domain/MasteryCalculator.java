@@ -43,8 +43,6 @@ public final class MasteryCalculator {
      * {@code m_effective = m * exp(-lambda * days since the last signal)}; never stored (§1, Unutma). Days are whole
      * elapsed days, so mastery read minutes after an exam equals the stored value and matches the documented examples.
      */
-    // TODO(spec): §1 does not say whether "days" is fractional; whole days keep 0.1715 from showing as 0.171 seconds
-    // after the exam, when a fractional day count would already have decayed it below the rounding boundary.
     public double effectiveMastery(double mastery, Instant lastSignalAt, Instant now) {
         long days = Math.max(0, Duration.between(lastSignalAt, now).toDays());
         return mastery * Math.exp(-parameters.decayLambda() * days);

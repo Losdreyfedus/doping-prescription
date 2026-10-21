@@ -178,9 +178,7 @@ Açık `TODO(spec)` notu yok.
 
 ### TODO(spec) notları
 
-- `Trend`: "son 3 sinyalin yönü" demo adım 5 ile çelişiyor; son sinyalin yönü kullanıldı.
-- Decay tam gün sayısıyla hesaplanıyor (kesirli gün, sınav anındaki 0,1715'i saniyeler içinde 0,171'e yuvarlatıyordu).
-- Redis'te konu başına hash yerine öğrenci başına tek JSON değeri.
+Üç not da (trend = son sinyalin yönü, decay tam gün, Redis'te öğrenci başına tek JSON değeri) onaylandı; `docs/algoritma.md` §1, `docs/api.md` ve `docs/mimari.md` §5 güncellendi. Açık not yok.
 
 ### Açık işler
 

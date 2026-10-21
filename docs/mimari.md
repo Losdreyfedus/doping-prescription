@@ -115,7 +115,7 @@ com.doping.prescription.learner
 
 | Anahtar | İçerik | TTL |
 | --- | --- | --- |
-| `mastery:{userId}` | Hash: topicId → mastery, confidence, lastSignalAt | 24 saat; her yazımda yenilenir |
+| `mastery:{userId}` | String: öğrencinin profil snapshot'ı (JSON; konu başına decay uygulanmamış mastery, confidence, deneme sayısı, son sinyal ve son deneme özeti). Tek değer olduğu için bütün olarak okunur ve değiştirilir. Okuyan yalnızca anahtar yoksa yazar (`SET NX`), yazan commit sonrası üzerine yazar; böylece eski değer yenisinin üzerine yazılamaz | 24 saat; her yazımda yenilenir |
 | `feed:queue:{userId}` | Liste: hazırlanmış kartlar (JSON) | `prescription.feed.queue-ttl` |
 | `feed:session:{sessionId}` | Set: oturumda gösterilen içerik id'leri (kuyruk yeniden kurulurken hariç tutulur) | 30 dk |
 | `feed:session:{sessionId}:skips` | Hash: konu başına oturum içi geçme sayaçları | 30 dk |

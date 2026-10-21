@@ -36,8 +36,12 @@ Bir denemedeki sinyaller soru sırasıyla, tek transaction içinde uygulanır. D
 **Unutma (decay):** Okuma anında uygulanır, tabloya yazılmaz:
 
 ```
-m_etkin = m * exp(-mastery.decay_lambda * gün)     (gün = now - last_signal_at, gün cinsinden)
+m_etkin = m * exp(-mastery.decay_lambda * gün)     (gün = now - last_signal_at arasındaki tam gün sayısı)
 ```
+
+Gün tam sayıdır (kesirli değil): aynı gün içinde decay uygulanmaz. Kesirli gün, deneme gönderildikten saniyeler sonra 0,1715'i 0,171'e yuvarlatıyor ve §1 örnekleriyle çelişiyordu.
+
+**Trend:** Eksiklerim'deki ok, konunun son ustalık sinyalinin yönüdür: doğru cevap `UP`, yanlış veya boş `DOWN`, sinyal yoksa `FLAT`. (Son 3 sinyalin çoğunluğu, demo adım 5'te 3 yanlıştan sonra gelen doğru cevabı yukarı ok olarak gösteremezdi.)
 
 **Hızlı cevap:** `responseMs < quiz.min_response_ms` olan mikro-soru cevapları sinyal üretmez ve puan almaz.
 
