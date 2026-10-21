@@ -133,7 +133,7 @@ Yanıt `200`:
       "impressionId": "7f1c...",
       "position": 0,
       "content": {
-        "contentId": 31,
+        "contentId": 33,
         "title": "Olasılığın temeli: istenen bölü tüm durumlar",
         "teacherName": "Ayşe Öğretmen",
         "videoUrl": null,
@@ -174,7 +174,7 @@ Yanıt `200` → `MicroQuiz`:
 
 ```json
 {
-  "microQuestionId": 90,
+  "microQuestionId": 37,
   "impressionId": "7f1c...",
   "stem": "Bir zar atılıyor. Gelen sayının çift olduğu bilindiğine göre 4 olma olasılığı kaçtır?",
   "options": [
@@ -257,7 +257,7 @@ Kullanıcı sonucu aynı yanıtta görmeli, bu yüzden bu akış senkrondur (`do
 
 ### POST /api/admin/demo/persona
 
-`persona`: `NEW` (her şey boş), `WEAK_PROBLEMS` (Mert'in profili), `SCRIPTED_EXAM` (demo senaryosundaki deneme sonucu). Persona'lar gerçek API akışıyla uygulanır: attempt oluşturulur, cevaplar yazılır, gönderilir; böylece event zinciri de test edilmiş olur.
+`persona`: `NEW` (her şey boş), `WEAK_PROBLEMS` (Mert'in profili), `SCRIPTED_EXAM` (demo senaryosundaki deneme sonucu), `SCRIPTED_IN_PROGRESS` (Mini Deneme 1 başlatılmış, 12 cevap senaryo cevaplarıyla işaretli, gönderilmemiş; sunumda Deniz için). Persona'lar gerçek API akışıyla uygulanır: attempt oluşturulur, cevaplar yazılır, gönderilir (`SCRIPTED_IN_PROGRESS`'te gönderme adımı yapılmaz); böylece event zinciri de test edilmiş olur. Senaryo cevapları `exam_question.scenario_answer` kolonundan okunur.
 
 ### GET /api/admin/feed-debug?slug=deniz
 
@@ -323,7 +323,7 @@ Topic'ler uygulama başlangıcında `NewTopic` bean'leriyle oluşturulur; demo i
   "occurredAt": "2026-10-19T10:05:12+03:00",
   "userId": "…",
   "impressionId": "7f1c...",
-  "contentId": 31,
+  "contentId": 33,
   "topicId": 9,
   "interaction": "VIEW_COMPLETE",
   "watchMs": 57200
@@ -340,7 +340,7 @@ Topic'ler uygulama başlangıcında `NewTopic` bean'leriyle oluşturulur; demo i
   "userId": "…",
   "quizAttemptId": "…",
   "impressionId": "7f1c...",
-  "microQuestionId": 90,
+  "microQuestionId": 37,
   "topicId": 9,
   "isCorrect": true,
   "responseMs": 14300
