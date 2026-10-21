@@ -40,7 +40,7 @@
           "explanation": "Grupta sıra önemli değildir: C(5, 2) = (5 · 4) ÷ 2 = 10.",
           "check": "C(5,2)" },
         { "orderNo": 8, "topicId": 8, "difficulty": 3, "correctKey": "A", "scenarioAnswer": null,
-          "stem": "KALEM kelimesinin harflerinin tamamı kullanılarak 5 harfli, anlamlı ya da anlamsız kaç farklı kelime yazılabilir?",
+          "stem": "KALEM kelimesinin harfleriyle anlamlı ya da anlamsız 5 harfli kaç kelime yazılabilir?",
           "options": ["120", "60", "24", "720", "25"],
           "explanation": "KALEM'in 5 harfi birbirinden farklıdır; 5 farklı harf 5! = 120 biçimde sıralanır.",
           "check": "fact(5)" },
