@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.doping.prescription.IntegrationTest;
-import com.doping.prescription.feed.domain.CandidatePool;
 import com.doping.prescription.feed.domain.InteractionType;
+import com.doping.prescription.feed.domain.PoolType;
 import com.doping.prescription.feed.domain.ScoreBreakdown;
 import com.doping.prescription.feed.domain.ServedCard;
 import jakarta.persistence.EntityManager;
@@ -43,7 +43,7 @@ class FeedPersistenceIT {
         ServedCard card = new ServedCard(
                 33,
                 0,
-                CandidatePool.WEAK_TOPIC,
+                PoolType.WEAK_TOPIC,
                 9,
                 new BigDecimal("0.4513"),
                 breakdown,
@@ -89,7 +89,7 @@ class FeedPersistenceIT {
         return new ServedCard(
                 1,
                 5,
-                CandidatePool.POPULAR,
+                PoolType.POPULAR,
                 null,
                 new BigDecimal("0.2100"),
                 new ScoreBreakdown(0, 0.9, 0.95, 1.0, 0.7, List.of()),

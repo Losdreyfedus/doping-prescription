@@ -6,4 +6,9 @@ export const queryKeys = {
   attempt: (attemptId: string): readonly ['exam-attempt', string] => ['exam-attempt', attemptId],
   result: (attemptId: string): readonly ['exam-result', string] => ['exam-result', attemptId],
   learnerProfile: (): readonly ['learner', 'profile'] => ['learner', 'profile'],
+  feed: (topicId: number | undefined, sessionKey: string): readonly ['feed', number | undefined, string] => [
+    'feed',
+    topicId,
+    sessionKey,
+  ],
 };

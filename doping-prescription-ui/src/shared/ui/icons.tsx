@@ -224,3 +224,27 @@ export function MegaphoneIcon() {
     </Icon>
   );
 }
+
+export function HeartIcon({ filled = false }: { filled?: boolean }) {
+  return (
+    <Icon fill={filled ? 'currentColor' : 'none'}>
+      <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />
+    </Icon>
+  );
+}
+
+export function SpeakerIcon() {
+  return (
+    <Icon>
+      <path d="M4 9v6h4l5 4V5L8 9zM17 9l4 6M21 9l-4 6" />
+    </Icon>
+  );
+}
+
+export function ChevronUpIcon() {
+  return (
+    <Icon>
+      <path d="M6 15l6-6 6 6" />
+    </Icon>
+  );
+}

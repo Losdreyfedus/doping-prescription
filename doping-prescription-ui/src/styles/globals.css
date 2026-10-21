@@ -50,6 +50,17 @@
   --menu-live: #e23b4a;
   --menu-stories: #29a9f0;
   --menu-weak-topics: #f6c344;
+  /* Dopingle card backgrounds, one hue per topic (docs/arayuz.md, Simüle oynatıcı) */
+  --topic-1: #3d5a98;
+  --topic-2: #2f7d6d;
+  --topic-3: #8a4f9e;
+  --topic-4: #b5622b;
+  --topic-5: #2c6aa0;
+  --topic-6: #a33b4c;
+  --topic-7: #4f7a2d;
+  --topic-8: #6b4fbf;
+  --topic-9: #c0392b;
+  --topic-10: #1f8a9e;
   /* Home page decorations, drawn with CSS instead of images (AGENTS.md rule 11) */
   --task-blue: #1590e0;
   --sky: #e6f3fb;
@@ -102,6 +113,16 @@
   --color-menu-help: var(--menu-help);
   --color-menu-live: var(--menu-live);
   --color-menu-stories: var(--menu-stories);
+  --color-topic-1: var(--topic-1);
+  --color-topic-2: var(--topic-2);
+  --color-topic-3: var(--topic-3);
+  --color-topic-4: var(--topic-4);
+  --color-topic-5: var(--topic-5);
+  --color-topic-6: var(--topic-6);
+  --color-topic-7: var(--topic-7);
+  --color-topic-8: var(--topic-8);
+  --color-topic-9: var(--topic-9);
+  --color-topic-10: var(--topic-10);
   --color-task-blue: var(--task-blue);
   --color-sky: var(--sky);
   --color-grass: var(--grass);

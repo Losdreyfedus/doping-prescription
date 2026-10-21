@@ -248,6 +248,80 @@
         "tags" : [ "exam-controller" ]
       }
     },
+    "/api/feed" : {
+      "get" : {
+        "operationId" : "feed",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "cursor",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "maximum" : 20,
+            "minimum" : 1,
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 10
+          }
+        }, {
+          "in" : "query",
+          "name" : "topicId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "in" : "query",
+          "name" : "refresh",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FeedPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "feed-controller" ]
+      }
+    },
+    "/api/feed/interactions" : {
+      "post" : {
+        "operationId" : "interactions",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InteractionBatch"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "202" : {
+            "description" : "Accepted"
+          }
+        },
+        "tags" : [ "feed-controller" ]
+      }
+    },
     "/api/learner/profile" : {
       "get" : {
         "operationId" : "profile",
@@ -321,6 +395,68 @@
           },
           "title" : {
             "type" : "string"
+          }
+        }
+      },
+      "CardView" : {
+        "required" : [ "content", "hasMicroQuiz", "impressionId", "pointsAvailable", "pool", "position", "reasonText", "topic" ],
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "$ref" : "#/components/schemas/ContentView"
+          },
+          "hasMicroQuiz" : {
+            "type" : "boolean"
+          },
+          "impressionId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "pointsAvailable" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pool" : {
+            "type" : "string",
+            "enum" : [ "WEAK_TOPIC", "REVIEW_DUE", "EXPLORE", "POPULAR", "FALLBACK" ]
+          },
+          "position" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "reasonText" : {
+            "type" : "string"
+          },
+          "topic" : {
+            "$ref" : "#/components/schemas/TopicRef"
+          }
+        }
+      },
+      "ContentView" : {
+        "required" : [ "contentId", "contentKind", "durationSec", "teacherName", "title" ],
+        "type" : "object",
+        "properties" : {
+          "contentId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "contentKind" : {
+            "type" : "string",
+            "enum" : [ "CONCEPT", "SOLVED_EXAMPLE", "TIP" ]
+          },
+          "durationSec" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "teacherName" : {
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "videoUrl" : {
+            "type" : "string",
+            "nullable" : true
           }
         }
       },
@@ -448,6 +584,78 @@
           },
           "title" : {
             "type" : "string"
+          }
+        }
+      },
+      "FeedPage" : {
+        "required" : [ "algoVersion", "cards", "demoVideoSpeed", "nextCursor", "personalized", "sessionId" ],
+        "type" : "object",
+        "properties" : {
+          "algoVersion" : {
+            "type" : "string"
+          },
+          "cards" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CardView"
+            }
+          },
+          "demoVideoSpeed" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "nextCursor" : {
+            "type" : "string"
+          },
+          "personalized" : {
+            "type" : "boolean"
+          },
+          "sessionId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }
+      },
+      "InteractionBatch" : {
+        "required" : [ "events" ],
+        "type" : "object",
+        "properties" : {
+          "events" : {
+            "maxItems" : 100,
+            "minItems" : 0,
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InteractionEvent"
+            }
+          }
+        }
+      },
+      "InteractionEvent" : {
+        "required" : [ "clientEventId", "clientTs", "event", "impressionId" ],
+        "type" : "object",
+        "properties" : {
+          "clientEventId" : {
+            "maxLength" : 64,
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "clientTs" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "event" : {
+            "type" : "string",
+            "enum" : [ "VIEW_START", "VIEW_COMPLETE", "SKIP", "LIKE", "QUIZ_SHOWN", "QUIZ_DISMISSED" ]
+          },
+          "impressionId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "watchMs" : {
+            "minimum" : 0,
+            "type" : "integer",
+            "format" : "int32",
+            "nullable" : true
           }
         }
       },
@@ -666,6 +874,22 @@
           }
         }
       },
+      "TopicRef" : {
+        "required" : [ "code", "name", "topicId" ],
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "topicId" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
       "TopicResult" : {
         "required" : [ "blank", "correct", "name", "topicId", "total", "wrong" ],
         "type" : "object",
@@ -696,11 +920,15 @@
         }
       },
       "UserSummary" : {
-        "required" : [ "displayName", "personalizationEnabled", "role", "slug", "userId" ],
+        "required" : [ "displayName", "examDate", "personalizationEnabled", "role", "slug", "userId" ],
         "type" : "object",
         "properties" : {
           "displayName" : {
             "type" : "string"
+          },
+          "examDate" : {
+            "type" : "string",
+            "format" : "date"
           },
           "personalizationEnabled" : {
             "type" : "boolean"

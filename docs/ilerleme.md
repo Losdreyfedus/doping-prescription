@@ -183,3 +183,18 @@ Açık `TODO(spec)` notu yok.
 ### Açık işler
 
 - Eksiklerim'de "son ziyaretten beri artan konu" vurgusu 8. aşamadaki cilaya bırakıldı.
+
+## 5. aşama: Kişiselleştirilmiş akış ve Dopingle ekranı
+
+**Branch:** `feat/05-personalized-feed` · **Tarih:** 2026-10-21
+
+- Saf domain: havuzlar (`CandidatePool` arayüzü; WEAK_TOPIC, REVIEW_DUE, EXPLORE, POPULAR), en büyük kalan yöntemiyle kota ve eksik kotanın WEAK → EXPLORE → POPULAR zinciri, `WeightedLinearRanker`, açgözlü "art arda en fazla 2" kuralı, oturumda gösterilen / son 14 günde tamamlanan / oturumda çok geçilen konuların dışlanması, `ReasonTemplate` şablonları, oturum tohumlu fallback. Havuzlar, sıralayıcı ve şablonlar bean (genişleme noktaları).
+- Kotalar sayfa başına uygulanıyor ve kuyruk 3 sayfa olarak kuruluyor; böylece keşif kartı ilk 10'da yer alıyor (demo adım 3).
+- `GET /api/feed`: imleçli oturum, `topicId`, `refresh`; kişiselleştirme hata verirse fallback (`personalized: false`), Redis yoksa sayfa her istekte hesaplanıyor ve oturum `feed_impression`'dan okunuyor. `POST /api/feed/interactions` `clientEventId` ile idempotent ve `feed.interaction-recorded` yayınlıyor; `learner.mastery-changed` kuyruğu siliyor.
+- UI: Dopingle katmanında 9:16 simüle oynatıcı (konu rengi, neden hapı, konu çipi, puan rozeti), klavye/tekerlek/ok gezintisi, 3 kart kala sonraki sayfa, etkileşim olayları 5 sn'de bir.
+- Kabul: `FeedFlowIT` (gerçek Kafka + Redis) ilk kartın Olasılık olduğunu, ilk 5'in en az 3'ünün zayıf konudan geldiğini, art arda 3 aynı konu olmadığını ve Fonksiyonlar keşif kartını doğruluyor; `FeedServiceIT` Redis kapalıyken akışı ve kişiselleştirmesi kapalı öğrencinin fallback akışını doğruluyor.
+
+### Kararlar
+
+- Learner, `feed.interaction-recorded`'ı feed'in Java tipini import etmeden kendi kaydıyla okuyor (feed → learner bağımlılığı varken döngü olmasın diye).
+- `topicId` ile gelen akış kuyruğa girmiyor; konunun bandına göre havuz etiketi alıyor (WEAK → WEAK_TOPIC, UNKNOWN → EXPLORE, diğer → POPULAR).

@@ -81,6 +81,14 @@ public class TopicMastery {
         this.updatedAt = now;
     }
 
+    /** The feed served a video of this topic; kept for future pools, not part of mastery. */
+    public void recordServed(Instant servedAt) {
+        if (lastServedAt == null || servedAt.isAfter(lastServedAt)) {
+            this.lastServedAt = servedAt;
+            this.updatedAt = servedAt;
+        }
+    }
+
     public Optional<LastExamSummary> getLastExamSummary() {
         if (lastExamAttemptId == null) {
             return Optional.empty();

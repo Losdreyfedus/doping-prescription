@@ -71,7 +71,8 @@ public class DemoLoginService implements UserDirectory {
                 user.getSlug(),
                 user.getDisplayName(),
                 user.getRole().name(),
-                user.isPersonalizationEnabled());
+                user.isPersonalizationEnabled(),
+                user.getExamDate());
     }
 
     /**

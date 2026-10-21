@@ -10,8 +10,8 @@ import com.doping.prescription.content.domain.MicroQuestionStatus;
 import com.doping.prescription.content.domain.TagSource;
 import com.doping.prescription.exam.domain.AnswerResult;
 import com.doping.prescription.exam.domain.AttemptStatus;
-import com.doping.prescription.feed.domain.CandidatePool;
 import com.doping.prescription.feed.domain.InteractionType;
+import com.doping.prescription.feed.domain.PoolType;
 import com.doping.prescription.learner.domain.SignalType;
 import com.doping.prescription.points.domain.PointsReason;
 import java.util.Arrays;
@@ -133,7 +133,7 @@ class SchemaConventionsIT {
                 Arguments.of("exam_attempt", "ck_exam_attempt_status", AttemptStatus.class),
                 Arguments.of("exam_answer", "ck_exam_answer_result", AnswerResult.class),
                 Arguments.of("learner_signal", "ck_learner_signal_type", SignalType.class),
-                Arguments.of("feed_impression", "ck_feed_impression_pool", CandidatePool.class),
+                Arguments.of("feed_impression", "ck_feed_impression_pool", PoolType.class),
                 Arguments.of("feed_interaction", "ck_feed_interaction_event", InteractionType.class),
                 Arguments.of("points_ledger", "ck_points_ledger_reason", PointsReason.class));
     }
