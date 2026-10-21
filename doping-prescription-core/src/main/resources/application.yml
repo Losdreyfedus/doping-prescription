@@ -34,6 +34,8 @@ springdoc:
   writer-with-order-by-keys: true
   api-docs:
     path: /v3/api-docs
+    # OpenAPI 3.0 keeps "nullable", which openapi-typescript turns into "| null" in the UI's types.
+    version: openapi_3_0
   swagger-ui:
     path: /swagger-ui.html
 

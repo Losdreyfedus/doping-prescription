@@ -1,5 +1,6 @@
 package com.doping.prescription.auth.web;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
@@ -33,5 +34,5 @@ final class AuthDtos {
             String displayName,
             String role,
             boolean personalizationEnabled,
-            LocalDate examDate) {}
+            @Schema(nullable = true) LocalDate examDate) {}
 }

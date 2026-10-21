@@ -1,5 +1,6 @@
 package com.doping.prescription.auth.security;
 
+import com.doping.prescription.auth.api.CurrentUser;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -7,6 +8,7 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import java.util.List;
+import org.springdoc.core.utils.SpringDocUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,6 +20,11 @@ import org.springframework.context.annotation.Configuration;
 class OpenApiConfiguration {
 
     static final String BEARER = "bearer";
+
+    static {
+        // CurrentUser comes from the token, not from the request; keep it out of the documented parameters.
+        SpringDocUtils.getConfig().addRequestWrapperToIgnore(CurrentUser.class);
+    }
 
     @Bean
     OpenAPI prescriptionOpenApi() {
