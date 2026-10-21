@@ -29,6 +29,16 @@ spring:
 server:
   port: 8080
 
+springdoc:
+  # Stable key order keeps the committed openapi.json diff-friendly (ADR 0004).
+  writer-with-order-by-keys: true
+  api-docs:
+    path: /v3/api-docs
+    # OpenAPI 3.0 keeps "nullable", which openapi-typescript turns into "| null" in the UI's types.
+    version: openapi_3_0
+  swagger-ui:
+    path: /swagger-ui.html
+
 management:
   endpoints:
     web:
@@ -43,6 +53,11 @@ management:
 
 prescription:
   timezone: Europe/Istanbul
+  auth:
+    # Required outside the demo profile; never logged (docs/mimari.md §6).
+    jwt-secret: ${PRESCRIPTION_JWT_SECRET}
+    token-ttl: 12h
+    cors-allowed-origin: http://localhost:5173
   health:
     kafka:
       timeout: 2s

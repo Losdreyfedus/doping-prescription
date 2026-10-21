@@ -1,10 +1,20 @@
-import { BrandLogo } from '@/shared/ui/BrandLogo';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createBrowserRouter, RouterProvider } from 'react-router';
 
-// Placeholder shell; routing and the Doping-like layout arrive in phase 2.
+import { routes } from './routes';
+import { SessionProvider } from './session/SessionProvider';
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
+});
+const router = createBrowserRouter(routes);
+
 export function App() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-surface-muted">
-      <BrandLogo />
-    </main>
+    <QueryClientProvider client={queryClient}>
+      <SessionProvider>
+        <RouterProvider router={router} />
+      </SessionProvider>
+    </QueryClientProvider>
   );
 }

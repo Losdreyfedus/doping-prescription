@@ -10,7 +10,7 @@ import tseslint from 'typescript-eslint';
 
 // Feature folders may not import each other's internals; shared code moves to src/shared
 // (docs/kod-standartlari.md §3).
-const FEATURES = ['dopingle', 'exams', 'learner', 'quiz', 'points', 'admin'];
+const FEATURES = ['auth', 'dopingle', 'exams', 'learner', 'quiz', 'points', 'admin'];
 
 const featureIsolationZones = FEATURES.map((feature) => ({
   target: `./src/features/${feature}`,

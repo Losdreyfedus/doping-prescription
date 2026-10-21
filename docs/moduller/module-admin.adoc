@@ -4,4 +4,6 @@
 |Demo control, feed debugging and content management APIs.
 |Base package
 |`com.doping.prescription.admin`
+|Bean references
+|* `c.d.p.a.api.UserDirectory` (in Auth) -- Read access to users for other modules (admin demo control, personas).
 |===

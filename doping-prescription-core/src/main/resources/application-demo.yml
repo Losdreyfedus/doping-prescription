@@ -1,0 +1,6 @@
+# Demo profile: seed data is loaded at startup (docs/seed-verisi.md).
+prescription:
+  auth:
+    # Demo-only default so the setup commands work without extra environment variables; override with
+    # PRESCRIPTION_JWT_SECRET anywhere else.
+    jwt-secret: ${PRESCRIPTION_JWT_SECRET:demo-only-secret-0123456789-abcdefghij}

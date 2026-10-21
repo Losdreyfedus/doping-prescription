@@ -28,4 +28,17 @@
         <Package name="~com\.doping\.prescription\.[a-z]+\.persistence"/>
         <Bug pattern="URF_UNREAD_FIELD,UWF_UNWRITTEN_FIELD"/>
     </Match>
+    <!--
+      RequestIdFilter echoes the client X-Request-Id only after it matched [A-Za-z0-9-]{1,64}, so no CR/LF or other
+      header-splitting characters can reach the response; SpotBugs does not see the regex check.
+    -->
+    <Match>
+        <Class name="com.doping.prescription.shared.error.RequestIdFilter"/>
+        <Bug pattern="HRS_REQUEST_PARAMETER_TO_HTTP_HEADER"/>
+    </Match>
+    <!-- HttpSecurity.build() declares "throws Exception"; a SecurityFilterChain bean method cannot narrow it. -->
+    <Match>
+        <Class name="com.doping.prescription.auth.security.SecurityConfiguration"/>
+        <Bug pattern="THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION"/>
+    </Match>
 </FindBugsFilter>
