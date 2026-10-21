@@ -1,8 +1,8 @@
 name: CI
 
+# Every push and every pull request (docs/kod-standartlari.md §5).
 on:
   push:
-    branches: [main]
   pull_request:
 
 permissions:
