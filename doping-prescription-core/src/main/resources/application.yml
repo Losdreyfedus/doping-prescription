@@ -29,6 +29,14 @@ spring:
 server:
   port: 8080
 
+springdoc:
+  # Stable key order keeps the committed openapi.json diff-friendly (ADR 0004).
+  writer-with-order-by-keys: true
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
 management:
   endpoints:
     web:
