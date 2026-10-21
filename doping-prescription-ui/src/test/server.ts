@@ -45,6 +45,9 @@ export const server = setupServer(
       cards: [],
     }),
   ),
+  http.get(`${API}/api/points`, () =>
+    HttpResponse.json({ total: 0, today: 0, dailyCap: 200, streak: { current: 0, best: 0 }, recent: [] }),
+  ),
   http.post(`${API}/api/feed/interactions`, () => new HttpResponse(null, { status: 202 })),
   http.get(`${API}/api/learner/profile`, () =>
     HttpResponse.json({ userId: meOf('deniz').userId, personalizationEnabled: true, topics: [] }),

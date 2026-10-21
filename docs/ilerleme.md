@@ -198,3 +198,13 @@ Açık `TODO(spec)` notu yok.
 
 - Learner, `feed.interaction-recorded`'ı feed'in Java tipini import etmeden kendi kaydıyla okuyor (feed → learner bağımlılığı varken döngü olmasın diye).
 - `topicId` ile gelen akış kuyruğa girmiyor; konunun bandına göre havuz etiketi alıyor (WEAK → WEAK_TOPIC, UNKNOWN → EXPLORE, diğer → POPULAR).
+
+## 6. aşama: Mikro-soru ve puan
+
+**Branch:** `feat/06-micro-quiz-and-points` · **Tarih:** 2026-10-21
+
+- `GET /api/feed/cards/:impressionId/quiz`: videonun %70'i izlenmeden `409 VIDEO_NOT_WATCHED`; şıklar karıştırılıp yeniden harflendiriliyor, eşleme oturum anahtarından ayrı bir anahtarla imzalanan token'da (`PRESCRIPTION_QUIZ_TOKEN_SECRET`, demo profilinde varsayılan değer). Soru kalmadıysa `204`.
+- `POST /api/quiz/:id/answer`: cevap sunucuda kontrol ediliyor; tek transaction'da cevap (`micro_quiz_attempt`), senkron sinyal (`LearnerSignalRecorder`, "%17 → %27"), puan (`PointsLedger`) ve `quiz.answered`. İkinci veya eşzamanlı cevap unique kısıta takılıp `pointsAwarded: 0` dönüyor; token Redis'te tek kullanımlık (`quiz:token-used:{jti}`), Redis yoksa yalnız veritabanı kısıtı koruyor. 2 sn'den hızlı cevap sinyal ve puan üretmiyor.
+- Puan kuralları saf domain (`PointsRules`): zayıf konu 15, diğer 10, 5'li seri +20, günlük 200 sınırı (ödül ve bonus birlikte sınırlanıyor). `GET /api/points` üst çubuğu besliyor.
+- UI: "Soruyu çöz" butonu, video bitince kendiliğinden açılan panel, tek tıkla cevap, çözüm, puan, seri ve eski değerden yeniye büyüyen ustalık çubuğu; üst çubukta ve Ana Sayfa'da toplam puan.
+- Kabul: `QuizIT` api.md'deki quiz hata kodlarının hepsini (400, 403 QUIZ_TOKEN_INVALID, 404, 409 VIDEO_NOT_WATCHED, 410, 429), ikinci cevabın 0 puan aldığını ve eşzamanlı iki cevabın puanı bir kez yazdığını doğruluyor; 401, 403 FORBIDDEN ve 409 ATTEMPT_ALREADY_SUBMITTED önceki aşamaların testlerinde.

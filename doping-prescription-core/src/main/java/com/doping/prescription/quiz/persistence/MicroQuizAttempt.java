@@ -53,6 +53,14 @@ public class MicroQuizAttempt {
         this.pointsAwarded = pointsAwarded;
     }
 
+    /** Points are known only after the answer was claimed (inserted) and the ledger applied it. */
+    public void recordPoints(int points) {
+        if (points < 0) {
+            throw new IllegalArgumentException("points must not be negative");
+        }
+        this.pointsAwarded = points;
+    }
+
     public UUID getId() {
         return id;
     }

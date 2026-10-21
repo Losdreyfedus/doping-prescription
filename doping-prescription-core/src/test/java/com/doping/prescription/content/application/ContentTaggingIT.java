@@ -153,9 +153,17 @@ class ContentTaggingIT {
                 .toList();
     }
 
+    /**
+     * Waits for this test's ContentCreated events only: other tests share the database, and their externalized events
+     * stay incomplete in this context because Kafka is unreachable here.
+     */
     private void awaitAllEventsHandled() {
         await().atMost(LISTENER_TIMEOUT)
-                .until(() -> jdbc.sql("select count(*) from event_publication where completion_date is null")
+                .until(() -> jdbc.sql("""
+                                        select count(*) from event_publication
+                                        where completion_date is null and event_type = :type
+                                        """)
+                                .param("type", ContentCreated.class.getName())
                                 .query(Integer.class)
                                 .single()
                         == 0);

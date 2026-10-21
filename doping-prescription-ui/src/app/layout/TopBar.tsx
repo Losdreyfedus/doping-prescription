@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 import { useSession } from '@/app/session/sessionContext';
+import { usePoints } from '@/shared/api/points';
 import { tr } from '@/shared/i18n/tr';
 import { Avatar } from '@/shared/ui/Avatar';
 import { BellIcon, BoltIcon, CalendarIcon, LogoutIcon, MailIcon, SearchIcon } from '@/shared/ui/icons';
@@ -15,6 +16,19 @@ function RoundIcon({ label, children }: { label: string; children: ReactNode }) 
       className="flex size-12 items-center justify-center rounded-full bg-surface-muted text-ink"
     >
       {children}
+    </span>
+  );
+}
+
+function PointsPill() {
+  const points = usePoints();
+  return (
+    <span
+      aria-label={tr.topBar.points}
+      className="flex items-center gap-2 rounded-full bg-surface-muted px-3 py-2 text-sm font-bold"
+    >
+      <span aria-hidden="true" className="size-3 rounded-full bg-sun" />
+      {tr.points.label(points.data?.total ?? 0)}
     </span>
   );
 }
@@ -57,6 +71,7 @@ export function TopBar() {
       <RoundIcon label={tr.topBar.notifications}>
         <BellIcon />
       </RoundIcon>
+      <PointsPill />
       {session && (
         <div className="flex items-center gap-3">
           <Avatar name={session.user.displayName} />
