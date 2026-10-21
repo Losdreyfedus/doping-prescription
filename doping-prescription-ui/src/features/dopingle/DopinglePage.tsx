@@ -5,6 +5,8 @@ import { tr } from '@/shared/i18n/tr';
 import { BookmarkIcon, ChevronDownIcon, ChevronUpIcon, HeartIcon, SpeakerIcon } from '@/shared/ui/icons';
 
 import { type FeedCard, useFeed, useInteractionRecorder } from './api';
+import { MicroQuizPanel } from './MicroQuizPanel';
+import { type MicroQuiz, openQuiz } from './quiz';
 import { useSimulatedPlayer } from './useSimulatedPlayer';
 import { VideoCard } from './VideoCard';
 
@@ -15,6 +17,8 @@ const PREFETCH_REMAINING = 3;
 const SKIP_WINDOW_MS = 3000;
 const WHEEL_COOLDOWN_MS = 600;
 const AUTO_NEXT_DELAY_MS = 800;
+/** docs/arayuz.md: the "Soruyu çöz" button appears once 70% of the video has played. */
+const QUIZ_BUTTON_AT = 0.7;
 
 function toTopicId(value: string | null): number | undefined {
   const parsed = Number(value);
@@ -72,22 +76,53 @@ interface PlayerProps {
 }
 
 /** One card on screen: playback, keyboard and wheel navigation, actions and interaction events. */
+type QuizState =
+  | { status: 'closed' }
+  | { status: 'loading' }
+  | { status: 'open'; quiz: MicroQuiz }
+  | { status: 'done' }
+  | { status: 'error'; message: string };
+
 function Player({ card, speed, onMove }: PlayerProps) {
-  const { record } = useInteractionRecorder();
+  const { record, flush } = useInteractionRecorder();
+  const [quizState, setQuizState] = useState<QuizState>({ status: 'closed' });
+  const quizActive = quizState.status === 'loading' || quizState.status === 'open';
   const [liked, setLiked] = useState(false);
   const [autoNext, setAutoNext] = useState(true);
   const startedAt = useRef(0);
   const completed = useRef(false);
   const lastWheel = useRef(0);
 
+  const elapsedRef = useRef(0);
+
+  // The server checks the watched share before opening the question, so the events are sent first.
+  const showQuiz = useCallback(async () => {
+    setQuizState({ status: 'loading' });
+    record(card.impressionId, 'QUIZ_SHOWN', Math.round(elapsedRef.current * 1000));
+    await flush();
+    try {
+      const quiz = await openQuiz(card.impressionId);
+      setQuizState(quiz ? { status: 'open', quiz } : { status: 'done' });
+    } catch (error) {
+      setQuizState({
+        status: 'error',
+        message: error instanceof Error ? error.message : tr.errors.unexpected,
+      });
+    }
+  }, [record, flush, card.impressionId]);
+
   const onComplete = useCallback(() => {
     completed.current = true;
+    elapsedRef.current = card.content.durationSec;
     record(card.impressionId, 'VIEW_COMPLETE', card.content.durationSec * 1000);
-  }, [record, card]);
+    if (card.hasMicroQuiz) {
+      void showQuiz();
+    }
+  }, [record, card, showQuiz]);
   const player = useSimulatedPlayer({
     durationSec: card.content.durationSec,
     speed,
-    active: true,
+    active: !quizActive,
     onComplete,
   });
 
@@ -96,7 +131,6 @@ function Player({ card, speed, onMove }: PlayerProps) {
     record(card.impressionId, 'VIEW_START', 0);
   }, [record, card.impressionId]);
 
-  const elapsedRef = useRef(0);
   useEffect(() => {
     elapsedRef.current = player.elapsedSec;
   }, [player.elapsedSec]);
@@ -111,7 +145,8 @@ function Player({ card, speed, onMove }: PlayerProps) {
   );
 
   useEffect(() => {
-    if (player.progress < 1 || !autoNext) {
+    const quizSettled = !card.hasMicroQuiz || quizState.status === 'done' || quizState.status === 'error';
+    if (player.progress < 1 || !autoNext || !quizSettled) {
       return;
     }
     const timer = setTimeout(() => {
@@ -120,11 +155,14 @@ function Player({ card, speed, onMove }: PlayerProps) {
     return () => {
       clearTimeout(timer);
     };
-  }, [player.progress, autoNext, move]);
+  }, [player.progress, autoNext, move, card.hasMicroQuiz, quizState.status]);
 
   const { toggle } = player;
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (quizActive) {
+        return;
+      }
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
         event.preventDefault();
         move(event.key === 'ArrowDown' ? 1 : -1);
@@ -137,7 +175,7 @@ function Player({ card, speed, onMove }: PlayerProps) {
     return () => {
       window.removeEventListener('keydown', onKey);
     };
-  }, [move, toggle]);
+  }, [move, toggle, quizActive]);
 
   return (
     <div
@@ -164,15 +202,28 @@ function Player({ card, speed, onMove }: PlayerProps) {
         </label>
       </div>
 
-      <div className="flex items-end gap-4">
-        <VideoCard
-          card={card}
-          progress={player.progress}
-          elapsedSec={player.elapsedSec}
-          playing={player.playing}
-          onToggle={toggle}
-        />
-        <div className="mb-24 flex flex-col items-center gap-4">
+      <div className="flex items-center gap-4">
+        <div className={`relative transition-opacity ${quizActive ? 'opacity-40' : ''}`}>
+          <VideoCard
+            card={card}
+            progress={player.progress}
+            elapsedSec={player.elapsedSec}
+            playing={player.playing}
+            onToggle={toggle}
+          />
+          {card.hasMicroQuiz && quizState.status === 'closed' && player.progress >= QUIZ_BUTTON_AT && (
+            <button
+              type="button"
+              onClick={() => {
+                void showQuiz();
+              }}
+              className="absolute -bottom-12 left-1/2 -translate-x-1/2 rounded-button bg-orange px-5 py-2 font-semibold"
+            >
+              {tr.quiz.open}
+            </button>
+          )}
+        </div>
+        <div className="mt-40 flex flex-col items-center gap-4">
           <button
             type="button"
             aria-pressed={liked}
@@ -203,7 +254,27 @@ function Player({ card, speed, onMove }: PlayerProps) {
             <SpeakerIcon />
           </span>
         </div>
+        {quizState.status === 'open' && (
+          <MicroQuizPanel
+            quiz={quizState.quiz}
+            topicName={card.topic.name}
+            onContinue={() => {
+              record(card.impressionId, 'QUIZ_DISMISSED');
+              setQuizState({ status: 'done' });
+              move(1);
+            }}
+          />
+        )}
       </div>
+
+      {quizState.status === 'error' && (
+        <p
+          role="alert"
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-button bg-surface/15 px-4 py-2"
+        >
+          {quizState.message}
+        </p>
+      )}
 
       <div className="absolute right-5 flex flex-col gap-3">
         <button

@@ -1,4 +1,5 @@
 import { useSession } from '@/app/session/sessionContext';
+import { usePoints } from '@/shared/api/points';
 import { tr } from '@/shared/i18n/tr';
 import { Avatar } from '@/shared/ui/Avatar';
 import { MegaphoneIcon, PlayCircleIcon } from '@/shared/ui/icons';
@@ -14,6 +15,7 @@ const BADGE_COUNT = 5;
 export function HomePage() {
   const { session } = useSession();
   const name = session?.user.displayName ?? '';
+  const points = usePoints();
 
   return (
     <div className="flex gap-6 p-6">
@@ -28,7 +30,8 @@ export function HomePage() {
                 <Avatar name={name} size="lg" />
               </span>
               <span className="-mt-3 rounded-full bg-surface px-3 py-0.5 text-sm font-bold text-ink shadow">
-                <span aria-hidden="true" className="mr-1 inline-block size-3 rounded-full bg-sun" />0
+                <span aria-hidden="true" className="mr-1 inline-block size-3 rounded-full bg-sun" />
+                {points.data?.total ?? 0}
               </span>
             </div>
             <div className="flex flex-1 flex-col gap-3">

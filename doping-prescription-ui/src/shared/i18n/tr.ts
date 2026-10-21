@@ -40,6 +40,7 @@ export const tr = {
     messages: 'Mesajlar',
     calendar: 'Takvim',
     notifications: 'Bildirimler',
+    points: 'Toplam puan',
   },
   dopingle: {
     keyboardHint: '↑ ↓ Video değiştir | Space: Duraklat',
@@ -58,6 +59,22 @@ export const tr = {
     sound: 'Ses',
     previous: 'Önceki video',
     next: 'Sonraki video',
+  },
+  quiz: {
+    title: 'Mikro-soru',
+    open: 'Soruyu çöz',
+    timeLeft: 'Kalan süre',
+    timeUp: 'Süre doldu.',
+    continue: 'Devam',
+    correct: 'Doğru!',
+    wrong: 'Yanlış.',
+    streak: (current: number, bonusAt: number) => `Seri: ${String(current)} / ${String(bonusAt)}`,
+    total: (points: number) => `Toplam ${String(points)} puan`,
+    mastery: (topic: string, before: number, after: number) =>
+      `${topic} ustalığın %${String(before)} → %${String(after)}`,
+  },
+  points: {
+    label: (points: number) => `${String(points)} puan`,
   },
   home: {
     profile: 'Profil',

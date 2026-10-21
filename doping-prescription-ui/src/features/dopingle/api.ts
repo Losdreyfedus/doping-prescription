@@ -42,28 +42,30 @@ const FLUSH_INTERVAL_MS = 5000;
 export function useInteractionRecorder() {
   const buffer = useRef<InteractionEvent[]>([]);
 
-  const flush = useCallback(() => {
+  /** Sends the buffered events; the promise settles when they are stored (or failed: a lost batch only loses analytics). */
+  const flush = useCallback(async () => {
     if (buffer.current.length === 0) {
       return;
     }
     const events = buffer.current;
     buffer.current = [];
-    // Fire and forget: a lost batch only loses analytics, never the learner's progress.
-    void api.POST('/api/feed/interactions', { body: { events } }).catch(() => undefined);
+    await api.POST('/api/feed/interactions', { body: { events } }).catch(() => undefined);
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(flush, FLUSH_INTERVAL_MS);
+    const timer = setInterval(() => {
+      void flush();
+    }, FLUSH_INTERVAL_MS);
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') {
-        flush();
+        void flush();
       }
     };
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
       clearInterval(timer);
       document.removeEventListener('visibilitychange', onVisibility);
-      flush();
+      void flush();
     };
   }, [flush]);
 
