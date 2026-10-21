@@ -74,3 +74,73 @@ Açık `TODO(spec)` notu yok. Config yapısı (eski 1. not) karara bağlandı.
 ### Açık işler (sonraki aşamalara devredilen)
 
 - **Health ayrıntıları ADMIN'e bağlanmalı (2. aşama):** `application.yml` şu an `show-details: when-authorized` ve `roles: ADMIN`. Spring Security henüz olmadığı için kimse yetkili değil; herkese yalnızca toplam durum (`status`) görünür. 2. aşamada Security yapılandırılınca ADMIN token'ıyla ayrıntıların göründüğü, öğrenci token'ıyla görünmediği testlenmeli ve `HealthEndpointIT`'deki `show-details=always` override'ı kaldırılmalı.
+
+## 1. aşama: Veri modeli ve seed
+
+**Branch:** `feat/01-data-model-and-seed` · **Tarih:** 2026-10-21
+
+### Yapılanlar
+
+- **Şema (V1–V9):** 18 iş tablosu ve Modulith'in `event_publication` outbox tablosu; her modülün tabloları ayrı migration'da. Modüller arası FK yok (ADR 0005), enum'lar `CHECK` kısıtlı, sorgulanan `*_id` kolonları indeksli.
+- **Veritabanı güvenceleri:** tek `IN_PROGRESS` deneme (kısmi unique indeks), `exam_attempt` / `learner_topic_mastery` / `points_streak` için `@Version`, aynı soruya ikinci cevap / aynı puan / aynı sinyal için unique kısıtlar, ustalık için `double precision` + 0–1 `CHECK`.
+- **Entity'ler:** her modülün `persistence` paketinde; birbirine id ile referans veriyor (JPA ilişkisi yok); zaman damgaları `Clock`'tan.
+- **Etiketleme:** `TextNormalizer` ve `KeywordTagger` saf Java (kelime başı eşleşmesi, ünsüz yumuşaması, kısa token'larda tam eşleşme, şapkalı ünlüler); `ContentCreated` modül içi event'i ve asenkron `ContentTagging` dinleyicisi.
+- **Seed:** `shared.api.DemoDataLoader` + `admin` modülündeki `DemoDataSeeder` (yalnızca `demo` profili). 4 kullanıcı, 10 konu, 34 anahtar kelime, 40 video (36 LIVE + 4 otomatik etiketlenen), 48 mikro-soru, 2 mini deneme (24 soru). Upsert kuralları docs/seed-verisi.md'deki gibi.
+- **Soru doğrulama:** her sorunun cevaptan bağımsız `check` ifadesi, test tarafında tam kesirli bir hesaplayıcıyla hesaplanıyor; doğru şıkla eşitlik ve diğer şıklardan farklılık kontrol ediliyor. Hesaplayıcının kendi birim testleri var; bozuk bir cevap anahtarıyla testin kırıldığı doğrulandı.
+- **Test altyapısı:** container'lar yalnızca ihtiyaç duyulunca başlıyor; veritabanı testleri yalnızca PostgreSQL kullanıyor.
+
+### Kabul kriterleri
+
+| Kriter | Durum |
+| --- | --- |
+| Migration'lar Testcontainers üzerinde temiz veritabanına uygulanır | Geçti (`MigrationIT`, `SchemaConventionsIT`; Hibernate `validate` dahil) |
+| Seed tekrar çalıştırıldığında veriyi çoğaltmaz | Geçti (`DemoSeedIT` ve yükleyici başına IT'ler; Compose'a karşı iki başlatmada elle de doğrulandı) |
+| Seed sonrası 10 konu, 40 video, 2 mini deneme ve 4 kullanıcı | Geçti (`DemoSeedIT`) |
+
+### Öz-değerlendirme (docs/kod-standartlari.md §7)
+
+**Mimari**
+- [x] Modül sınırları: her modül yalnızca kendi tablolarına yazıyor (seed dahil); `verify()` ve ArchUnit geçiyor. `admin` seed'i yalnızca `shared.api` arayüzü üzerinden yönetiyor.
+- [x] Domain saflığı: etiketleme, `AttemptScore`, `ServedCard` vb. Spring/JPA/Jackson içermiyor.
+- [x] Controller yok (bu aşamada API yok).
+- [x] Senkron/asenkron: içerik etiketleme modül içi asenkron event ile; Kafka henüz kullanılmıyor.
+
+**Doğruluk**
+- [x] Event'ler outbox üzerinden: `ContentCreated` Modulith event publication registry'ye yazılıyor.
+- [x] Tüketiciler idempotent: etiketleme yalnızca `DRAFT` videoda çalışıyor; tekrar oynatılan event'in sonucu değiştirmediği test edildi.
+- [x] Eşzamanlılık: kilitleme ve unique kısıtlar persistence testleriyle doğrulandı.
+- [ ] Kaynak sahipliği ve `correct_key`'in sızmaması: API olmadığı için 2.–6. aşamalarda.
+
+**Performans**
+- [x] Sorgulanan kolonlarda indeks (otomatik kontrol). N+1 için entity'ler arası JPA ilişkisi kullanılmadı.
+
+**Okunabilirlik**
+- [x] Sihirli sayı yok: etiketleme eşiği config'de (`prescription.content.tagging.min-confidence`), algoritma sabitleri isimli ve algoritma.md'ye referanslı.
+- [x] Alan dili isimlerde: `CandidatePool`, `ServedCard`, `ScoreBreakdown`, `KeywordTagger`, `TopicMastery`.
+
+**Test**
+- [x] Her davranışın testi aynı commit'te; hata yolları (kısıt ihlalleri, geçersiz config, bozuk ifade) test edildi.
+- [x] Deterministik: sabit zaman damgaları; paylaşılan veritabanında testler kendi verisini temizliyor ya da seed verisine dayanıklı.
+- [x] Arka arkaya 3 tam `verify` yeşil (container başlatma düzeltmesinden sonra).
+
+**Teslim**
+- [x] Küçük, Conventional Commits biçiminde commit'ler; şema kararları dokümanlara işlendi.
+
+### Bu aşamada alınan kararlar ve sapmalar
+
+- **Ünsüz yumuşaması:** onaylanan kelime başı kuralı algoritma.md'nin kendi örneğini (`olasilik` → "olasılığın") karşılamıyordu; p/t/k → b/d/g kuralı eklendi ve dokümana işlendi.
+- **Şapkalı ünlüler:** `â, î, û` da normalize ediliyor ("kâr" bölünmesin diye).
+- **`points_ledger.created_at` uygulamadan:** günlük puan sınırı `Clock`'a göre hesaplanabilsin diye.
+- **Modulith Documenter hatası:** Javadoc'ta çift tırnak varsa modül dokümanı üretimi çöküyor; Javadoc'larda çift tırnak kullanılmıyor.
+- **SpotBugs istisnaları:** JPA entity'leri için `CT_CONSTRUCTOR_THROW`, `URF_UNREAD_FIELD`, `UWF_UNWRITTEN_FIELD` yalnızca `persistence` paketlerinde, gerekçeli.
+- **Seed'deki editör id'si:** content seed'i, onaylayan admin için users.json'daki sabit id'yi kullanıyor (content modülü auth tablosunu okuyamaz).
+
+### TODO(spec) notları
+
+Açık `TODO(spec)` notu yok.
+
+### Açık işler
+
+- Health ayrıntılarının ADMIN'e bağlanması (2. aşama, yukarıda).
+- Persona'lar (`WEAK_PROBLEMS`, `SCRIPTED_EXAM`, `SCRIPTED_IN_PROGRESS`) 7. aşamada; şu an tüm kullanıcılar boş durumda seed'leniyor.
+- Seed sorularının editör kontrolü: testler hesabı ve tek doğru cevabı doğruluyor, sorunun metninin ifadeyle aynı şeyi sorduğunu doğrulayamaz.
