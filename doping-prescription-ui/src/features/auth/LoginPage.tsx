@@ -7,7 +7,7 @@ import { BrandLogo } from '@/shared/ui/BrandLogo';
 
 import { type DemoLogin, useDemoLogin, useDemoUsers } from './api';
 
-const HOME = { STUDENT: '/app/dopingle', ADMIN: '/admin' };
+const HOME = { STUDENT: '/app', ADMIN: '/admin' };
 
 /** Demo login: pick a student card, or the small admin link (docs/arayuz.md, route /). */
 export function LoginPage() {
