@@ -12,7 +12,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
-@SpringBootTest
+// Details are ADMIN-only in application.yml; this test is about the indicators, not about who may see them.
+// TODO(phase 2): replace the override with an authenticated ADMIN request once Spring Security is configured.
+@SpringBootTest(properties = "management.endpoint.health.show-details=always")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 class HealthEndpointIT {

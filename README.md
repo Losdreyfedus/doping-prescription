@@ -31,7 +31,7 @@ cd doping-prescription-ui && npm ci && npm run dev
 | Adres | İçerik |
 | --- | --- |
 | http://localhost:5173 | Web uygulaması |
-| http://localhost:8080/actuator/health | Sağlık durumu (postgres, redis, kafka) |
+| http://localhost:8080/actuator/health | Sağlık durumu; postgres, redis ve kafka ayrıntıları yalnızca ADMIN'e görünür (2. aşamadan itibaren) |
 | http://localhost:8090 | Kafka UI (isteğe bağlı: `docker compose --profile tools up -d`) |
 
 ## Test ve kalite komutları

@@ -23,9 +23,10 @@ management:
         include: health, info, metrics
   endpoint:
     health:
-      # Demo setup: component details let the presenter verify postgres, redis and kafka at a glance.
-      # TODO(spec): restrict to ADMIN once Spring Security is configured in phase 2.
-      show-details: always
+      # Component details (postgres, redis, kafka) only for authorized ADMIN users; until Spring Security is
+      # configured in phase 2 nobody is authorized, so only the aggregate status is public.
+      show-details: when-authorized
+      roles: ADMIN
 
 prescription:
   timezone: Europe/Istanbul

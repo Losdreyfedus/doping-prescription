@@ -8,7 +8,7 @@
 
 - Repo hijyeni: `.gitignore`, `.gitattributes` (LF zorunlu), `.editorconfig`.
 - `docker-compose.yml`: PostgreSQL 16.15, Redis 7.4.11, Kafka 4.3.2 (KRaft, tek node), isteğe bağlı kafka-ui (`tools` profili). Üç servis de healthcheck ile `healthy` durumuna geliyor.
-- Backend iskeleti: Spring Boot 4.1.1 ve Spring Modulith 2.1.1 BOM olarak; 10 modül paketi (`shared` OPEN); `Clock` bean'i `prescription.timezone` ile.
+- Backend iskeleti: Spring Boot 4.1.1 (`spring-boot-starter-parent`) ve Spring Modulith 2.1.1 (BOM); 10 modül paketi (`shared` OPEN); `Clock` bean'i `prescription.timezone` ile.
 - `GET /actuator/health`: db, redis ve özel `KafkaHealthIndicator` ile kafka. Hem Testcontainers entegrasyon testinde hem gerçek Compose yığınında `UP` doğrulandı.
 - Kalite kapıları `verify` fazında: Spotless (palantir), Checkstyle, SpotBugs, JaCoCo (`domain` + `application` %80), Spring Modulith `verify()`, ArchUnit.
 - Frontend iskeleti: React 19, Vite 8, TypeScript 6.0 strict, Tailwind 4 ve tüm tasarım değişkenleri, şirket logosu, ESLint/Prettier/Vitest, `npm run check`.
@@ -59,14 +59,18 @@
 
 ### Bu aşamada alınan kararlar ve sapmalar
 
-- **Spring Boot parent yerine BOM import:** Boot ve Modulith sürümleri pom'da property olarak tutuluyor. Bunun bedeli, parent'ın sağladığı şeylerin (eklenti sürümleri, `-parameters`, `repackage`, failsafe `classesDirectory`) açıkça yazılması oldu.
-- **Kafka health indicator'ı `shared.messaging` içinde:** ADR 0005'teki "event zarfı" alanını "event/mesajlaşma altyapısı" olarak yorumladım.
+- **`spring-boot-starter-parent`:** İlk denemede Boot BOM olarak import edildi; parent'ın sağladığı eklenti sürümlerini ve ayarları elle tekrar yazmak gerektiği için parent'a dönüldü. pom'da yalnızca gerçek özelleştirmeler var: Modulith BOM, toolchain enforcer kuralı ve parent'ın yönetmediği kalite eklentileri. Çalıştırılabilir jar elle doğrulandı.
+- **Kafka health indicator'ı `shared.messaging` içinde:** ADR 0005'e `shared`'ın beşinci alanı olarak "mesajlaşma altyapısı (Kafka yapılandırması ve health)" eklendi.
+- **Config modül başına:** Her modül kendi `prescription.<modül>.*` grubunu kendi `@ConfigurationProperties` record'uyla bağlar (algoritma.md §9). `shared` altyapı anahtarları (`prescription.timezone`, `prescription.health.*`) modül adı taşımaz.
 - **TypeScript 6.0 ve ESLint 9:** typescript-eslint TypeScript'i < 6.1 ile, jsx-a11y ise ESLint'i 9 ile sınırlıyor.
 - **ArchUnit 1.4.2:** Hiçbir BOM yönetmiyor; Modulith'in getirdiği sürümle hizalandı.
 - **Commit sırası:** Docker motoru başta çalışmadığı için health commit'i (planda 4.) kalite kapıları, ArchUnit ve UI commit'lerinden sonra atıldı.
-- **JDK:** Bu makinede Oracle JDK 21.0.12 kurulu; CI Temurin 21 kullanıyor.
+- **JDK:** Doğrulamalar Temurin 21.0.12 ile yapıldı; CI da Temurin 21 kullanıyor.
 
 ### TODO(spec) notları
 
-1. `shared/time/TimeProperties.java`: algoritma.md §9 tek bir `PrescriptionProperties` record'u tarif ediyor. Modül sınırlarını korumak için her modülün kendi `prescription.*` grubunu bağlamasını öneriyorum; 1. aşamadan önce karar gerekiyor.
-2. `application.yml`: health ayrıntıları (`show-details: always`) herkese açık; 2. aşamada Spring Security ile ADMIN'e kısıtlanmalı.
+Açık `TODO(spec)` notu yok. Config yapısı (eski 1. not) karara bağlandı.
+
+### Açık işler (sonraki aşamalara devredilen)
+
+- **Health ayrıntıları ADMIN'e bağlanmalı (2. aşama):** `application.yml` şu an `show-details: when-authorized` ve `roles: ADMIN`. Spring Security henüz olmadığı için kimse yetkili değil; herkese yalnızca toplam durum (`status`) görünür. 2. aşamada Security yapılandırılınca ADMIN token'ıyla ayrıntıların göründüğü, öğrenci token'ıyla görünmediği testlenmeli ve `HealthEndpointIT`'deki `show-details=always` override'ı kaldırılmalı.
