@@ -73,6 +73,15 @@ public class ContentItem {
         this.updatedAt = Objects.requireNonNull(now, "now");
     }
 
+    /** Keyword tagging found topics for this draft; an editor still has to approve them before it goes LIVE. */
+    public void markTagged(Instant now) {
+        if (status != ContentStatus.DRAFT) {
+            throw new IllegalStateException("Only a DRAFT video can be tagged, video " + id + " is " + status);
+        }
+        this.status = ContentStatus.TAGGED;
+        this.updatedAt = now;
+    }
+
     public Integer getId() {
         return id;
     }

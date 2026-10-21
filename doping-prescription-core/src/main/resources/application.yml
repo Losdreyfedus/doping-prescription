@@ -46,3 +46,6 @@ prescription:
   health:
     kafka:
       timeout: 2s
+  content:
+    tagging:
+      min-confidence: 0.5
