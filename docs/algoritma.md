@@ -50,8 +50,8 @@ Tek bir tanım vardır (`domain` paketinde `MasteryBand`) ve hem Eksiklerim ekra
 | Bant | Koşul |
 | --- | --- |
 | `UNKNOWN` | Konuda mastery'yi etkileyen hiç sinyal yok (`attempts = 0`) |
-| `WEAK` | `m_etkin < mastery.band.weak_threshold` (0.6) |
-| `MEDIUM` | `m_etkin < mastery.band.strong_threshold` (0.8) |
+| `WEAK` | `m_etkin < learner.mastery.band.weak-threshold` (0.6) |
+| `MEDIUM` | `m_etkin < learner.mastery.band.strong-threshold` (0.8) |
 | `STRONG` | Diğer durumlar |
 
 ### Örnek (demo senaryosu, varsayılan config)
@@ -126,7 +126,7 @@ Akış Redis'te kullanıcı başına bir kuyruk olarak tutulur (`feed:queue:{use
 
 Anahtar kelime başlıkta eşleşiyorsa `weight · 1.0`, yalnızca açıklamada eşleşiyorsa `weight · 0.5` eklenir. Konu skoru 1 ile sınırlıdır. Negatif anahtar kelime eşleşirse konu skoru 0 olur.
 
-**Sonuç:** Skoru `tagging.min_confidence` (0.5) ve üstündeki konular `content_topic_map`'e `tag_source = KEYWORD_RULE`, `weight = skor`, `confidence = skor` ile yazılır, video `TAGGED` olur. Hiç eşleşme yoksa video `DRAFT` kalır. Admin onayıyla (`POST /api/admin/content/:id/tags`) etiket kesinleşir ve video `LIVE` olur.
+**Sonuç:** Skoru `content.tagging.min-confidence` (0.5) ve üstündeki konular `content_topic_map`'e `tag_source = KEYWORD_RULE`, `weight = skor`, `confidence = skor` ile yazılır, video `TAGGED` olur. Hiç eşleşme yoksa video `DRAFT` kalır. Admin onayıyla (`POST /api/admin/content/:id/tags`) etiket kesinleşir ve video `LIVE` olur.
 
 ## 6. "Neden bu video?" şablonları
 
@@ -163,50 +163,56 @@ Suistimal önlemleri: soru yalnız `quiz.min_watch_ratio` izlendikten sonra aç�
 
 Etki paneli, gerçek veri olmadığı için **açıkça etiketlenmiş bir simülasyon** gösterir. Amaç, "ölçüm böyle yapılacak" sorusunu görsel olarak cevaplamaktır, etki iddia etmek değil.
 
-- `impact.student_count` (400) sentetik öğrenci, `impact.seed` (42) ile deterministik üretilir; yarısı kontrol, yarısı deney grubu.
+- `simulation.impact.student-count` (400) sentetik öğrenci, `simulation.impact.seed` (42) ile deterministik üretilir; yarısı kontrol, yarısı deney grubu.
 - Her öğrencinin 10 konuda gizli bir "gerçek beceri" değeri vardır (0.2–0.9 arası rastgele).
-- 4 hafta boyunca her hafta: 12 soruluk bir deneme (doğru olasılığı = beceri), ardından `impact.videos_per_week` (15) video izleme.
+- 4 hafta boyunca her hafta: 12 soruluk bir deneme (doğru olasılığı = beceri), ardından `simulation.impact.videos-per-week` (15) video izleme.
 - Deney grubu videolarını mevcut algoritmayla seçer (simüle mastery üzerinden); kontrol grubu rastgele seçer.
-- Bir video, izlendiği konunun becerisini `impact.gain_per_video` (0.01) kadar artırır, en fazla 0.95'e kadar.
+- Bir video, izlendiği konunun becerisini `simulation.impact.gain-per-video` (0.01) kadar artırır, en fazla 0.95'e kadar.
 - Çıktı: haftalık ortalama net (iki çizgi), başlangıçtaki en zayıf 2 konudaki doğru oranı değişimi (iki çubuk), grup büyüklükleri.
 
 Ekranda ve API yanıtında "Simülasyon verisi; sonuçlar model varsayımlarından gelir, gerçek kullanıcı etkisi değildir" notu bulunur.
 
 ## 9. Config
 
-Değerler `doping-prescription-core/src/main/resources/application.yml` içinde `prescription.` önekiyle ve Spring'in kebab-case biçimiyle yazılır (örn. `feed.weak_threshold` → `prescription.feed.weak-threshold`). `@ConfigurationProperties(prefix = "prescription")` ile bağlanan, `@Validated` iç içe record'lar (`PrescriptionProperties.Mastery`, `.Feed`, `.Quiz`, `.Points`, `.Tagging`, `.Demo`, `.Impact`) üzerinden okunur; geçersiz değerde (örn. toplamı 1 olmayan kotalar) uygulama başlamaz. Ortam değişkeniyle ezilebilir. Süreler `java.time.Duration` tipindedir ve yml'de `30m`, `5m` biçiminde yazılır. Algoritma sınıfları config record'unu değil, kendi ihtiyaç duyduğu değerleri taşıyan küçük parametre nesnelerini alır; böylece domain paketi Spring'e bağımlı olmaz.
+Değerler `doping-prescription-core/src/main/resources/application.yml` içinde, Spring'in kebab-case biçimiyle yazılır. **Her modül kendi grubunu, kendi paketindeki `@Validated @ConfigurationProperties` record'uyla bağlar** (`prescription.<modül>.*`): başka bir modülün config'ini okuyan modül yoktur, config de modül sınırlarına uyar. Geçersiz değerde (örn. toplamı 1 olmayan kotalar) uygulama başlamaz. Ortam değişkeniyle ezilebilir. Süreler `java.time.Duration` tipindedir ve yml'de `30m`, `5m` biçiminde yazılır. Algoritma sınıfları config record'unu değil, kendi ihtiyaç duyduğu değerleri taşıyan küçük parametre nesnelerini alır; böylece domain paketi Spring'e bağımlı olmaz.
 
-| Anahtar | Varsayılan |
-| --- | --- |
-| timezone | Europe/Istanbul |
-| mastery.alpha | 0.3 |
-| mastery.initial | 0.5 |
-| mastery.confidence_k | 5 |
-| mastery.decay_lambda | 0.01 |
-| mastery.signal_weights | EXAM 1.0, EXAM_BLANK 0.8, QUIZ 0.4 |
-| mastery.change_event_threshold | 0.05 |
-| mastery.band.weak_threshold / mastery.band.strong_threshold | 0.6 / 0.8 |
-| feed.page_size / feed.page_size_max | 10 / 20 |
-| feed.queue_size / feed.queue_ttl | 30 / 30m |
-| feed.queue_refill_threshold | 5 |
-| feed.quota | WEAK 0.60, REVIEW 0.15, EXPLORE 0.15, POPULAR 0.10 |
-| feed.cold_start_quota | EXPLORE 0.70, POPULAR 0.30 |
-| feed.weak_topic_count | 5 |
-| feed.review_after_days | 7 |
-| feed.rank_weights | 0.45 / 0.20 / 0.15 / 0.10 / 0.10 |
-| feed.exam_near_days / feed.exam_near_weight | 60 / 0.30 |
-| feed.max_same_topic_in_row | 2 |
-| feed.rewatch_block_days | 14 |
-| feed.skip_defer_count | 3 |
-| quiz.min_watch_ratio | 0.70 |
-| quiz.time_limit_sec | 60 |
-| quiz.token_ttl | 5m |
-| quiz.min_response_ms | 2000 |
-| quiz.rate_limit_per_min | 30 |
-| points.correct / points.weak_topic_correct | 10 / 15 |
-| points.streak_length / points.streak_bonus | 5 / 20 |
-| points.daily_cap | 200 |
-| tagging.min_confidence | 0.5 |
-| demo.video_speed | 4 |
-| impact.student_count / impact.seed | 400 / 42 |
-| impact.videos_per_week / impact.gain_per_video | 15 / 0.01 |
+Altyapı ayarları `shared` modülüne aittir ve modül adı taşımaz: `prescription.timezone` (`shared.time.TimeProperties`) ve `prescription.health.kafka.timeout` (`shared.messaging.KafkaHealthProperties`, varsayılan `2s`).
+
+Bu dokümandaki kısa adlar (örn. `feed.page_size`) aşağıdaki tam anahtarlara karşılık gelir.
+
+| Modül | Record | Anahtar (`prescription.` önekiyle) | Varsayılan |
+| --- | --- | --- | --- |
+| shared | `TimeProperties` | `timezone` | Europe/Istanbul |
+| learner | `LearnerProperties` | `learner.mastery.alpha` | 0.3 |
+| learner | | `learner.mastery.initial` | 0.5 |
+| learner | | `learner.mastery.confidence-k` | 5 |
+| learner | | `learner.mastery.decay-lambda` | 0.01 |
+| learner | | `learner.mastery.signal-weights` | EXAM 1.0, EXAM_BLANK 0.8, QUIZ 0.4 |
+| learner | | `learner.mastery.change-event-threshold` | 0.05 |
+| learner | | `learner.mastery.band.weak-threshold` / `strong-threshold` | 0.6 / 0.8 |
+| feed | `FeedProperties` | `feed.page-size` / `feed.page-size-max` | 10 / 20 |
+| feed | | `feed.queue-size` / `feed.queue-ttl` | 30 / 30m |
+| feed | | `feed.queue-refill-threshold` | 5 |
+| feed | | `feed.quota` | WEAK 0.60, REVIEW 0.15, EXPLORE 0.15, POPULAR 0.10 |
+| feed | | `feed.cold-start-quota` | EXPLORE 0.70, POPULAR 0.30 |
+| feed | | `feed.weak-topic-count` | 5 |
+| feed | | `feed.review-after-days` | 7 |
+| feed | | `feed.rank-weights` | 0.45 / 0.20 / 0.15 / 0.10 / 0.10 |
+| feed | | `feed.exam-near-days` / `feed.exam-near-weight` | 60 / 0.30 |
+| feed | | `feed.max-same-topic-in-row` | 2 |
+| feed | | `feed.rewatch-block-days` | 14 |
+| feed | | `feed.skip-defer-count` | 3 |
+| feed | | `feed.demo-video-speed` | 4 (akış yanıtıyla web'e iletilir) |
+| quiz | `QuizProperties` | `quiz.min-watch-ratio` | 0.70 |
+| quiz | | `quiz.time-limit-sec` | 60 |
+| quiz | | `quiz.token-ttl` | 5m |
+| quiz | | `quiz.min-response-ms` | 2000 |
+| quiz | | `quiz.rate-limit-per-min` | 30 |
+| points | `PointsProperties` | `points.correct` / `points.weak-topic-correct` | 10 / 15 |
+| points | | `points.streak-length` / `points.streak-bonus` | 5 / 20 |
+| points | | `points.daily-cap` | 200 |
+| content | `ContentProperties` | `content.tagging.min-confidence` | 0.5 |
+| simulation | `SimulationProperties` | `simulation.impact.student-count` / `simulation.impact.seed` | 400 / 42 |
+| simulation | | `simulation.impact.videos-per-week` / `simulation.impact.gain-per-video` | 15 / 0.01 |
+
+Bant eşikleri yalnızca `learner` modülündedir; `feed` modülü bandı `LearnerProfileQuery` üzerinden hazır alır, eşikleri kendisi okumaz (tek kaynak, §1).

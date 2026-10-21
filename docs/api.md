@@ -360,4 +360,4 @@ Topic'ler uygulama başlangıcında `NewTopic` bean'leriyle oluşturulur; demo i
 }
 ```
 
-Yalnızca en az bir konuda değişim `prescription.mastery.change-event-threshold` değerini geçerse yayınlanır. Feed modülü bu event'te kullanıcının Redis akış kuyruğunu siler; bir sonraki `GET /api/feed` kuyruğu yeniden kurar.
+Yalnızca en az bir konuda değişim `prescription.learner.mastery.change-event-threshold` değerini geçerse yayınlanır. Feed modülü bu event'te kullanıcının Redis akış kuyruğunu siler; bir sonraki `GET /api/feed` kuyruğu yeniden kurar.

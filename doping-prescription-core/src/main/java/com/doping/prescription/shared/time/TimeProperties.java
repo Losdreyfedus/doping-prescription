@@ -10,8 +10,6 @@ import org.springframework.validation.annotation.Validated;
  *
  * @param timezone zone that defines where a "day" starts and ends
  */
-// TODO(spec): docs/algoritma.md §9 describes one PrescriptionProperties record with nested groups.
-// Each module will bind its own group under "prescription.*" to keep config inside module boundaries.
 @Validated
 @ConfigurationProperties(prefix = "prescription")
 public record TimeProperties(@NotNull ZoneId timezone) {}

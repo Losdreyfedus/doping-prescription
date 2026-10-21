@@ -80,6 +80,6 @@ Ana mesaj: **"Öğrenci hiçbir şey yapmadı; sistem denemeden eksiğini kendis
 | Deneme gönderme → Eksiklerim güncel | En geç 2 sn |
 | Deneme gönderme → yeni akış hazır | En geç 2 sn |
 | Akış isteği yanıt süresi | p95 < 150 ms (lokalde) |
-| Video demo hızı | `demo.video_speed` config değeri, varsayılan 4 |
+| Video demo hızı | `feed.demo-video-speed` config değeri, varsayılan 4 |
 | Sıfırla işlemi | Tekrarlanabilir, 1 sn altında |
 | Toplam demo süresi | 3 dakikanın altında |

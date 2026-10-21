@@ -124,7 +124,7 @@ API `http://localhost:8080`, web `http://localhost:5173`, OpenAPI arayüzü `htt
 5. **Doğru cevap sızmaz.** `correct_key` hiçbir öğrenci yanıtında, log'da veya event'te yer almaz; cevap kontrolü her zaman sunucuda yapılır.
 6. **İdempotent yazma.** Event'lerde `eventId`, etkileşimlerde `clientEventId`, puanda `refId` tekrar işlenmez.
 7. **Akış asla hata vermez.** Profil veya sıralama hata verirse kullanıcıya `personalized: false` ile fallback akış döner.
-8. **Sayısal değerler config'de.** `docs/algoritma.md` §9'daki her değer `application.yml` içindeki `prescription.*` altından, doğrulanmış bir `@ConfigurationProperties` record'u ile okunur.
+8. **Sayısal değerler config'de.** `docs/algoritma.md` §9'daki her değer `application.yml` içindeki `prescription.*` altından okunur; her modül kendi `prescription.<modül>.*` grubunu kendi doğrulanmış `@ConfigurationProperties` record'uyla bağlar.
 9. **Arayüz dili Türkçe**, kod, tablo, kolon, endpoint, commit mesajı ve kod yorumları İngilizce.
 10. **Belirsizlikte sessiz tahmin yok.** Varsayım yaptığın yere `TODO(spec):` yorumu bırak ve iş sonunda liste halinde raporla. Önemli bir teknik karar alırsan `docs/adr/` altına yeni bir ADR yaz.
 11. **Telifli içerik kullanma.** İnternetten video, görsel, logo veya soru indirme. Videolar için `docs/arayuz.md` içindeki simüle oynatıcıyı kullan.
