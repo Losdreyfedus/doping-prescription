@@ -81,6 +81,173 @@
         "tags" : [ "auth-controller" ]
       }
     },
+    "/api/exam-attempts/{attemptId}" : {
+      "get" : {
+        "operationId" : "attempt",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "attemptId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AttemptView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "exam-controller" ]
+      }
+    },
+    "/api/exam-attempts/{attemptId}/answers/{questionId}" : {
+      "put" : {
+        "operationId" : "saveAnswer",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "attemptId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "path",
+          "name" : "questionId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SaveAnswerRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [ "exam-controller" ]
+      }
+    },
+    "/api/exam-attempts/{attemptId}/result" : {
+      "get" : {
+        "operationId" : "result",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "attemptId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExamResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "exam-controller" ]
+      }
+    },
+    "/api/exam-attempts/{attemptId}/submit" : {
+      "post" : {
+        "operationId" : "submit",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "attemptId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExamResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "exam-controller" ]
+      }
+    },
+    "/api/exams" : {
+      "get" : {
+        "operationId" : "exams",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ExamSummary"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "exam-controller" ]
+      }
+    },
+    "/api/exams/{examId}/attempts" : {
+      "post" : {
+        "operationId" : "start",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "examId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AttemptView"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "tags" : [ "exam-controller" ]
+      }
+    },
     "/api/me" : {
       "get" : {
         "operationId" : "me",
@@ -102,6 +269,43 @@
   },
   "components" : {
     "schemas" : {
+      "AttemptView" : {
+        "required" : [ "answers", "attemptId", "durationMin", "examId", "questions", "startedAt", "title" ],
+        "type" : "object",
+        "properties" : {
+          "answers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SavedAnswer"
+            }
+          },
+          "attemptId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "durationMin" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "examId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "questions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/QuestionView"
+            }
+          },
+          "startedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "title" : {
+            "type" : "string"
+          }
+        }
+      },
       "DemoLoginRequest" : {
         "required" : [ "slug" ],
         "type" : "object",
@@ -141,6 +345,112 @@
           }
         }
       },
+      "ExamOption" : {
+        "required" : [ "key", "text" ],
+        "type" : "object",
+        "properties" : {
+          "key" : {
+            "type" : "string"
+          },
+          "text" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ExamResult" : {
+        "required" : [ "attemptId", "blank", "byTopic", "correct", "examId", "net", "profileUpdate", "questions", "title", "wrong" ],
+        "type" : "object",
+        "properties" : {
+          "attemptId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "blank" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "byTopic" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TopicResult"
+            }
+          },
+          "correct" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "examId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "net" : {
+            "type" : "number"
+          },
+          "profileUpdate" : {
+            "$ref" : "#/components/schemas/ProfileUpdate"
+          },
+          "questions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/QuestionResult"
+            }
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "wrong" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "ExamSummary" : {
+        "required" : [ "durationMin", "examId", "lastResult", "questionCount", "title" ],
+        "type" : "object",
+        "properties" : {
+          "durationMin" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "examId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "inProgressAttemptId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "nullable" : true
+          },
+          "lastResult" : {
+            "$ref" : "#/components/schemas/LastResult"
+          },
+          "questionCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "title" : {
+            "type" : "string"
+          }
+        }
+      },
+      "LastResult" : {
+        "required" : [ "attemptId", "net", "submittedAt" ],
+        "type" : "object",
+        "properties" : {
+          "attemptId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "net" : {
+            "type" : "number"
+          },
+          "submittedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "nullable" : true
+      },
       "MeResponse" : {
         "required" : [ "displayName", "personalizationEnabled", "role", "slug", "userId" ],
         "type" : "object",
@@ -166,6 +476,134 @@
           "userId" : {
             "type" : "string",
             "format" : "uuid"
+          }
+        }
+      },
+      "ProfileUpdate" : {
+        "required" : [ "status" ],
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string"
+          }
+        }
+      },
+      "QuestionResult" : {
+        "required" : [ "correctKey", "explanation", "options", "orderNo", "questionId", "result", "stem" ],
+        "type" : "object",
+        "properties" : {
+          "correctKey" : {
+            "type" : "string"
+          },
+          "explanation" : {
+            "type" : "string"
+          },
+          "options" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ExamOption"
+            }
+          },
+          "orderNo" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "questionId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "result" : {
+            "type" : "string",
+            "enum" : [ "CORRECT", "WRONG", "BLANK" ]
+          },
+          "selectedKey" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "stem" : {
+            "type" : "string"
+          }
+        }
+      },
+      "QuestionView" : {
+        "required" : [ "options", "orderNo", "questionId", "stem" ],
+        "type" : "object",
+        "properties" : {
+          "options" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ExamOption"
+            }
+          },
+          "orderNo" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "questionId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "stem" : {
+            "type" : "string"
+          }
+        }
+      },
+      "SaveAnswerRequest" : {
+        "type" : "object",
+        "properties" : {
+          "selectedKey" : {
+            "pattern" : "[A-E]",
+            "type" : "string",
+            "nullable" : true
+          },
+          "timeSpentSec" : {
+            "minimum" : 0,
+            "type" : "integer",
+            "format" : "int32",
+            "nullable" : true
+          }
+        }
+      },
+      "SavedAnswer" : {
+        "required" : [ "questionId" ],
+        "type" : "object",
+        "properties" : {
+          "questionId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "selectedKey" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        }
+      },
+      "TopicResult" : {
+        "required" : [ "blank", "correct", "name", "topicId", "total", "wrong" ],
+        "type" : "object",
+        "properties" : {
+          "blank" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "correct" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "topicId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "wrong" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },

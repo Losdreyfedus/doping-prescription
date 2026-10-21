@@ -25,6 +25,12 @@ spring:
       port: ${PRESCRIPTION_REDIS_PORT:6379}
   kafka:
     bootstrap-servers: ${PRESCRIPTION_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      # Key = userId (string). Spring Modulith hands over the event already serialized to JSON bytes, so the value is
+      # written as-is; a JSON serializer here would wrap it again as a base64 string.
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+      acks: all
 
 server:
   port: 8080

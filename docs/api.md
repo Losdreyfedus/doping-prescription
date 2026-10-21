@@ -29,6 +29,7 @@ Hata formatı RFC 9457 `ProblemDetail`, ek alan `code`:
 | GET | `/api/me` | auth | Oturumdaki kullanıcı |
 | GET | `/api/exams` | exam | Denemeler ve son sonuç özeti |
 | POST | `/api/exams/:examId/attempts` | exam | Denemeyi başlat, soruları al |
+| GET | `/api/exam-attempts/:attemptId` | exam | Devam eden denemeyi soruları ve kayıtlı cevaplarıyla getir (çözme ekranı yenilenince) |
 | PUT | `/api/exam-attempts/:attemptId/answers/:questionId` | exam | Cevap kaydet veya boşalt |
 | POST | `/api/exam-attempts/:attemptId/submit` | exam | Denemeyi bitir |
 | GET | `/api/exam-attempts/:attemptId/result` | exam | Sonuç |

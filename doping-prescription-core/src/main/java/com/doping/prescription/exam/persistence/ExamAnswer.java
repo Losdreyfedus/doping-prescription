@@ -43,6 +43,13 @@ public class ExamAnswer {
         this.updatedAt = Objects.requireNonNull(now, "now");
     }
 
+    /** The learner changed or cleared the answer while the attempt is in progress. */
+    public void change(String newSelectedKey, Integer newTimeSpentSec, Instant now) {
+        this.selectedKey = newSelectedKey;
+        this.timeSpentSec = newTimeSpentSec;
+        this.updatedAt = now;
+    }
+
     public void grade(AnswerResult result, Instant now) {
         this.result = Objects.requireNonNull(result, "result");
         this.updatedAt = now;
