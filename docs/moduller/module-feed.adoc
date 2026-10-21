@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Candidate pools, ranking, feed queue and interactions.
+|Base package
+|`com.doping.prescription.feed`
+|===

@@ -49,13 +49,13 @@ Kök paket: `com.doping.prescription`. Her modül bu kökün altında bir pakett
 | `points` | Puan defteri, seri | points_ledger, points_streak | — | — | `PointsLedger` |
 | `admin` | Demo kontrolü, debug, içerik yönetimi ekranlarının API'si | — | — | — | — |
 | `simulation` | Etki paneli simülasyonu | — | — | — | — |
-| `shared` | Ortak altyapı: hata modeli, event zarfı, saat, idempotency. **Açık (OPEN) modül**, iş mantığı içermez | processed_event | — | — | `UserDataEraser`, `DomainEvent` |
+| `shared` | Ortak altyapı: hata modeli, event zarfı, saat, idempotency, mesajlaşma altyapısı (Kafka yapılandırması ve health). **Açık (OPEN) modül**, iş mantığı içermez | processed_event | — | — | `UserDataEraser`, `DomainEvent` |
 
 Kurallar:
 
 - Bir modül başka bir modülün yalnızca `api` paketindeki tiplerini ve event'lerini kullanır. Repository, entity, iç servis kullanımı yasaktır. `ModularityTests` içinde `ApplicationModules.of(PrescriptionApplication.class).verify()` bunu zorlar; ayrıca Spring Modulith dokümantasyon üreticisiyle `docs/moduller/` altına modül diyagramı üretilir.
 - Döngüsel modül bağımlılığı yoktur. Örneğin `quiz` → `points` bağımlılığı tek yönlüdür: seri `points` içinde tutulur, `points` hiçbir zaman `quiz` verisini okumaz.
-- `shared`, `@ApplicationModule(type = OPEN)` ile işaretlidir: hata modeli (`shared.error`), event zarfı, idempotency ve saat altyapısını tüm modüller `api` paketi dışından da kullanabilir. Bu ayrıcalık yalnızca bu dört alan için geçerlidir; `shared` içine iş mantığı girmez.
+- `shared`, `@ApplicationModule(type = OPEN)` ile işaretlidir: hata modeli (`shared.error`), event zarfı, idempotency, saat ve mesajlaşma altyapısını (`shared.messaging`: Kafka yapılandırması ve health) tüm modüller `api` paketi dışından da kullanabilir. Bu ayrıcalık yalnızca bu beş alan için geçerlidir; `shared` içine iş mantığı girmez.
 - Modüller arası veritabanı foreign key'i yoktur; başka modüle ait id'ler indeksli, FK'siz kolonlardır.
 - Gerekçeler: `docs/adr/0005-modul-sinirlari-netlestirme.md`.
 - `admin` demo sıfırlamayı her modülün uyguladığı `shared.api.UserDataEraser` arayüzü üzerinden yapar (her modül kendi tablolarını siler); kendisi hiçbir tabloya doğrudan yazmaz.

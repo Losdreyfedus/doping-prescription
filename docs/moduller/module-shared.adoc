@@ -1,0 +1,14 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Shared infrastructure: error model, event envelope, idempotency, time and messaging infrastructure (Kafka configuration and health).  
++
+Open module so other modules can use these types outside an `api` package. It must never contain business logic (docs/adr/0005-modul-sinirlari-netlestirme.md).
+|Base package
+|`com.doping.prescription.shared`
+|Spring components
+|_Configuration properties_
+
+* `c.d.p.s.messaging.KafkaHealthProperties` -- Kafka health check settings.
+* `c.d.p.s.time.TimeProperties` -- Time zone used for calendar-day calculations such as the daily points cap (docs/mimari.md §9).
+|===

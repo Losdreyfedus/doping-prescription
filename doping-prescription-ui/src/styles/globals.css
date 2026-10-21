@@ -1,0 +1,78 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens from docs/arayuz.md ("Renkler"). Components use these only through Tailwind utilities
+ * (bg-brand-blue, text-ink, ...); hard-coded hex values in components are not allowed.
+ */
+:root {
+  --brand-blue: #3167be;
+  --brand-blue-ink: #375f99;
+  --brand-red: #eb353d;
+  --accent-pink: #f14a8b;
+  --navy: #2b3e51;
+  --navy-end: #25384b;
+  --navy-deep: #0b304c;
+  --ink: #1b2129;
+  --select: #04a4ed;
+  --select-row: #d4f3fe;
+  --success: #1abc9c;
+  --success-strong: #16b58e;
+  --danger: #f84f4f;
+  --danger-strong: #ff4e52;
+  --orange: #f38d1d;
+  --pin: #ff693e;
+  --surface: #ffffff;
+  --surface-muted: #edf2f3;
+  --surface-muted-active: #f3f8f9;
+  --surface-result: #e0ecf7;
+  --surface-sheet: #f8fbfe;
+  --header-tint-start: #e9ebf6;
+  --header-tint-end: #e3eafb;
+  --dopingle-bg: #111111;
+
+  /* Mastery bands (docs/arayuz.md, docs/algoritma.md §1) */
+  --band-weak: var(--danger);
+  --band-medium: var(--orange);
+  --band-strong: var(--success);
+  --band-unknown: #c0c7ca;
+}
+
+@theme inline {
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-blue-ink: var(--brand-blue-ink);
+  --color-brand-red: var(--brand-red);
+  --color-accent-pink: var(--accent-pink);
+  --color-navy: var(--navy);
+  --color-navy-end: var(--navy-end);
+  --color-navy-deep: var(--navy-deep);
+  --color-ink: var(--ink);
+  --color-select: var(--select);
+  --color-select-row: var(--select-row);
+  --color-success: var(--success);
+  --color-success-strong: var(--success-strong);
+  --color-danger: var(--danger);
+  --color-danger-strong: var(--danger-strong);
+  --color-orange: var(--orange);
+  --color-pin: var(--pin);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-muted-active: var(--surface-muted-active);
+  --color-surface-result: var(--surface-result);
+  --color-surface-sheet: var(--surface-sheet);
+  --color-header-tint-start: var(--header-tint-start);
+  --color-header-tint-end: var(--header-tint-end);
+  --color-dopingle-bg: var(--dopingle-bg);
+  --color-band-weak: var(--band-weak);
+  --color-band-medium: var(--band-medium);
+  --color-band-strong: var(--band-strong);
+  --color-band-unknown: var(--band-unknown);
+
+  --radius-card: 1.125rem;
+  --radius-button: 0.6875rem;
+}
+
+body {
+  @apply bg-surface text-ink antialiased;
+  /* Projector readability: body text is at least 15px (docs/arayuz.md). */
+  font-size: 15px;
+}

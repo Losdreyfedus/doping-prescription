@@ -15,7 +15,7 @@ ADR 0001 modülleri ve "yalnızca `api` paketi" kuralını tanımladı. Uygulama
 
 1. **Modüller arası foreign key yok.** Başka modüle ait id'ler FK'siz ve indeksli kolonlardır; bütünlük uygulama katmanında, ilgili modülün `api` arayüzüyle sağlanır. FK'ler yalnızca aynı modülün tabloları arasında tanımlanır.
 2. **Seri `points` modülünün kendi verisidir** (`points_streak` tablosu). `quiz`, her cevapta `PointsLedger`'a sonucu (doğru/yanlış, havuz, `refId`) iletir; yanıt olarak kazanılan puanı ve güncel seriyi alır. Bağımlılık tek yönlüdür: `quiz → points`.
-3. **`shared` açık (OPEN) bir modüldür** (`@ApplicationModule(type = OPEN)`). İçeriği dört alanla sınırlıdır: hata modeli, event zarfı (`DomainEvent`), idempotency (`processed_event`) ve saat. İş mantığı `shared`'a girmez; bu kural kod incelemesinde ve bir ArchUnit kuralıyla (`shared` başka bir modüle bağımlı olamaz) korunur.
+3. **`shared` açık (OPEN) bir modüldür** (`@ApplicationModule(type = OPEN)`). İçeriği beş alanla sınırlıdır: hata modeli, event zarfı (`DomainEvent`), idempotency (`processed_event`), saat ve mesajlaşma altyapısı (Kafka yapılandırması ve health, `shared.messaging`). İş mantığı `shared`'a girmez; bu kural kod incelemesinde ve bir ArchUnit kuralıyla (`shared` başka bir modüle bağımlı olamaz) korunur.
 
 ## Değerlendirilen seçenekler
 

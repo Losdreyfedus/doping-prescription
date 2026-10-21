@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Mini exams: solving, submitting and publishing results.
+|Base package
+|`com.doping.prescription.exam`
+|===

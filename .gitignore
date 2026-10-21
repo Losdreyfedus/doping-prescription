@@ -1,0 +1,30 @@
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Backend (Maven)
+doping-prescription-core/target/
+!doping-prescription-core/.mvn/wrapper/maven-wrapper.jar
+
+# Frontend / e2e (Node)
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+playwright-report/
+test-results/
+
+# Local video files are never committed (docs/arayuz.md)
+doping-prescription-ui/public/videos/
+
+# Logs
+*.log

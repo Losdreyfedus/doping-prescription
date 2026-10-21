@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Demo control, feed debugging and content management APIs.
+|Base package
+|`com.doping.prescription.admin`
+|===

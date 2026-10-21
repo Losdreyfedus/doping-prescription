@@ -51,7 +51,7 @@ Ustalık bantları için: `WEAK` = `--danger`, `MEDIUM` = `--orange`, `STRONG` =
 
 ### Logo ve görseller
 
-- Doping'in logo dosyalarını internetten indirme. Sol üstte geçici bir yazı logosu kullan: "doping" `--brand-blue-ink`, "hafıza" `--brand-red`, altında küçük gri "Prescription demo". Gerçek logo `doping-prescription-ui/public/brand/logo.svg` olarak eklenirse onu göstersin.
+- Logo, şirketin kendi sağladığı `doping-prescription-ui/public/brand/logo.svg` dosyasıdır; sol üstte bu dosya, altında küçük gri "Prescription demo" yazısı gösterilir (`shared/ui/BrandLogo`). Dopingle kartındaki filigran da aynı dosyayı kullanır. Başka logo veya görsel internetten indirilmez.
 - Öğrenci avatarı: baş harfli yuvarlak rozet (renkli arka plan). 3B avatar çizme.
 
 ## Uygulama kabuğu
@@ -111,7 +111,7 @@ Ekran kaydındaki Dopingle sayfasının birebir benzeri olmalı:
 Gerçek video dosyası olmadığında (`videoUrl: null`) kullanılır; demo bunun üzerine kuruludur.
 
 - 9:16 kart içinde konunun renginde koyu degrade arka plan; ortada büyük beyaz konu adı ve video başlığı (Doping videolarındaki gibi kalın, gölgeli altyazı stili); ortada büyük bir öğretmen baş harfi rozeti.
-- Kartın altında ince ilerleme çubuğu ve sağında süre (`00:14 / 00:58`). Süre `durationSec / demo.video_speed` saniyede dolar; ekranda gerçek video süresi gösterilir.
+- Kartın altında ince ilerleme çubuğu ve sağında süre (`00:14 / 00:58`). Süre `durationSec / feed.demo-video-speed` saniyede dolar; ekranda gerçek video süresi gösterilir.
 - Kart ekrana gelince otomatik başlar; Space veya tıklama ile durur/devam eder.
 - `videoUrl` doluysa aynı arayüz HTML5 `<video>` ile çalışır (dosyalar `doping-prescription-ui/public/videos` altında, git'e eklenmez).
 - Oynatıcı mantığı `useSimulatedPlayer` hook'unda (`play`, `pause`, `progress`, `onComplete`), görünüm ayrı bileşende; hook sahte zamanlayıcılarla test edilir.

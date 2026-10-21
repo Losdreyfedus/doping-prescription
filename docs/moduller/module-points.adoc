@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Description
+|Points ledger and answer streaks.
+|Base package
+|`com.doping.prescription.points`
+|===
