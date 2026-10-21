@@ -1,0 +1,37 @@
+{
+  "_note": "Editör kontrolünden geçmedi. Kişi isimleri kurgusaldır.",
+  "items": [
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "slug": "deniz",
+      "displayName": "Deniz",
+      "role": "STUDENT",
+      "personalizationEnabled": true,
+      "examInDays": 240
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "slug": "mert",
+      "displayName": "Mert",
+      "role": "STUDENT",
+      "personalizationEnabled": true,
+      "examInDays": 240
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000003",
+      "slug": "selin",
+      "displayName": "Selin",
+      "role": "STUDENT",
+      "personalizationEnabled": false,
+      "examInDays": 240
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "slug": "admin",
+      "displayName": "Admin",
+      "role": "ADMIN",
+      "personalizationEnabled": true,
+      "examInDays": null
+    }
+  ]
+}

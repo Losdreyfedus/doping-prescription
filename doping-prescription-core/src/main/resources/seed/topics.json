@@ -1,0 +1,89 @@
+{
+  "_note": "Editör kontrolünden geçmedi. exam_weight değerleri demo için verilmiş yaklaşık değerlerdir.",
+  "items": [
+    {
+      "id": 1, "code": "TYT.MAT.TEMEL", "name": "Temel Kavramlar", "examWeight": 0.90,
+      "keywords": [
+        { "keyword": "temel kavramlar", "weight": 1.0 },
+        { "keyword": "tek cift sayilar", "weight": 0.6 },
+        { "keyword": "ardisik sayilar", "weight": 0.6 }
+      ]
+    },
+    {
+      "id": 2, "code": "TYT.MAT.SAYIBAS", "name": "Sayı Basamakları", "examWeight": 0.50,
+      "keywords": [
+        { "keyword": "basamak", "weight": 0.8 },
+        { "keyword": "sayi basamaklari", "weight": 1.0 },
+        { "keyword": "cozumleme", "weight": 0.6 }
+      ]
+    },
+    {
+      "id": 3, "code": "TYT.MAT.BOLUNME", "name": "Bölme ve Bölünebilme", "examWeight": 0.50,
+      "keywords": [
+        { "keyword": "bolunebilme", "weight": 1.0 },
+        { "keyword": "bolme", "weight": 0.6 },
+        { "keyword": "kalan", "weight": 0.5 }
+      ]
+    },
+    {
+      "id": 4, "code": "TYT.MAT.RASYONEL", "name": "Rasyonel Sayılar", "examWeight": 0.60,
+      "keywords": [
+        { "keyword": "rasyonel", "weight": 1.0 },
+        { "keyword": "kesir", "weight": 0.6 },
+        { "keyword": "ondalik", "weight": 0.5 }
+      ]
+    },
+    {
+      "id": 5, "code": "TYT.MAT.USLU", "name": "Üslü ve Köklü Sayılar", "examWeight": 0.60,
+      "keywords": [
+        { "keyword": "uslu", "weight": 1.0 },
+        { "keyword": "koklu", "weight": 1.0 },
+        { "keyword": "us", "weight": 0.5 },
+        { "keyword": "karekok", "weight": 0.8 }
+      ]
+    },
+    {
+      "id": 6, "code": "TYT.MAT.PROBLEM", "name": "Problemler", "examWeight": 1.00,
+      "keywords": [
+        { "keyword": "problem", "weight": 0.8 },
+        { "keyword": "yas problemi", "weight": 1.0 },
+        { "keyword": "yuzde", "weight": 0.7 },
+        { "keyword": "hiz problemi", "weight": 1.0 }
+      ]
+    },
+    {
+      "id": 7, "code": "TYT.MAT.KUMELER", "name": "Kümeler", "examWeight": 0.40,
+      "keywords": [
+        { "keyword": "kume", "weight": 1.0 },
+        { "keyword": "kesisim", "weight": 0.6 },
+        { "keyword": "birlesim", "weight": 0.6 }
+      ]
+    },
+    {
+      "id": 8, "code": "TYT.MAT.PERKOM", "name": "Permütasyon-Kombinasyon", "examWeight": 0.50,
+      "keywords": [
+        { "keyword": "permutasyon", "weight": 1.0 },
+        { "keyword": "kombinasyon", "weight": 1.0 },
+        { "keyword": "sayma", "weight": 0.6 },
+        { "keyword": "faktoriyel", "weight": 0.7 }
+      ]
+    },
+    {
+      "id": 9, "code": "TYT.MAT.OLAS", "name": "Olasılık", "examWeight": 0.50,
+      "keywords": [
+        { "keyword": "olasilik", "weight": 1.0 },
+        { "keyword": "zar", "weight": 0.5 },
+        { "keyword": "para atisi", "weight": 0.5 },
+        { "keyword": "kosullu", "weight": 0.7 }
+      ]
+    },
+    {
+      "id": 10, "code": "TYT.MAT.FONK", "name": "Fonksiyonlar", "examWeight": 0.60,
+      "keywords": [
+        { "keyword": "fonksiyon", "weight": 1.0 },
+        { "keyword": "tanim kumesi", "weight": 0.7 },
+        { "keyword": "bileske", "weight": 0.8 }
+      ]
+    }
+  ]
+}

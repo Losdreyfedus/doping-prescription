@@ -4,7 +4,7 @@ import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** Single source of "now" for the application; tests replace it with a fixed clock. */
+/** Single source of the current time for the application; tests replace it with a fixed clock. */
 @Configuration(proxyBeanMethods = false)
 class ClockConfiguration {
 

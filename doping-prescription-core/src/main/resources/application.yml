@@ -6,6 +6,19 @@ spring:
     url: ${PRESCRIPTION_DB_URL:jdbc:postgresql://localhost:5432/prescription}
     username: ${PRESCRIPTION_DB_USER:prescription}
     password: ${PRESCRIPTION_DB_PASSWORD:prescription}
+  jpa:
+    # Schema is owned by Flyway; Hibernate only checks that entities match it.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    locations: classpath:db/migration
+  modulith:
+    events:
+      # The event_publication table is created by Flyway (V2), never by Modulith itself.
+      jdbc:
+        schema-initialization:
+          enabled: false
   data:
     redis:
       host: ${PRESCRIPTION_REDIS_HOST:localhost}
@@ -33,3 +46,6 @@ prescription:
   health:
     kafka:
       timeout: 2s
+  content:
+    tagging:
+      min-confidence: 0.5

@@ -1,40 +1,27 @@
 package com.doping.prescription;
 
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.kafka.KafkaContainer;
-import org.testcontainers.postgresql.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
+import org.springframework.test.context.DynamicPropertyRegistrar;
 
 /**
- * PostgreSQL, Redis and Kafka for integration tests. Image versions must match docker-compose.yml so tests run against
- * the same infrastructure as the demo.
+ * PostgreSQL for integration tests. Redis and Kafka are not started: the application connects to them lazily, so tests
+ * that only touch the database never pay for (or depend on) those containers. Tests that need them use
+ * {@link InfrastructureContainersConfiguration} instead.
  */
 @TestConfiguration(proxyBeanMethods = false)
 public class TestcontainersConfiguration {
 
-    private static final DockerImageName POSTGRES = DockerImageName.parse("postgres:16.15-alpine");
-    private static final DockerImageName REDIS = DockerImageName.parse("redis:7.4.11-alpine");
-    private static final DockerImageName KAFKA = DockerImageName.parse("apache/kafka:4.3.2");
-    private static final int REDIS_PORT = 6379;
+    private static final int UNREACHABLE_PORT = 1;
 
     @Bean
-    @ServiceConnection
-    PostgreSQLContainer postgresContainer() {
-        return new PostgreSQLContainer(POSTGRES);
-    }
-
-    @Bean
-    @ServiceConnection(name = "redis")
-    GenericContainer<?> redisContainer() {
-        return new GenericContainer<>(REDIS).withExposedPorts(REDIS_PORT);
-    }
-
-    @Bean
-    @ServiceConnection
-    KafkaContainer kafkaContainer() {
-        return new KafkaContainer(KAFKA);
+    DynamicPropertyRegistrar postgresOnlyProperties() {
+        return registry -> {
+            TestContainers.registerPostgres(registry);
+            // Deliberately unreachable: a database-only test that touches Redis or Kafka fails loudly instead of
+            // silently using a locally running docker compose stack.
+            registry.add("spring.data.redis.port", () -> UNREACHABLE_PORT);
+            registry.add("spring.kafka.bootstrap-servers", () -> "localhost:" + UNREACHABLE_PORT);
+        };
     }
 }

@@ -120,9 +120,9 @@ Akış Redis'te kullanıcı başına bir kuyruk olarak tutulur (`feed:queue:{use
 
 ## 5. Kural tabanlı etiketleme
 
-**Normalizasyon:** Türkçe küçük harfe çevir (`toLocaleLowerCase('tr')`), `ç→c, ğ→g, ı→i, ö→o, ş→s, ü→u`, noktalama işaretlerini boşluğa çevir, birden fazla boşluğu teke indir.
+**Normalizasyon:** Türkçe küçük harfe çevir (`toLocaleLowerCase('tr')`), `ç→c, ğ→g, ı→i, ö→o, ş→s, ü→u` ve şapkalı ünlüler `â→a, î→i, û→u` ("kâr" → "kar"), noktalama işaretlerini boşluğa çevir, birden fazla boşluğu teke indir.
 
-**Eşleşme (kelime başı):** Türkçe eklemeli bir dil olduğu için tam kelime eşleşmesi kullanılmaz ("kume" → "kumeler", "olasilik" → "olasiligin" eşleşmeli). Normalize edilmiş anahtar kelime token'lara bölünür; anahtar kelimenin her token'ı, metindeki **ardışık** token'ların başı (prefix) olmalıdır. Örn. `tanim kumesi`, "tanım kümesini bulma" metnine eşleşir. 4 karakterden kısa token'lar tam eşleşmelidir (örn. `us`, "ustalık" kelimesine eşleşmez, "üs" kelimesine eşleşir). Bu kurallar parametreli birim testleriyle doğrulanır.
+**Eşleşme (kelime başı):** Türkçe eklemeli bir dil olduğu için tam kelime eşleşmesi kullanılmaz ("kume" → "kumeler", "olasilik" → "olasiligin" eşleşmeli). Normalize edilmiş anahtar kelime token'lara bölünür; anahtar kelimenin her token'ı, metindeki **ardışık** token'ların başı (prefix) olmalıdır. Örn. `tanim kumesi`, "tanım kümesini bulma" metnine eşleşir. Ünsüz yumuşaması da kabul edilir: p/t/k ile biten bir token'ın b/d/g ile biten biçimi de eşleşir (`olasilik` → "olasılığın", `kitap` → "kitabı"). 4 karakterden kısa token'lar tam eşleşmelidir (örn. `us`, "ustalık" kelimesine eşleşmez, "üs" kelimesine eşleşir). Bu kurallar parametreli birim testleriyle doğrulanır.
 
 Anahtar kelime başlıkta eşleşiyorsa `weight · 1.0`, yalnızca açıklamada eşleşiyorsa `weight · 0.5` eklenir. Konu skoru 1 ile sınırlıdır. Negatif anahtar kelime eşleşirse konu skoru 0 olur.
 

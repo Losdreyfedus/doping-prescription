@@ -16,7 +16,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 // TODO(phase 2): replace the override with an authenticated ADMIN request once Spring Security is configured.
 @SpringBootTest(properties = "management.endpoint.health.show-details=always")
 @AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
+@Import(InfrastructureContainersConfiguration.class)
 class HealthEndpointIT {
 
     // A freshly started Kafka container may need a few seconds before it answers metadata requests.

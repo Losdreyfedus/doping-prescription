@@ -18,7 +18,10 @@ Ana mesaj: **"Öğrenci hiçbir şey yapmadı; sistem denemeden eksiğini kendis
 
 1. Admin panelinde `/admin/demo` ekranını aç.
 2. Deniz için **Sıfırla**'ya bas: denemeleri, sinyalleri, ustalık skorları, akış geçmişi ve puanları silinir. Selin, Deniz'in sunumda yapacağı deneme sonucuyla hazır yüklenir.
-3. Öğrenci uygulamasını ayrı bir sekmede aç, Deniz ile giriş yap.
+3. Deniz için **Persona yükle** → `SCRIPTED_IN_PROGRESS`: Mini Deneme 1 başlatılmış, 12 cevabın hepsi senaryo cevaplarıyla işaretli, ama deneme **gönderilmemiş** durumda hazırlanır. Deniz'in hâlâ hiç sinyali yoktur, bu yüzden 1. adımdaki akış kişiselleştirilmemiş kalır.
+4. Öğrenci uygulamasını ayrı bir sekmede aç, Deniz ile giriş yap.
+
+Sunumun tamamı 10–12 dakikadır; deneme canlı çözülmez, böylece demo bölümü kısa ve hatasız kalır.
 
 ## Senaryo
 
@@ -28,14 +31,14 @@ Ana mesaj: **"Öğrenci hiçbir şey yapmadı; sistem denemeden eksiğini kendis
 - Akışta farklı konulardan videolar vardır. Kart etiketleri genel ifadelerdir: "TYT'de sık çıkan konu", "Bu hafta en çok izlenenlerden".
 - Anlatım: "Bugün Dopingle herkese benzer videolar gösteriyor. Sistem öğrencinin neyi bilmediğini bilmiyor."
 
-### Adım 2: Öğrenci sadece denemesini çözer (yaklaşık 60 sn)
+### Adım 2: Öğrenci sadece denemesini bitirir (yaklaşık 10 sn)
 
-- Deniz sol menüden Testler ve Denemeler'e geçer ve "TYT Matematik Mini Deneme 1"i açar (12 soru).
-- Sunucu şöyle cevaplar (cevap anahtarı `docs/seed-verisi.md` içindedir):
+- Deniz sol menüden Testler ve Denemeler'e geçer ve "TYT Matematik Mini Deneme 1"i açar (12 soru). Deneme hazırlıkta başlatılmıştır; ekran mevcut denemeyi açar.
+- Cevap kâğıdında cevaplar zaten işaretlidir (`SCRIPTED_IN_PROGRESS` personası, cevap anahtarı `docs/seed-verisi.md` içindedir):
     - 3 Olasılık sorusu: **yanlış**
     - 1 Permütasyon-Kombinasyon sorusu: **boş**
     - Diğer 8 soru: doğru
-- Deniz "Denemeyi Bitir"e basar.
+- Sunucu cevap kâğıdını kısaca gösterir ve **Sınavı Bitir**'e basar; onay penceresinde ("1 soru boş…") bitirmeyi onaylar.
 - Sonuç ekranı: 8 doğru, 3 yanlış, 1 boş, 7,25 net. Konu tablosunda Olasılık ve Permütasyon kırmızıdır.
 - Sonuç ekranının altında bir bant görünür: "Dopingle akışın bu sonuca göre güncellendi." ve **Reçeteni gör** butonu.
 - Anlatım: "Öğrenci bir şey yüklemedi, bir şey seçmedi. Sadece denemesini çözdü."

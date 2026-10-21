@@ -7,4 +7,25 @@
         xmlns="https://github.com/spotbugs/filter/3.0.0"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
+
+    <!--
+      JPA entities validate their invariants in the constructor (docs/kod-standartlari.md §2) but cannot be final,
+      because Hibernate subclasses them for lazy proxies. The finalizer attack CT_CONSTRUCTOR_THROW warns about needs
+      a malicious subclass with a finalizer; entities are never exposed outside their module and finalization is
+      deprecated for removal in Java 21.
+    -->
+    <Match>
+        <Package name="~com\.doping\.prescription\.[a-z]+\.persistence"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+
+    <!--
+      Mapped entity columns are read and written by Hibernate through reflection: updated_at is written by the entity
+      but only read by the database, published_at is set by SQL (seed) before any Java code writes it. SpotBugs cannot
+      see reflective access, so these are false positives for persistence packages only.
+    -->
+    <Match>
+        <Package name="~com\.doping\.prescription\.[a-z]+\.persistence"/>
+        <Bug pattern="URF_UNREAD_FIELD,UWF_UNWRITTEN_FIELD"/>
+    </Match>
 </FindBugsFilter>
