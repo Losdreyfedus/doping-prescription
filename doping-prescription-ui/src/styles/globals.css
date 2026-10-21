@@ -84,10 +84,22 @@
 
   --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-display: 'Barlow Semi Condensed', 'Plus Jakarta Sans', sans-serif;
+
+  /* Eksiklerim bars fill from zero on page load (docs/arayuz.md). */
+  --animate-bar-fill: bar-fill 0.8s ease-out;
 }
 
 body {
   @apply bg-surface font-sans text-ink antialiased;
   /* Projector readability: body text is at least 15px (docs/arayuz.md). */
   font-size: 15px;
+}
+
+@keyframes bar-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
