@@ -64,6 +64,11 @@ class RedisSnapshotCache implements SnapshotCache {
         }
     }
 
+    @Override
+    public void evict(UUID userId) {
+        evictQuietly(userId);
+    }
+
     private void evictQuietly(UUID userId) {
         try {
             redis.delete(key(userId));

@@ -15,6 +15,9 @@ public interface SnapshotCache {
     /** Read path: caches the snapshot unless another one got there first. */
     void putIfAbsent(UUID userId, LearnerSnapshot snapshot);
 
+    /** Drops the cached snapshot, e.g. after the learner's data was erased. */
+    void evict(UUID userId);
+
     /** Write path: replaces whatever is cached with the snapshot loaded after the commit. */
     void replace(UUID userId, LearnerSnapshot snapshot);
 }
