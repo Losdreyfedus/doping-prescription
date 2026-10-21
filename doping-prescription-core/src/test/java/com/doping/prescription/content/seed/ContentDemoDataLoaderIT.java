@@ -4,14 +4,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import com.doping.prescription.IntegrationTest;
+import com.doping.prescription.content.domain.AnswerOption;
 import com.doping.prescription.content.domain.ContentKind;
 import com.doping.prescription.content.domain.ContentStatus;
+import com.doping.prescription.content.domain.MicroQuestionStatus;
 import com.doping.prescription.content.domain.TagSource;
 import com.doping.prescription.content.domain.VideoDetails;
 import com.doping.prescription.content.persistence.ContentItem;
 import com.doping.prescription.content.persistence.ContentItemRepository;
 import com.doping.prescription.content.persistence.ContentTopic;
 import com.doping.prescription.content.persistence.ContentTopicRepository;
+import com.doping.prescription.content.persistence.MicroQuestion;
+import com.doping.prescription.content.persistence.MicroQuestionRepository;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -44,6 +48,9 @@ class ContentDemoDataLoaderIT {
     private ContentTopicRepository contentTopics;
 
     @Autowired
+    private MicroQuestionRepository microQuestions;
+
+    @Autowired
     private JdbcClient jdbc;
 
     @BeforeEach
@@ -63,6 +70,22 @@ class ContentDemoDataLoaderIT {
                 .filteredOn(video -> video.getStatus() == ContentStatus.LIVE)
                 .hasSize(36)
                 .allSatisfy(video -> assertThat(video.getPublishedAt()).isPresent());
+    }
+
+    @Test
+    void seedsMicroQuestionsWithLetteredOptions() {
+        assertThat(count("select count(*) from micro_question where id between 1 and 48"))
+                .isEqualTo(48);
+        MicroQuestion apiExample = microQuestions.findById(37).orElseThrow();
+        assertThat(apiExample.getContentId()).isEqualTo(33);
+        assertThat(apiExample.getStatus()).isEqualTo(MicroQuestionStatus.LIVE);
+        assertThat(apiExample.getContent().options())
+                .containsExactly(
+                        new AnswerOption("A", "1/6"),
+                        new AnswerOption("B", "1/3"),
+                        new AnswerOption("C", "1/2"),
+                        new AnswerOption("D", "2/3"));
+        assertThat(apiExample.getContent().correctKey()).isEqualTo("B");
     }
 
     @Test
@@ -107,6 +130,8 @@ class ContentDemoDataLoaderIT {
         assertThat(count("select count(*) from topic_keyword")).isEqualTo(keywordsBefore);
         assertThat(seedVideos()).hasSize(40);
         assertThat(seedLinks()).hasSize(linksBefore);
+        assertThat(count("select count(*) from micro_question where id between 1 and 48"))
+                .isEqualTo(48);
         DRAFT_VIDEO_TOPICS
                 .keySet()
                 .forEach(videoId -> assertThat(
