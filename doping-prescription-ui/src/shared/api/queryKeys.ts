@@ -7,6 +7,9 @@ export const queryKeys = {
   result: (attemptId: string): readonly ['exam-result', string] => ['exam-result', attemptId],
   learnerProfile: (): readonly ['learner', 'profile'] => ['learner', 'profile'],
   points: (): readonly ['points'] => ['points'],
+  adminStudents: (): readonly ['admin', 'students'] => ['admin', 'students'],
+  adminPersonas: (): readonly ['admin', 'personas'] => ['admin', 'personas'],
+  adminAnswerKey: (): readonly ['admin', 'answer-key'] => ['admin', 'answer-key'],
   feed: (topicId: number | undefined, sessionKey: string): readonly ['feed', number | undefined, string] => [
     'feed',
     topicId,
