@@ -26,9 +26,9 @@ System_Boundary("PrescriptionApplication_boundary", "PrescriptionApplication", $
 
 }
 
+Rel(PrescriptionApplication.PrescriptionApplication.Auth, PrescriptionApplication.PrescriptionApplication.Shared, "depends on", $techn="", $tags="", $link="")
 Rel(PrescriptionApplication.PrescriptionApplication.Admin, PrescriptionApplication.PrescriptionApplication.Shared, "depends on", $techn="", $tags="", $link="")
 Rel(PrescriptionApplication.PrescriptionApplication.Content, PrescriptionApplication.PrescriptionApplication.Shared, "depends on", $techn="", $tags="", $link="")
-Rel(PrescriptionApplication.PrescriptionApplication.Auth, PrescriptionApplication.PrescriptionApplication.Shared, "depends on", $techn="", $tags="", $link="")
 Rel(PrescriptionApplication.PrescriptionApplication.Exam, PrescriptionApplication.PrescriptionApplication.Shared, "depends on", $techn="", $tags="", $link="")
 
 SHOW_LEGEND(true)

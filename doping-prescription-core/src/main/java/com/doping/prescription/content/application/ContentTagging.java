@@ -1,7 +1,7 @@
 package com.doping.prescription.content.application;
 
 import com.doping.prescription.content.domain.ContentStatus;
-import com.doping.prescription.content.domain.KeywordTagger;
+import com.doping.prescription.content.domain.ContentTagger;
 import com.doping.prescription.content.domain.TagSource;
 import com.doping.prescription.content.domain.TagSuggestion;
 import com.doping.prescription.content.domain.TaggingKeyword;
@@ -36,19 +36,19 @@ class ContentTagging {
     private final ContentItemRepository contents;
     private final ContentTopicRepository contentTopics;
     private final TopicKeywordRepository keywords;
-    private final KeywordTagger tagger;
+    private final ContentTagger tagger;
     private final Clock clock;
 
     ContentTagging(
             ContentItemRepository contents,
             ContentTopicRepository contentTopics,
             TopicKeywordRepository keywords,
-            ContentProperties properties,
+            ContentTagger tagger,
             Clock clock) {
         this.contents = contents;
         this.contentTopics = contentTopics;
         this.keywords = keywords;
-        this.tagger = new KeywordTagger(properties.tagging().minConfidence());
+        this.tagger = tagger;
         this.clock = clock;
     }
 

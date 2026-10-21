@@ -17,7 +17,7 @@ import java.util.Set;
  * shorter than {@value #PREFIX_MATCH_MIN_LENGTH} characters must match a whole word ({@code us} does not match
  * {@code ustalik}). A multi-word keyword must match consecutive words.
  */
-public final class KeywordTagger {
+public final class KeywordTagger implements ContentTagger {
 
     /** docs/algoritma.md §5: shorter tokens match whole words only. */
     static final int PREFIX_MATCH_MIN_LENGTH = 4;
@@ -42,6 +42,7 @@ public final class KeywordTagger {
     }
 
     /** Topics whose score reaches {@code minConfidence}, highest score first. */
+    @Override
     public List<TagSuggestion> suggest(String title, String description, List<TaggingKeyword> dictionary) {
         List<String> titleTokens = TextNormalizer.tokens(title);
         List<String> descriptionTokens = TextNormalizer.tokens(description);
