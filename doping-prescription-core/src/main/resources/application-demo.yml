@@ -4,3 +4,6 @@ prescription:
     # Demo-only default so the setup commands work without extra environment variables; override with
     # PRESCRIPTION_JWT_SECRET anywhere else.
     jwt-secret: ${PRESCRIPTION_JWT_SECRET:demo-only-secret-0123456789-abcdefghij}
+  quiz:
+    # Demo-only default, like the session key above; override with PRESCRIPTION_QUIZ_TOKEN_SECRET anywhere else.
+    token-secret: ${PRESCRIPTION_QUIZ_TOKEN_SECRET:demo-only-quiz-secret-0123456789-abcdefghij}

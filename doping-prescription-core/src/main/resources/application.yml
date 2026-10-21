@@ -128,3 +128,11 @@ prescription:
     streak-length: 5
     streak-bonus: 20
     daily-cap: 200
+  quiz:
+    min-watch-ratio: 0.70
+    time-limit-sec: 60
+    token-ttl: 5m
+    min-response-ms: 2000
+    rate-limit-per-min: 30
+    # Required outside the demo profile; never logged (docs/api.md, quizToken).
+    token-secret: ${PRESCRIPTION_QUIZ_TOKEN_SECRET}

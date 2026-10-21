@@ -2,6 +2,7 @@ package com.doping.prescription.learner.application;
 
 import com.doping.prescription.exam.api.ExamResultPublished;
 import com.doping.prescription.exam.api.ExamResultPublished.AnswerOutcome;
+import com.doping.prescription.learner.api.LearnerSignalRecorder.MasteryChange;
 import com.doping.prescription.learner.api.MasteryChanged;
 import com.doping.prescription.learner.api.MasteryChanged.TopicChange;
 import com.doping.prescription.learner.domain.MasteryCalculator;
@@ -103,6 +104,31 @@ public class MasteryService {
         masteries.saveAll(rows.values());
 
         publishSignificantChanges(userId, EXAM_TRIGGER, before, rows, now);
+    }
+
+    /**
+     * Applies one micro-question answer (docs/algoritma.md §1, QUIZ weight). The before value is the decayed mastery
+     * the learner saw on Eksiklerim; a repeated {@code refId} returns the current value as both before and after.
+     */
+    @Transactional
+    public MasteryChange applyQuizAnswer(
+            UUID userId, Integer topicId, boolean correct, String refId, Instant answeredAt) {
+        TopicMasteryId id = new TopicMasteryId(userId, topicId);
+        TopicMastery row = masteries.findById(id).orElseGet(() -> newRow(userId, topicId, answeredAt));
+        double before = row.getLastSignalAt()
+                .map(last -> calculator.effectiveMastery(row.getMastery(), last, answeredAt))
+                .orElse(row.getMastery());
+        String idempotencyKey = "quiz:" + refId;
+        if (signals.existsByIdempotencyKey(idempotencyKey)) {
+            return new MasteryChange(topicId, before, before);
+        }
+        SignalType type = correct ? SignalType.QUIZ_CORRECT : SignalType.QUIZ_WRONG;
+        signals.save(new LearnerSignal(userId, topicId, type, refId, answeredAt, idempotencyKey));
+        MasteryState next = calculator.apply(stateOf(row), type);
+        row.recordSignal(next.mastery(), next.confidence(), correct, answeredAt);
+        masteries.save(row);
+        publishSignificantChanges(userId, type.name(), Map.of(topicId, before), Map.of(topicId, row), clock.instant());
+        return new MasteryChange(topicId, before, row.getMastery());
     }
 
     /**

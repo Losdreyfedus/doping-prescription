@@ -1,11 +1,12 @@
 package com.doping.prescription.points.application;
 
+import com.doping.prescription.points.domain.PointsRules;
 import jakarta.validation.constraints.Positive;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 /**
- * Configuration of the points module, {@code prescription.points.*} (docs/algoritma.md §7, §9).
+ * Configuration of the points module, {@code prescription.points.*} (docs/algoritma.md Â§7, Â§9).
  *
  * @param correct          a correct answer
  * @param weakTopicCorrect a correct answer on a WEAK_TOPIC card
@@ -20,4 +21,9 @@ public record PointsProperties(
         @Positive int weakTopicCorrect,
         @Positive int streakLength,
         @Positive int streakBonus,
-        @Positive int dailyCap) {}
+        @Positive int dailyCap) {
+
+    public PointsRules rules() {
+        return new PointsRules(correct, weakTopicCorrect, streakLength, streakBonus, dailyCap);
+    }
+}

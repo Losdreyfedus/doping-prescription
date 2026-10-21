@@ -301,6 +301,33 @@
         "tags" : [ "feed-controller" ]
       }
     },
+    "/api/feed/cards/{impressionId}/quiz" : {
+      "get" : {
+        "operationId" : "quiz",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "impressionId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MicroQuiz"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "quiz-controller" ]
+      }
+    },
     "/api/feed/interactions" : {
       "post" : {
         "operationId" : "interactions",
@@ -357,10 +384,85 @@
         },
         "tags" : [ "auth-controller" ]
       }
+    },
+    "/api/points" : {
+      "get" : {
+        "operationId" : "points",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Summary"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "points-controller" ]
+      }
+    },
+    "/api/quiz/{microQuestionId}/answer" : {
+      "post" : {
+        "operationId" : "answer",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "microQuestionId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AnswerRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/QuizResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "quiz-controller" ]
+      }
     }
   },
   "components" : {
     "schemas" : {
+      "AnswerRequest" : {
+        "required" : [ "quizToken", "responseMs", "selectedKey" ],
+        "type" : "object",
+        "properties" : {
+          "quizToken" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "responseMs" : {
+            "minimum" : 0,
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "selectedKey" : {
+            "minLength" : 1,
+            "pattern" : "[A-D]",
+            "type" : "string"
+          }
+        }
+      },
       "AttemptView" : {
         "required" : [ "answers", "attemptId", "durationMin", "examId", "questions", "startedAt", "title" ],
         "type" : "object",
@@ -495,6 +597,23 @@
             "enum" : [ "STUDENT", "ADMIN" ]
           },
           "slug" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Entry" : {
+        "required" : [ "amount", "createdAt", "reason" ],
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "reason" : {
             "type" : "string"
           }
         }
@@ -677,6 +796,27 @@
         },
         "nullable" : true
       },
+      "MasteryChangeView" : {
+        "required" : [ "after", "before", "name", "topicId" ],
+        "type" : "object",
+        "properties" : {
+          "after" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "before" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "topicId" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
       "MeResponse" : {
         "required" : [ "displayName", "personalizationEnabled", "role", "slug", "userId" ],
         "type" : "object",
@@ -702,6 +842,52 @@
           "userId" : {
             "type" : "string",
             "format" : "uuid"
+          }
+        }
+      },
+      "MicroQuiz" : {
+        "required" : [ "impressionId", "microQuestionId", "options", "pointsAvailable", "quizToken", "stem", "timeLimitSec" ],
+        "type" : "object",
+        "properties" : {
+          "impressionId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "microQuestionId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "options" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OptionView"
+            }
+          },
+          "pointsAvailable" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "quizToken" : {
+            "type" : "string"
+          },
+          "stem" : {
+            "type" : "string"
+          },
+          "timeLimitSec" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "OptionView" : {
+        "required" : [ "key", "text" ],
+        "type" : "object",
+        "properties" : {
+          "key" : {
+            "type" : "string"
+          },
+          "text" : {
+            "type" : "string"
           }
         }
       },
@@ -803,6 +989,35 @@
           }
         }
       },
+      "QuizResult" : {
+        "required" : [ "correctKey", "explanation", "isCorrect", "masteryChange", "pointsAwarded", "streak", "totalPoints" ],
+        "type" : "object",
+        "properties" : {
+          "correctKey" : {
+            "type" : "string"
+          },
+          "explanation" : {
+            "type" : "string"
+          },
+          "isCorrect" : {
+            "type" : "boolean"
+          },
+          "masteryChange" : {
+            "$ref" : "#/components/schemas/MasteryChangeView"
+          },
+          "pointsAwarded" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "streak" : {
+            "$ref" : "#/components/schemas/StreakView"
+          },
+          "totalPoints" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
       "SaveAnswerRequest" : {
         "type" : "object",
         "properties" : {
@@ -830,6 +1045,61 @@
           "selectedKey" : {
             "type" : "string",
             "nullable" : true
+          }
+        }
+      },
+      "Streak" : {
+        "required" : [ "best", "current" ],
+        "type" : "object",
+        "properties" : {
+          "best" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "current" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "StreakView" : {
+        "required" : [ "bonusAt", "current" ],
+        "type" : "object",
+        "properties" : {
+          "bonusAt" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "current" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "Summary" : {
+        "required" : [ "dailyCap", "recent", "streak", "today", "total" ],
+        "type" : "object",
+        "properties" : {
+          "dailyCap" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "recent" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Entry"
+            }
+          },
+          "streak" : {
+            "$ref" : "#/components/schemas/Streak"
+          },
+          "today" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },
