@@ -135,6 +135,7 @@ API `http://localhost:8080`, web `http://localhost:5173`, OpenAPI arayüzü `htt
 
 - Her aşama ayrı bir branch'te (`feat/03-exam-module` gibi) ve küçük, anlamlı commit'lerle ilerler. Commit mesajları [Conventional Commits](https://www.conventionalcommits.org/) biçiminde (`feat(exam): submit attempt and publish result event`).
 - Bir commit tek bir mantıksal değişiklik içerir; kod ve onun testi aynı commit'tedir.
+- Commit öncesi kontrol: kod içeren her commit'te tam `./mvnw verify` (ve frontend değiştiyse `npm run check`) şarttır. Yalnızca doküman değiştiren commit'lerde (kod yorumu dahil, davranış değişmiyorsa) Spotless ve Checkstyle kontrolü yeterlidir.
 - Aşama bittiğinde `main`'e merge edilir; merge öncesi CI yeşil olmalı.
 
 ## 7. Uygulama sırası
