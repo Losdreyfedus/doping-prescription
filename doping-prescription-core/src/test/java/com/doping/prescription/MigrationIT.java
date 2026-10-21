@@ -19,7 +19,15 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 class MigrationIT {
 
     /** Every table from docs/veri-modeli.md plus Spring Modulith's outbox table. */
-    static final List<String> EXPECTED_TABLES = List.of("processed_event", "event_publication", "users");
+    static final List<String> EXPECTED_TABLES = List.of(
+            "processed_event",
+            "event_publication",
+            "users",
+            "topic",
+            "topic_keyword",
+            "content_item",
+            "content_topic_map",
+            "micro_question");
 
     @Autowired
     private Flyway flyway;
