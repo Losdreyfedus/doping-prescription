@@ -17,17 +17,19 @@ top to bottom direction
 
 System_Boundary("PrescriptionApplication_boundary", "PrescriptionApplication", $tags="") {
   Container_Boundary("PrescriptionApplication.PrescriptionApplication_boundary", "PrescriptionApplication", $tags="") {
-    Component(PrescriptionApplication.PrescriptionApplication.Admin, "Admin", $techn="Module", $descr="", $tags="", $link="")
     Component(PrescriptionApplication.PrescriptionApplication.Auth, "Auth", $techn="Module", $descr="", $tags="", $link="")
     Component(PrescriptionApplication.PrescriptionApplication.Content, "Content", $techn="Module", $descr="", $tags="", $link="")
+    Component(PrescriptionApplication.PrescriptionApplication.Exam, "Exam", $techn="Module", $descr="", $tags="", $link="")
     Component(PrescriptionApplication.PrescriptionApplication.Shared, "Shared", $techn="Module", $descr="", $tags="", $link="")
+    Component(PrescriptionApplication.PrescriptionApplication.Admin, "Admin", $techn="Module", $descr="", $tags="", $link="")
   }
 
 }
 
-Rel(PrescriptionApplication.PrescriptionApplication.Auth, PrescriptionApplication.PrescriptionApplication.Shared, "depends on", $techn="", $tags="", $link="")
-Rel(PrescriptionApplication.PrescriptionApplication.Content, PrescriptionApplication.PrescriptionApplication.Shared, "depends on", $techn="", $tags="", $link="")
 Rel(PrescriptionApplication.PrescriptionApplication.Admin, PrescriptionApplication.PrescriptionApplication.Shared, "depends on", $techn="", $tags="", $link="")
+Rel(PrescriptionApplication.PrescriptionApplication.Content, PrescriptionApplication.PrescriptionApplication.Shared, "depends on", $techn="", $tags="", $link="")
+Rel(PrescriptionApplication.PrescriptionApplication.Auth, PrescriptionApplication.PrescriptionApplication.Shared, "depends on", $techn="", $tags="", $link="")
+Rel(PrescriptionApplication.PrescriptionApplication.Exam, PrescriptionApplication.PrescriptionApplication.Shared, "depends on", $techn="", $tags="", $link="")
 
 SHOW_LEGEND(true)
 hide stereotypes
