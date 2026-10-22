@@ -28,14 +28,14 @@ interface MenuItem {
   children?: { label: string; image: string }[];
 }
 
-/** Doping Hafıza's menu (docs/arayuz.md, Uygulama kabuğu) plus Eksiklerim; Dopingle opens from the top bar. */
+/** Doping Hafıza's menu (docs/arayuz.md, Uygulama kabuğu) plus Gelişimim; Dopingle opens from the top bar. */
 const MENU: MenuItem[] = [
   { to: '/app', label: tr.menu.home, icon: { tile: 'bg-menu-home', glyph: <HomeIcon /> } },
   { label: tr.menu.lessons, icon: { tile: 'bg-menu-lessons', glyph: <BookIcon /> } },
   { to: '/app/denemeler', label: tr.menu.exams, icon: { tile: 'bg-menu-exams', glyph: <ExamIcon /> } },
   {
-    to: '/app/eksiklerim',
-    label: tr.menu.weakTopics,
+    to: '/app/gelisimim',
+    label: tr.menu.progress,
     icon: { tile: 'bg-menu-weak-topics', glyph: <TargetIcon /> },
   },
   { label: tr.menu.way, icon: { image: dopingAssets.colorfulBird } },

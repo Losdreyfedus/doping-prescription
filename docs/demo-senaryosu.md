@@ -62,7 +62,7 @@ Sunumun tamamı 10–12 dakikadır; deneme canlı çözülmez, böylece demo bö
 
 ### Adım 5: İyileşme (yaklaşık 15 sn)
 
-- Deniz sol menüden Eksiklerim'e geçer.
+- Deniz sol menüden Gelişimim'e geçer.
 - Olasılık en üstte, kırmızı bölgededir; çubuğu az önceki artışla birlikte animasyonla yükselir ve yanında yukarı ok vardır.
 - Her konunun yanında "Bu konudan 4 video hazır" gibi bir bilgi ve **Çalış** butonu vardır.
 
@@ -79,7 +79,7 @@ Ertelendi (`docs/backlog.md`). Planlanan: `/admin/compare` ekranında yan yana i
 
 | Şart | Değer |
 | --- | --- |
-| Deneme gönderme → Eksiklerim güncel | En geç 2 sn |
+| Deneme gönderme → Gelişimim güncel | En geç 2 sn |
 | Deneme gönderme → yeni akış hazır | En geç 2 sn |
 | Akış isteği yanıt süresi | p95 < 150 ms (lokalde) |
 | Video demo hızı | `feed.demo-video-speed` config değeri, varsayılan 4 |

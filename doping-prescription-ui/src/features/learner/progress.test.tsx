@@ -37,11 +37,11 @@ const profile: LearnerProfile = {
   ],
 };
 
-describe('Eksiklerim', () => {
+describe('Gelişimim', () => {
   it('lists topics in API order with band, trend, ready videos and a study link', async () => {
     server.use(http.get(`${API}/api/learner/profile`, () => HttpResponse.json(profile)));
     writeSession({ token: 'token-deniz', user: meOf('deniz') });
-    renderApp('/app/eksiklerim');
+    renderApp('/app/gelisimim');
 
     const list = await screen.findByRole('list', { name: 'Konu ustalıkları' });
     const rows = within(list).getAllByRole('listitem');
@@ -64,7 +64,7 @@ describe('Eksiklerim', () => {
   it('shows an error when the profile cannot be loaded', async () => {
     server.use(http.get(`${API}/api/learner/profile`, () => HttpResponse.json({}, { status: 500 })));
     writeSession({ token: 'token-deniz', user: meOf('deniz') });
-    renderApp('/app/eksiklerim');
+    renderApp('/app/gelisimim');
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Veriler yüklenemedi.');
   });

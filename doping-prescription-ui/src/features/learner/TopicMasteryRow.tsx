@@ -12,9 +12,9 @@ const BAND_COLOR: Record<TopicProfile['band'], string> = {
 };
 
 const TREND: Record<TopicProfile['trend'], { arrow: string; className: string; label: string }> = {
-  UP: { arrow: '↑', className: 'text-success', label: tr.weakTopics.trendUp },
-  DOWN: { arrow: '↓', className: 'text-danger', label: tr.weakTopics.trendDown },
-  FLAT: { arrow: '→', className: 'text-text-muted', label: tr.weakTopics.trendFlat },
+  UP: { arrow: '↑', className: 'text-success', label: tr.progress.trendUp },
+  DOWN: { arrow: '↓', className: 'text-danger', label: tr.progress.trendDown },
+  FLAT: { arrow: '→', className: 'text-surface/50', label: tr.progress.trendFlat },
 };
 
 export function TopicMasteryRow({ topic }: { topic: TopicProfile }) {
@@ -25,20 +25,20 @@ export function TopicMasteryRow({ topic }: { topic: TopicProfile }) {
   return (
     <li
       data-band={topic.band}
-      className={`flex items-center gap-6 rounded-card bg-surface px-6 py-4 shadow-sm ${unknown ? 'opacity-60' : ''}`}
+      className={`flex items-center gap-5 border-b border-surface/10 px-2 py-3.5 last:border-b-0 ${unknown ? 'opacity-50' : ''}`}
     >
-      <span className="w-56 font-semibold">{topic.name}</span>
+      <span className="w-52 font-semibold">{topic.name}</span>
       {unknown ? (
-        <span className="flex-1 text-text-muted">{tr.weakTopics.noData}</span>
+        <span className="flex-1 text-surface/60">{tr.progress.noData}</span>
       ) : (
         <>
           <div
             role="meter"
-            aria-label={tr.weakTopics.masteryOf(topic.name)}
+            aria-label={tr.progress.masteryOf(topic.name)}
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={percent}
-            className="h-3 flex-1 overflow-hidden rounded-full bg-surface-muted"
+            className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface/15"
           >
             <div
               className={`h-full origin-left animate-bar-fill rounded-full ${BAND_COLOR[topic.band]}`}
@@ -51,15 +51,13 @@ export function TopicMasteryRow({ topic }: { topic: TopicProfile }) {
           </span>
         </>
       )}
-      <span className="w-44 text-sm text-text-muted">
-        {tr.weakTopics.readyVideos(topic.readyContentCount)}
-      </span>
+      <span className="w-40 text-xs text-surface/60">{tr.progress.readyVideos(topic.readyContentCount)}</span>
       <Link
         to={`/app/dopingle?topicId=${String(topic.topicId)}`}
-        className="rounded-button bg-ink px-5 py-2 font-semibold text-surface"
-        aria-label={tr.weakTopics.studyTopic(topic.name)}
+        className="rounded-button border border-surface/25 bg-ink px-5 py-2 font-semibold text-surface hover:border-surface/60"
+        aria-label={tr.progress.studyTopic(topic.name)}
       >
-        {tr.weakTopics.study}
+        {tr.progress.study}
       </Link>
     </li>
   );

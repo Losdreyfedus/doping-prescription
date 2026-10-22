@@ -140,7 +140,7 @@ function ResultView({ result }: { result: QuizResult }) {
         <p className="text-sm font-semibold">{tr.quiz.mastery(masteryChange.name, before, after)}</p>
         <div
           role="meter"
-          aria-label={tr.weakTopics.masteryOf(masteryChange.name)}
+          aria-label={tr.progress.masteryOf(masteryChange.name)}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={after}

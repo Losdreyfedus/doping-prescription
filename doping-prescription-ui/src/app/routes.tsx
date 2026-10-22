@@ -7,7 +7,7 @@ import { ExamResultPage } from '@/features/exams/ExamResultPage';
 import { ExamSolvePage } from '@/features/exams/ExamSolvePage';
 import { ExamsPage } from '@/features/exams/ExamsPage';
 import { HomePage } from '@/features/home/HomePage';
-import { WeakTopicsPage } from '@/features/learner/WeakTopicsPage';
+import { ProgressPage } from '@/features/learner/ProgressPage';
 
 import { AppShell } from './layout/AppShell';
 import { RouteError } from './layout/RouteError';
@@ -30,7 +30,9 @@ export const routes: RouteObject[] = [
       { path: 'denemeler', element: <ExamsPage /> },
       { path: 'denemeler/:attemptId', element: <ExamSolvePage /> },
       { path: 'denemeler/:attemptId/sonuc', element: <ExamResultPage /> },
-      { path: 'eksiklerim', element: <WeakTopicsPage /> },
+      { path: 'gelisimim', element: <ProgressPage /> },
+      // the screen was called Eksiklerim before the demo rename; old links keep working
+      { path: 'eksiklerim', element: <Navigate to="/app/gelisimim" replace /> },
     ],
   },
   {
