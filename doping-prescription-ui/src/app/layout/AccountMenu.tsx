@@ -11,7 +11,7 @@ import { ChevronDownIcon, ChevronRightIcon, LogoutIcon, SettingsIcon, UserIcon }
 const ROW = 'flex w-full items-center gap-4 rounded-button px-3 py-2.5 text-left text-sm';
 
 /**
- * The avatar and "Mezun ⌄" button of Doping Hafıza's top bar and its menu: the student, their points (AGENTS.md:
+ * The avatar of Doping Hafıza's top bar opens the account menu: the student, their points (AGENTS.md:
  * points in the top bar), Profilim and Ayarlar (not in the demo) and logout.
  */
 export function AccountMenu() {
@@ -49,7 +49,6 @@ export function AccountMenu() {
 
   return (
     <div ref={container} className="relative flex items-center gap-3">
-      <Avatar name={name} size="bar" />
       <button
         type="button"
         aria-haspopup="menu"
@@ -58,11 +57,19 @@ export function AccountMenu() {
         onClick={() => {
           setOpen((value) => !value);
         }}
+        className="rounded-full focus-visible:outline-2 focus-visible:outline-brand-blue"
+      >
+        <Avatar name={name} size="bar" />
+      </button>
+      {/* The class selector of Doping Hafıza; a single class in the demo */}
+      <span
+        aria-disabled="true"
+        title={tr.menu.notInDemo}
         className="flex h-12 items-center gap-1 rounded-button bg-surface px-3 text-sm text-text-muted shadow-md [&_svg]:size-4"
       >
         {tr.topBar.studentClass}
         <ChevronDownIcon />
-      </button>
+      </span>
       {open && (
         <div
           role="menu"
