@@ -21,7 +21,7 @@ describe('demo login and app shell', () => {
     expect(screen.getByRole('heading', { name: 'Deniz' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Ana Sayfa' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Testler ve Denemeler' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Eksiklerim' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Gelişimim' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Dersler' })).not.toBeInTheDocument();
     expect(sessionStorage.getItem('prescription.session')).toContain('token-deniz');
   });
@@ -54,9 +54,9 @@ describe('demo login and app shell', () => {
   it('keeps the session after a reload', async () => {
     loggedInAs('deniz');
 
-    renderApp('/app/eksiklerim');
+    renderApp('/app/gelisimim');
 
-    expect(await screen.findByRole('heading', { name: 'Eksiklerim' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Gelişimim' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Deniz hesap menüsü' })).toBeInTheDocument();
   });
 

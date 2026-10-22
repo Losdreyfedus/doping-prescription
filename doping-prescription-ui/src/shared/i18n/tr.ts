@@ -21,7 +21,7 @@ export const tr = {
     home: 'Ana Sayfa',
     lessons: 'Dersler',
     exams: 'Testler ve Denemeler',
-    weakTopics: 'Eksiklerim',
+    progress: 'Gelişimim',
     way: 'WAY Evreni',
     guidance: 'Rehberlik Videoları',
     stats: 'İstatistikler',
@@ -109,11 +109,16 @@ export const tr = {
     dopingleTitle: 'Dopingle',
     examsTitle: 'Testler ve Denemeler',
     examsSubtitle: 'Tüm testler ve deneme sınavları burada!',
-    weakTopicsTitle: 'Eksiklerim',
-    weakTopicsSubtitle: 'Deneme ve soru sonuçlarına göre konu durumun',
+    progressTitle: 'Gelişimim',
+    progressSubtitle:
+      'Deneme ve mikro-soru sonuçlarına göre her konudaki ustalığın. Kırmızı konular Dopingle akışında sana reçete olarak gelir.',
   },
-  weakTopics: {
+  progress: {
     loading: 'Konuların yükleniyor…',
+    legend: 'Renklerin anlamı',
+    legendWeak: 'Zayıf: Dopingle reçetende',
+    legendMedium: 'Gelişiyor',
+    legendStrong: 'Güçlü',
     listLabel: 'Konu ustalıkları',
     noData: 'Henüz veri yok, bir deneme çöz',
     readyVideos: (count: number) => `Bu konudan ${String(count)} video hazır`,

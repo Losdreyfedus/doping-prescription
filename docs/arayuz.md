@@ -59,7 +59,7 @@ Ustalık bantları için: `WEAK` = `--danger`, `MEDIUM` = `--orange`, `STRONG` =
 Ekran kaydındaki Doping Hafıza düzeni:
 
 - **Sol menü** (yaklaşık 300 px, beyaz): üstte logo; altında her biri **pastel renkli, yuvarlak kare ikon karosu** + metin olan menü öğeleri. Aktif öğenin arka planı `--surface-muted` ve yuvarlak köşeli. Dopingle katmanında menü yalnızca ikonlara daralır (~92 px) ve üzerine gelince ipucu (tooltip) gösterir.
-- Menü öğeleri Doping Hafıza'nın gerçek menüsüyle aynıdır (Ana Sayfa, Dersler, Testler ve Denemeler, WAY Evreni, Rehberlik Videoları, İstatistikler, Akıllı Değerlendirme Paneli, Bire Bir Uygulamalar, Yardım Merkezi, Canlı Etkinlikler, Öğrencilerimizden Dinleyin) ve Testler ve Denemeler'in altına **Eksiklerim** eklenir. Yalnızca **Ana Sayfa**, **Testler ve Denemeler** ve **Eksiklerim** ekran açar; diğerleri tıklanmayan görünüm öğeleridir. Dopingle menüde yoktur.
+- Menü öğeleri Doping Hafıza'nın gerçek menüsüyle aynıdır (Ana Sayfa, Dersler, Testler ve Denemeler, WAY Evreni, Rehberlik Videoları, İstatistikler, Akıllı Değerlendirme Paneli, Bire Bir Uygulamalar, Yardım Merkezi, Canlı Etkinlikler, Öğrencilerimizden Dinleyin) ve Testler ve Denemeler'in altına **Gelişimim** eklenir. Yalnızca **Ana Sayfa**, **Testler ve Denemeler** ve **Gelişimim** ekran açar; diğerleri tıklanmayan görünüm öğeleridir. Dopingle menüde yoktur.
 - **Üst çubuk:** solda geniş, `--surface-muted` arka planlı, yuvarlak köşeli arama kutusu ("Ders, ünite ya da konu ara" yer tutucusu; demoda işlevsiz olabilir); sağda **Dopingle'ı açan** pembe şimşek butonu, görünüm amaçlı mesaj, takvim ve bildirim ikonları, avatar (tıklanınca hesap menüsü: öğrenci adı, toplam puan, Profilim, Ayarlar, Çıkış Yap) ve görünüm amaçlı "Mezun ⌄" sınıf seçicisi.
 
 ## Sayfalar
@@ -102,7 +102,7 @@ Ekran kaydındaki Dopingle sayfasının birebir benzeri olmalı:
     - Video kartının sol üstünde konu çipi ve sağ altta puan rozeti ("+15 puan", `--orange`).
 - Klavye: ↑/↓ video değiştirir, Space durdurur/devam ettirir. Fare tekerleği ve sağ kenardaki oklar da çalışır.
 - Akış ilk açılışta veya `?refresh=1` ile yeni oturum başlatır. Sona 3 kart kala sonraki sayfa yüklenir.
-- `?topicId=` parametresiyle yalnız o konunun videoları gösterilir (Eksiklerim'deki **Çalış** butonu). API tarafında `GET /api/feed?topicId=9` desteklenir.
+- `?topicId=` parametresiyle yalnız o konunun videoları gösterilir (Gelişimim'deki **Çalış** butonu). API tarafında `GET /api/feed?topicId=9` desteklenir.
 
 ### Simüle oynatıcı
 
@@ -171,12 +171,12 @@ Ekran kaydındaki "Testi Tamamladın" ekranının benzeri:
 - **Güncelleme bandı** (bu projeye özel, en kritik öğe): Konu Analizi'nin üstünde, tam genişlikte, `--navy` arka planlı yuvarlak bant. Profil güncellenene kadar "Eksiklerin analiz ediliyor…" ve dönen ikon; güncellenince "Dopingle akışın bu sonuca göre güncellendi. Olasılık ve Permütasyon-Kombinasyon için 8 video hazır." ve turuncu **Reçeteni gör** butonu (`/app/dopingle?refresh=1`).
 - En altta soru inceleme listesi: soru, seçilen ve doğru şık balonları, açıklama.
 
-## Eksiklerim
+## Gelişimim
 
-Ekran kaydında karşılığı yok; aynı görsel dille tasarla.
+Route `/app/gelisimim` (eski `/app/eksiklerim` buraya yönlenir). Görsel stil Doping Hafıza'nın Akıllı Değerlendirme Paneli tonlarındadır.
 
-- Sayfa başlığı "Eksiklerim", alt başlık "Deneme ve soru sonuçlarına göre konu durumun".
-- Konular mastery'ye göre artan sırada, her biri beyaz yuvarlak kart satırı: konu adı, bant renginde yatay çubuk, yüzde, trend oku, "Bu konudan 6 video hazır" ve **Çalış** butonu (`--ink` dolgu).
+- Koyu tema (`--navy-deep` zemin): solda büyük "Gelişimim" başlığı, kısa açıklama ve bant renklerinin anlamı; sağda `--navy` kutu içinde konu satırları.
+- Konular mastery'ye göre artan sırada; her satır: konu adı, bant renginde ince yatay performans çubuğu, yüzde, trend oku, "Bu konudan 4 video hazır" ve **Çalış** butonu (`--ink` dolgu).
 - Verisi olmayan konular gri ve en altta: "Henüz veri yok, bir deneme çöz".
 - Bant renkleri API'deki `band` alanından gelir, arayüzde eşik hesaplanmaz. Kırmızı (`WEAK`) bant, akışta reçete olarak gelen konularla birebir aynıdır (bkz. `docs/algoritma.md` §1).
 - Sayfa açılışında çubuklar 0'dan değerlerine animasyonla dolar; son ziyaretten beri artan konu kısa bir vurgu animasyonu alır.
