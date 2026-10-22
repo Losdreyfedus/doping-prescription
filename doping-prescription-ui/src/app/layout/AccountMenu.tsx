@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router';
 import { useSession } from '@/app/session/sessionContext';
 import { usePoints } from '@/shared/api/points';
 import { tr } from '@/shared/i18n/tr';
-import { Avatar } from '@/shared/ui/Avatar';
 import { dopingAssets } from '@/shared/ui/dopingAssets';
 import { ChevronDownIcon, ChevronRightIcon, LogoutIcon, SettingsIcon, UserIcon } from '@/shared/ui/icons';
 
@@ -59,7 +58,7 @@ export function AccountMenu() {
         }}
         className="rounded-full focus-visible:outline-2 focus-visible:outline-brand-blue"
       >
-        <Avatar name={name} size="bar" />
+        <img src={dopingAssets.avatarBoy} alt="" className="size-12 rounded-full bg-sun/90 object-cover" />
       </button>
       {/* The class selector of Doping Hafıza; a single class in the demo */}
       <span
@@ -76,7 +75,12 @@ export function AccountMenu() {
           className="absolute top-full right-0 z-20 mt-2 flex w-72 flex-col gap-1 rounded-card bg-surface p-3 text-ink shadow-xl"
         >
           <div className="flex items-center gap-3 px-3 py-2">
-            <Avatar name={name} />
+            <img
+              src={dopingAssets.avatarBoy}
+              alt=""
+              aria-hidden="true"
+              className="size-9 rounded-full bg-sun/90 object-cover"
+            />
             <div className="flex flex-1 flex-col">
               <span className="font-bold">{name}</span>
               <span className="text-xs text-text-muted">{tr.topBar.studentClass}</span>
