@@ -13,6 +13,7 @@ export const dopingAssets = {
   fiftyPoint: '/doping/fiftypoint.svg',
   kocumYanimda: '/doping/kocum-yanimda-logo.svg',
   medal: '/doping/mukemmelkosu.svg',
+  miniLogoWhite: '/doping/mini-logo-white.svg',
   playIcon: '/doping/play-icon.svg',
   point: '/doping/point.svg',
   shortVideo: '/doping/short-video-icon.png',
