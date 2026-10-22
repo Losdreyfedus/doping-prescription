@@ -62,7 +62,7 @@ jobs:
 
   e2e:
     name: e2e (demo scenario)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Playwright 1.55 installs its browser dependencies for 24.04; ubuntu-latest moved to 26
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
