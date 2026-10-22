@@ -82,7 +82,7 @@ Ekran kaydındaki Doping Hafıza düzeni:
 
 ## Ana Sayfa
 
-Giriş sonrası açılan ilk ekran; Doping Hafıza'nın ana sayfasıyla aynı düzende. Yalnızca öğrenci adı canlıdır; diğer kartlar (profil kartı rozetleri, Günlük Görevlerim, Günlük Çalışma Performansı, Duyurular, Son Aktivitelerim, sağ sütunda haftalık takvim ve "YKS Yolculuğunu Başlat!" kartı) görünüm amaçlıdır. Görseller indirilmez, CSS ile çizilir (AGENTS.md §5.11).
+Giriş sonrası açılan ilk ekran; Doping Hafıza'nın ana sayfasıyla aynı düzende. Yalnızca öğrenci adı canlıdır; diğer kartlar (profil kartı rozetleri, Günlük Görevlerim, Günlük Çalışma Performansı, Duyurular, Son Aktivitelerim, sağ sütunda haftalık takvim ve "YKS Yolculuğunu Başlat!" kartı) görünüm amaçlıdır. Görseller Doping Hafıza'nın kendi varlıklarıdır (`public/doping/`, ADR 0006); bileşenler bunlara `dopingAssets` haritasıyla erişir. Canlı olanlar: öğrenci adı, toplam puan, seri sayacı ve hafta takvimi (oklar ve Bugün).
 
 ## Dopingle
 
