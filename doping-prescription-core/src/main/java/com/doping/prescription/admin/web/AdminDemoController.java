@@ -1,5 +1,7 @@
 package com.doping.prescription.admin.web;
 
+import com.doping.prescription.admin.application.ContentEffectivenessService;
+import com.doping.prescription.admin.application.ContentEffectivenessService.VideoEffectiveness;
 import com.doping.prescription.admin.application.DemoControlService;
 import com.doping.prescription.admin.application.DemoControlService.AnswerKeyRow;
 import com.doping.prescription.admin.application.DemoControlService.FeedDebug;
@@ -20,9 +22,11 @@ import org.springframework.web.bind.annotation.RestController;
 class AdminDemoController {
 
     private final DemoControlService demo;
+    private final ContentEffectivenessService effectiveness;
 
-    AdminDemoController(DemoControlService demo) {
+    AdminDemoController(DemoControlService demo, ContentEffectivenessService effectiveness) {
         this.demo = demo;
+        this.effectiveness = effectiveness;
     }
 
     @GetMapping("/api/admin/demo/students")
@@ -50,6 +54,12 @@ class AdminDemoController {
     @GetMapping("/api/admin/demo/answer-key")
     List<AnswerKeyRow> answerKey() {
         return demo.answerKey();
+    }
+
+    /** Answers and correct-answer rate of each video's micro-questions, best first. */
+    @GetMapping("/api/admin/content-effectiveness")
+    List<VideoEffectiveness> contentEffectiveness() {
+        return effectiveness.byVideo();
     }
 
     /** docs/demo-senaryosu.md, step 7: called from Swagger UI with an admin token. */

@@ -10,6 +10,7 @@ export const queryKeys = {
   adminStudents: (): readonly ['admin', 'students'] => ['admin', 'students'],
   adminPersonas: (): readonly ['admin', 'personas'] => ['admin', 'personas'],
   adminAnswerKey: (): readonly ['admin', 'answer-key'] => ['admin', 'answer-key'],
+  adminEffectiveness: (): readonly ['admin', 'effectiveness'] => ['admin', 'effectiveness'],
   feed: (topicId: number | undefined, sessionKey: string): readonly ['feed', number | undefined, string] => [
     'feed',
     topicId,

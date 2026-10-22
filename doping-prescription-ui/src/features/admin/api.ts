@@ -51,3 +51,12 @@ export function useDemoActions() {
   });
   return { reset, persona };
 }
+
+export type VideoEffectiveness = Schemas['VideoEffectiveness'];
+
+export function useContentEffectiveness() {
+  return useQuery({
+    queryKey: queryKeys.adminEffectiveness(),
+    queryFn: async () => unwrap(await api.GET('/api/admin/content-effectiveness')),
+  });
+}

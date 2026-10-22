@@ -11,6 +11,27 @@
     "bearer" : [ ]
   } ],
   "paths" : {
+    "/api/admin/content-effectiveness" : {
+      "get" : {
+        "operationId" : "contentEffectiveness",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/VideoEffectiveness"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "admin-demo-controller" ]
+      }
+    },
     "/api/admin/demo/answer-key" : {
       "get" : {
         "operationId" : "answerKey",
@@ -1487,6 +1508,34 @@
           "userId" : {
             "type" : "string",
             "format" : "uuid"
+          }
+        }
+      },
+      "VideoEffectiveness" : {
+        "required" : [ "answers", "contentId", "correct", "correctRate", "title", "topic" ],
+        "type" : "object",
+        "properties" : {
+          "answers" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "contentId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "correct" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "correctRate" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "topic" : {
+            "type" : "string"
           }
         }
       },

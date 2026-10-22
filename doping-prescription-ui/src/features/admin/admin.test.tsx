@@ -33,6 +33,18 @@ describe('admin demo control', () => {
           { orderNo: 8, topic: 'Permütasyon-Kombinasyon', correctKey: 'C', scenarioKey: null },
         ]),
       ),
+      http.get(`${API}/api/admin/content-effectiveness`, () =>
+        HttpResponse.json([
+          {
+            contentId: 33,
+            title: 'Olasılığın temeli',
+            topic: 'Olasılık',
+            answers: 3,
+            correct: 2,
+            correctRate: 2 / 3,
+          },
+        ]),
+      ),
       http.post(`${API}/api/admin/demo/reset`, record),
       http.post(`${API}/api/admin/demo/persona`, record),
     );
@@ -53,5 +65,7 @@ describe('admin demo control', () => {
     ]);
     expect(screen.getByText('Sunum cevap anahtarı')).toBeInTheDocument();
     expect(screen.getByText('Permütasyon-Kombinasyon').closest('tr')).toHaveTextContent('Boş');
+    const effectiveness = screen.getByRole('table', { name: 'Video etkinliği' });
+    expect(within(effectiveness).getByText('Olasılığın temeli').closest('tr')).toHaveTextContent('%67');
   });
 });

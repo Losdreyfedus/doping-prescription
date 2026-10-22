@@ -11,3 +11,7 @@ Hedef, 2. aşamadan itibaren demo senaryosunun ana yolunu (adım 1–5, Deniz) e
 | **Puanlarım ekranı** | Senaryoda kullanılmıyor. Ana Sayfa görünüm amaçlı olarak var (giriş sonrası açılır); puan üst çubukta ve mikro-soru panelinde görünür. | `GET /api/points` ve profil API'leri bu ekranları besleyecek şekilde tasarlanır; yalnızca yeni route ve sayfa eklenir. |
 | **Mert ve Selin persona'ları** (`WEAK_PROBLEMS`, `SCRIPTED_EXAM`) | Karşılaştırma ve yedek öğrenci senaryoları MVP'de yok. Kullanıcılar seed'de durur. | Yeni `DemoPersona` bean'leri; persona seçimi isimle yapıldığı için mevcut kod değişmez. |
 | **kafka-ui** | Geliştirme kolaylığı; demoyu etkilemiyor. Compose dosyasında `tools` profiliyle isteğe bağlı durur; MVP doğrulamalarında ve CI'da kullanılmaz, üzerine iş yapılmaz. | Gerekirse sürüm güncellemesi ve README notu. |
+
+## Video etkinliği → quality skoru
+
+Admin'deki "Video etkinliği" tablosu (`GET /api/admin/content-effectiveness`) her videonun mikro-sorularındaki doğruluk oranını gösteriyor. İleride bu oran, yeterli cevap biriktiğinde (örn. en az 30 cevap) `content_item.quality_score`'u besleyebilir; böylece akış sıralamasındaki quality bileşeni editör tahmini yerine gerçek öğrenme etkisine dayanır. Bugün quality skoru seed'den gelen statik bir değerdir.

@@ -44,6 +44,7 @@ Hata formatı RFC 9457 `ProblemDetail`, ek alan `code`:
 | POST | `/api/admin/demo/reset` | admin | `{ "slug": "deniz" }` demo öğrencisini sıfırla |
 | POST | `/api/admin/demo/persona` | admin | `{ "slug", "persona" }` hazır profil yükle |
 | GET | `/api/admin/feed-debug?slug=deniz` | admin | Akışın skor dökümü |
+| GET | `/api/admin/content-effectiveness` | admin | Video başına mikro-soru cevap sayısı ve doğruluk oranı |
 | GET | `/api/admin/compare?left=deniz&right=selin` | admin | İki öğrencinin akış önizlemesi (kayıt bırakmaz) |
 | GET | `/api/admin/content?status=TAGGED` | admin | İçerik listesi |
 | POST | `/api/admin/content` | admin | Yeni video ekle (etiketleme otomatik çalışır) |
@@ -260,6 +261,10 @@ Kullanıcı sonucu aynı yanıtta görmeli, bu yüzden bu akış senkrondur (`do
 ### POST /api/admin/demo/persona
 
 `persona`: `NEW` (her şey boş), `WEAK_PROBLEMS` (Mert'in profili), `SCRIPTED_EXAM` (demo senaryosundaki deneme sonucu), `SCRIPTED_IN_PROGRESS` (Mini Deneme 1 başlatılmış, 12 cevap senaryo cevaplarıyla işaretli, gönderilmemiş; sunumda Deniz için). Persona'lar gerçek API akışıyla uygulanır: attempt oluşturulur, cevaplar yazılır, gönderilir (`SCRIPTED_IN_PROGRESS`'te gönderme adımı yapılmaz); böylece event zinciri de test edilmiş olur. Senaryo cevapları `exam_question.scenario_answer` kolonundan okunur.
+
+### GET /api/admin/content-effectiveness
+
+Video başına mikro-soru cevap sayısı, doğru sayısı ve doğruluk oranı (`correctRate`, 0–1); doğruluk oranına göre azalan, eşitlikte cevap sayısı fazla olan önce. Yalnızca en az bir cevabı olan videolar. Kaynak `micro_quiz_attempt` (quiz modülü, `QuizStatistics`) ve soru → video eşlemesi (content modülü, `MicroQuestionCatalog`).
 
 ### GET /api/admin/feed-debug?slug=deniz
 

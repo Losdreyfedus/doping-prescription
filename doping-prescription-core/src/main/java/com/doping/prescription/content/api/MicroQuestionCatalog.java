@@ -1,6 +1,8 @@
 package com.doping.prescription.content.api;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -14,6 +16,9 @@ public interface MicroQuestionCatalog {
     Optional<QuizQuestion> nextQuestion(Integer contentId, Set<Integer> answeredQuestionIds);
 
     Optional<QuizQuestion> question(Integer microQuestionId);
+
+    /** The video of each given micro-question, in one lookup. */
+    Map<Integer, Integer> contentIdsOf(Collection<Integer> microQuestionIds);
 
     /**
      * @param options    choices in their stored order, keyed A-D

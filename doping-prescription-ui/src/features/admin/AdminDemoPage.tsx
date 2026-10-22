@@ -10,6 +10,7 @@ import { LogoutIcon } from '@/shared/ui/icons';
 import { PageHeader } from '@/shared/ui/PageHeader';
 
 import { type StudentCard, useAnswerKey, useDemoActions, usePersonas, useStudents } from './api';
+import { ContentEffectiveness } from './ContentEffectiveness';
 
 /** Route /admin (docs/arayuz.md, Admin): demo control and the presenter's answer key. */
 export function AdminDemoPage() {
@@ -45,6 +46,7 @@ export function AdminDemoPage() {
           </ul>
         )}
         <AnswerKey />
+        <ContentEffectiveness />
       </main>
     </div>
   );

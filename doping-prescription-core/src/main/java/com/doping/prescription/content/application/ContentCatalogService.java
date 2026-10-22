@@ -3,6 +3,7 @@ package com.doping.prescription.content.application;
 import com.doping.prescription.content.api.ContentCatalog;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +63,18 @@ class ContentCatalogService implements ContentCatalog {
     @Transactional(readOnly = true)
     public List<VideoView> liveVideos() {
         return jdbc.sql(VIDEOS + " where item.status = 'LIVE' order by item.id")
+                .query((row, rowNumber) -> videoOf(row))
+                .list();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<VideoView> videos(Collection<Integer> contentIds) {
+        if (contentIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql(VIDEOS + " where item.id in (:contentIds) order by item.id")
+                .param("contentIds", contentIds)
                 .query((row, rowNumber) -> videoOf(row))
                 .list();
     }
