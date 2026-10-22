@@ -85,6 +85,7 @@ export const tr = {
   },
   home: {
     profile: 'Profil',
+    avatar: (name: string) => `${name} profil resmi`,
     dailyTasks: 'Günlük Görevlerim',
     dailyTaskText: '5 video izle ve 50 puan kazan 😊',
     performance: 'Günlük Çalışma Performansı',
