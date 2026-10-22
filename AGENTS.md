@@ -128,7 +128,7 @@ API `http://localhost:8080`, web `http://localhost:5173`, OpenAPI arayüzü `htt
 8. **Sayısal değerler config'de.** `docs/algoritma.md` §9'daki her değer `application.yml` içindeki `prescription.*` altından okunur; her modül kendi `prescription.<modül>.*` grubunu kendi doğrulanmış `@ConfigurationProperties` record'uyla bağlar.
 9. **Arayüz dili Türkçe**, kod, tablo, kolon, endpoint, commit mesajı ve kod yorumları İngilizce.
 10. **Belirsizlikte sessiz tahmin yok.** Varsayım yaptığın yere `TODO(spec):` yorumu bırak ve iş sonunda liste halinde raporla. Önemli bir teknik karar alırsan `docs/adr/` altına yeni bir ADR yaz.
-11. **Telifli içerik kullanma.** İnternetten video, görsel, logo veya soru indirme. Videolar için `docs/arayuz.md` içindeki simüle oynatıcıyı kullan.
+11. **Telifli içerik kullanma.** İnternetten video, görsel, logo veya soru indirme. Videolar için `docs/arayuz.md` içindeki simüle oynatıcıyı kullan. İstisna: Doping Hafıza'nın kendi görsel varlıkları `public/doping/` altında kullanılabilir (`docs/adr/0006-doping-gorsel-varliklari.md`).
 12. **Seed içerikleri doğru olsun.** Soruları sen yazacaksın; her sorunun tek doğru cevabı olmalı ve matematiksel olarak doğru olmalı. Seed dosyalarının başına "Editör kontrolünden geçmedi" notu koy.
 13. **Kod kalitesi pazarlık konusu değil.** `docs/kod-standartlari.md` içindeki kurallar her commit'te geçerlidir; `./mvnw verify` ve `npm run check` kırmızıyken commit atma.
 

@@ -248,3 +248,19 @@ export function ChevronUpIcon() {
     </Icon>
   );
 }
+
+export function ChevronLeftIcon() {
+  return (
+    <Icon>
+      <path d="M15 6l-6 6 6 6" />
+    </Icon>
+  );
+}
+
+export function ChevronRightIcon() {
+  return (
+    <Icon>
+      <path d="M9 6l6 6-6 6" />
+    </Icon>
+  );
+}

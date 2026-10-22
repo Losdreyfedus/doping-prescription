@@ -5,7 +5,8 @@ import { useSession } from '@/app/session/sessionContext';
 import { usePoints } from '@/shared/api/points';
 import { tr } from '@/shared/i18n/tr';
 import { Avatar } from '@/shared/ui/Avatar';
-import { BellIcon, BoltIcon, CalendarIcon, LogoutIcon, MailIcon, SearchIcon } from '@/shared/ui/icons';
+import { dopingAssets } from '@/shared/ui/dopingAssets';
+import { BellIcon, CalendarIcon, ChevronDownIcon, LogoutIcon, MailIcon, SearchIcon } from '@/shared/ui/icons';
 
 function RoundIcon({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -27,7 +28,7 @@ function PointsPill() {
       aria-label={tr.topBar.points}
       className="flex items-center gap-2 rounded-full bg-surface-muted px-3 py-2 text-sm font-bold"
     >
-      <span aria-hidden="true" className="size-3 rounded-full bg-sun" />
+      <img src={dopingAssets.point} alt="" aria-hidden="true" className="size-5" />
       {tr.points.label(points.data?.total ?? 0)}
     </span>
   );
@@ -58,9 +59,9 @@ export function TopBar() {
         state={{ from: location.pathname }}
         aria-label={tr.topBar.openDopingle}
         title={tr.topBar.openDopingle}
-        className="flex size-12 items-center justify-center rounded-full bg-accent-pink text-surface shadow-md focus-visible:outline-2 focus-visible:outline-brand-blue"
+        className="size-12 shrink-0 rounded-full shadow-md focus-visible:outline-2 focus-visible:outline-brand-blue"
       >
-        <BoltIcon />
+        <img src={dopingAssets.shortVideo} alt="" className="size-12" />
       </Link>
       <RoundIcon label={tr.topBar.messages}>
         <MailIcon />
@@ -75,8 +76,10 @@ export function TopBar() {
       {session && (
         <div className="flex items-center gap-3">
           <Avatar name={session.user.displayName} />
-          <span className="rounded-button bg-surface px-3 py-2 text-sm text-text-muted shadow-sm">
-            {session.user.displayName}
+          <span className="flex items-center gap-1 rounded-button bg-surface px-3 py-2 text-sm text-text-muted shadow-sm [&_svg]:size-4">
+            <span className="sr-only">{session.user.displayName}</span>
+            {tr.topBar.studentClass}
+            <ChevronDownIcon />
           </span>
         </div>
       )}

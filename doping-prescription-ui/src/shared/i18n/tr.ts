@@ -30,6 +30,9 @@ export const tr = {
     help: 'Yardım Merkezi',
     live: 'Canlı Etkinlikler',
     stories: 'Öğrencilerimizden Dinleyin',
+    cozucu: 'Çözücü',
+    simdiAnladim: 'Şimdi Anladım',
+    kocumYanimda: 'Koçum Yanımda',
     notInDemo: 'Bu bölüm demoda yer almıyor',
   },
   topBar: {
@@ -41,6 +44,7 @@ export const tr = {
     calendar: 'Takvim',
     notifications: 'Bildirimler',
     points: 'Toplam puan',
+    studentClass: 'Mezun',
   },
   dopingle: {
     keyboardHint: '↑ ↓ Video değiştir | Space: Duraklat',
@@ -88,6 +92,10 @@ export const tr = {
     recentActivity: 'Son Aktivitelerim',
     recentActivityHint: 'En son izlediğin videolar ve tamamladığın testler aşağıda listelenecektir.',
     calendar: 'Takvim',
+    today: 'Bugün',
+    previousWeek: 'Önceki hafta',
+    nextWeek: 'Sonraki hafta',
+    streak: 'Günlük seri',
     weekDays: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'],
     journeyTitle: 'YKS Yolculuğunu Başlat!',
     journeyText: 'Günlük çalışma temponu belirle, Dopi senin için en doğru programı hazırlasın.',
