@@ -56,7 +56,7 @@ const MENU: MenuItem[] = [
   { label: tr.menu.stories, icon: { tile: 'bg-menu-stories', glyph: <PlayCircleIcon /> } },
 ];
 
-const ITEM = 'flex w-full items-center gap-3 rounded-button px-2 py-2 text-left text-[15px]';
+const ITEM = 'flex w-full items-center gap-3 rounded-button px-2 py-[7px] text-left text-sm';
 
 function ItemIcon({ icon }: { icon: MenuItem['icon'] }) {
   if ('image' in icon) {

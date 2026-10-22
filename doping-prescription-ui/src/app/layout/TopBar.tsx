@@ -14,7 +14,7 @@ function RoundIcon({ label, children }: { label: string; children: ReactNode }) 
       role="img"
       aria-label={label}
       title={tr.menu.notInDemo}
-      className="flex size-12 items-center justify-center rounded-full bg-surface-muted text-ink"
+      className="flex size-11 items-center justify-center rounded-full bg-surface-muted text-ink"
     >
       {children}
     </span>
@@ -44,8 +44,8 @@ export function TopBar() {
   const location = useLocation();
 
   return (
-    <header className="flex items-center gap-4 bg-surface px-6 py-4">
-      <label className="flex flex-1 items-center gap-3 rounded-button bg-surface-muted px-4 py-3 text-text-muted">
+    <header className="flex items-center gap-3.5 bg-surface px-6 py-3.5">
+      <label className="flex flex-1 items-center gap-3 rounded-button bg-surface-muted px-4 py-2.5 text-sm text-text-muted">
         <SearchIcon />
         <span className="sr-only">{tr.topBar.searchLabel}</span>
         <input
@@ -59,9 +59,9 @@ export function TopBar() {
         state={{ from: location.pathname }}
         aria-label={tr.topBar.openDopingle}
         title={tr.topBar.openDopingle}
-        className="size-12 shrink-0 rounded-full shadow-md focus-visible:outline-2 focus-visible:outline-brand-blue"
+        className="size-11 shrink-0 rounded-full shadow-md focus-visible:outline-2 focus-visible:outline-brand-blue"
       >
-        <img src={dopingAssets.shortVideo} alt="" className="size-12" />
+        <img src={dopingAssets.shortVideo} alt="" className="size-11" />
       </Link>
       <RoundIcon label={tr.topBar.messages}>
         <MailIcon />

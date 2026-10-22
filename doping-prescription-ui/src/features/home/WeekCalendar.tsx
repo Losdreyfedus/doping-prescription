@@ -18,7 +18,7 @@ export function WeekCalendar({ today }: { today: Date }) {
   return (
     <section aria-label={tr.home.calendar} className="flex flex-col gap-3 px-3 pt-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl">{title.charAt(0).toLocaleUpperCase('tr') + title.slice(1)}</h2>
+        <h2 className="text-[22px]">{title.charAt(0).toLocaleUpperCase('tr') + title.slice(1)}</h2>
         <div className="flex items-center gap-1 [&_svg]:size-5">
           <button
             type="button"

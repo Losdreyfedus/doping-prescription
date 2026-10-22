@@ -11,7 +11,7 @@
 - **Masaüstü web düzeni** (hedef çözünürlük 1920×1080, en az 1366×768 düzgün görünmeli). Mobil uyum gerekmez.
 - Açık tema; Dopingle sayfası koyu.
 - Her veri yüklemesinde iskelet (skeleton) görünümü, her listede boş durum metni.
-- Yansıtıcıda okunabilirlik için gövde metni en az 15 px.
+- Gövde metni Doping Hafıza ile aynı, 14 px; ölçüler gerçek sayfalarla birebir eşleşir (yansıtıcıda gerekirse tarayıcı yakınlaştırması kullanılır).
 
 ### Renkler
 

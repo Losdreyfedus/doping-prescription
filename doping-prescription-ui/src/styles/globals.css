@@ -143,8 +143,8 @@
 
 body {
   @apply bg-surface font-sans text-ink antialiased;
-  /* Projector readability: body text is at least 15px (docs/arayuz.md). */
-  font-size: 15px;
+  /* Same base size as Doping Hafıza (14px), so the demo matches the real pages one to one (docs/arayuz.md). */
+  font-size: 14px;
 }
 
 @keyframes bar-fill {
