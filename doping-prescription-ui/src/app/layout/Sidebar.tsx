@@ -72,12 +72,15 @@ function ItemIcon({ icon }: { icon: MenuItem['icon'] }) {
 }
 
 /** Left menu; an icon rail inside the Dopingle layer (docs/arayuz.md). */
-export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
+/**
+ * @param dark the Akıllı Değerlendirme Paneli look: dark rail, the active item on a white tile
+ */
+export function Sidebar({ collapsed = false, dark = false }: { collapsed?: boolean; dark?: boolean }) {
   const [openGroup, setOpenGroup] = useState<string | null>(null);
 
   return (
     <aside
-      className={`${collapsed ? 'w-[5.75rem] items-center' : 'w-[17.1875rem]'} flex shrink-0 flex-col gap-8 bg-surface px-3 py-8`}
+      className={`${collapsed ? 'w-[5.75rem] items-center' : 'w-[17.1875rem]'} flex shrink-0 flex-col gap-8 ${dark ? 'bg-dopingle-bg' : 'bg-surface'} px-3 py-8`}
     >
       {collapsed ? <span className="sr-only">{tr.app.logoAlt}</span> : <BrandLogo />}
       <nav aria-label={tr.menu.navigation}>
@@ -98,7 +101,7 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
                     title={collapsed ? item.label : undefined}
                     aria-label={collapsed ? item.label : undefined}
                     className={({ isActive }) =>
-                      `${ITEM} focus-visible:outline-2 focus-visible:outline-brand-blue ${isActive ? 'bg-surface-muted' : 'hover:bg-surface-muted-active'}`
+                      `${ITEM} focus-visible:outline-2 focus-visible:outline-brand-blue ${isActive ? (dark ? 'bg-surface' : 'bg-surface-muted') : dark ? 'hover:bg-surface/10' : 'hover:bg-surface-muted-active'}`
                     }
                   >
                     {content}

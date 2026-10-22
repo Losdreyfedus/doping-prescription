@@ -54,9 +54,9 @@ describe('demo login and app shell', () => {
   it('keeps the session after a reload', async () => {
     loggedInAs('deniz');
 
-    renderApp('/app/gelisimim');
+    renderApp('/app/denemeler');
 
-    expect(await screen.findByRole('heading', { name: 'Gelişimim' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Testler ve Denemeler' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Deniz hesap menüsü' })).toBeInTheDocument();
   });
 
@@ -68,6 +68,15 @@ describe('demo login and app shell', () => {
     sessionStorage.clear();
     const guestRouter = renderApp('/app/denemeler');
     expect(guestRouter.state.location.pathname).toBe('/');
+  });
+
+  it('opens Gelişimim in the dark panel layout without the top bar', async () => {
+    loggedInAs('deniz');
+    renderApp('/app/gelisimim');
+
+    expect(await screen.findByRole('heading', { name: 'Gelişimim' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Deniz hesap menüsü' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: "Ana Sayfa'ya dön" })).toHaveAttribute('href', '/app');
   });
 
   it('logs out back to the login screen', async () => {

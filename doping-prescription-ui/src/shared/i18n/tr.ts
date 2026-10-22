@@ -116,6 +116,10 @@ export const tr = {
   progress: {
     loading: 'Konuların yükleniyor…',
     legend: 'Renklerin anlamı',
+    back: "Ana Sayfa'ya dön",
+    course: 'TYT Matematik',
+    topicsHeader: 'Konular',
+    masteryHeader: 'Ustalık',
     legendWeak: 'Zayıf: Dopingle reçetende',
     legendMedium: 'Gelişiyor',
     legendStrong: 'Güçlü',

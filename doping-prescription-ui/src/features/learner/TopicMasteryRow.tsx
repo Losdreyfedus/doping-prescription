@@ -25,7 +25,7 @@ export function TopicMasteryRow({ topic }: { topic: TopicProfile }) {
   return (
     <li
       data-band={topic.band}
-      className={`flex items-center gap-5 border-b border-surface/10 px-2 py-3.5 last:border-b-0 ${unknown ? 'opacity-50' : ''}`}
+      className={`flex items-center gap-5 rounded-card border border-surface/10 bg-navy/70 px-5 py-3.5 ${unknown ? 'opacity-50' : ''}`}
     >
       <span className="w-52 font-semibold">{topic.name}</span>
       {unknown ? (

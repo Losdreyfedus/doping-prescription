@@ -175,7 +175,7 @@ Ekran kaydındaki "Testi Tamamladın" ekranının benzeri:
 
 Route `/app/gelisimim` (eski `/app/eksiklerim` buraya yönlenir). Görsel stil Doping Hafıza'nın Akıllı Değerlendirme Paneli tonlarındadır.
 
-- Koyu tema (`--navy-deep` zemin): solda büyük "Gelişimim" başlığı, kısa açıklama ve bant renklerinin anlamı; sağda `--navy` kutu içinde konu satırları.
+- Akıllı Değerlendirme Paneli gibi tam ekran koyu düzen: sol menü koyu ikon şeridine daralır (aktif öğe beyaz karoda), üst çubuk yoktur. Solda geri oku (Ana Sayfa), büyük "Gelişimim" başlığı, kısa açıklama ve bant renklerinin anlamı; sağda "TYT Matematik" başlığı, "Konular / Ustalık" başlık şeridi ve kart olarak konu satırları.
 - Konular mastery'ye göre artan sırada; her satır: konu adı, bant renginde ince yatay performans çubuğu, yüzde, trend oku, "Bu konudan 4 video hazır" ve **Çalış** butonu (`--ink` dolgu).
 - Verisi olmayan konular gri ve en altta: "Henüz veri yok, bir deneme çöz".
 - Bant renkleri API'deki `band` alanından gelir, arayüzde eşik hesaplanmaz. Kırmızı (`WEAK`) bant, akışta reçete olarak gelen konularla birebir aynıdır (bkz. `docs/algoritma.md` §1).
