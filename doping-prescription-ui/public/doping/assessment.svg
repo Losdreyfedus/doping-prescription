@@ -1,0 +1,12 @@
+<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Icons / Sidebar - Olcme Degerlendirme">
+<rect id="Rectangle 529" width="30" height="30" rx="9" fill="url(#paint0_linear_0_4)"/>
+<path id="Vector" d="M6 6H24M14.5 19.7368L10 24M15.5 19.7368L20 24M11 12.3161V15.4737M15 9.78947V15.4737M19 13.5789V15.4737M7 7V18.2632C7 18.8154 7.44772 19.2632 8 19.2632H22C22.5523 19.2632 23 18.8154 23 18.2632V7C23 6.44772 22.5523 6 22 6H8C7.44772 6 7 6.44772 7 7Z" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_4" x1="16.5" y1="-1.5" x2="16.5" y2="29" gradientUnits="userSpaceOnUse">
+<stop stop-color="#5867F1"/>
+<stop offset="1" stop-color="#314CE9"/>
+</linearGradient>
+</defs>
+</svg>

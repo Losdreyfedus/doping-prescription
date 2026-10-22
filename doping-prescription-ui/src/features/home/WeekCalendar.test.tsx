@@ -21,3 +21,17 @@ describe('WeekCalendar', () => {
     expect(screen.getByText('20')).not.toHaveAttribute('aria-current');
   });
 });
+
+describe('WeekCalendar navigation', () => {
+  it('moves by a week and comes back with Bugün', async () => {
+    const { default: userEvent } = await import('@testing-library/user-event');
+    render(<WeekCalendar today={new Date(2026, 9, 21)} />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Sonraki hafta' }));
+    expect(screen.getByText('26')).toBeInTheDocument();
+    expect(screen.queryByText('21')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Bugün' }));
+    expect(screen.getByText('21')).toHaveAttribute('aria-current', 'date');
+  });
+});
