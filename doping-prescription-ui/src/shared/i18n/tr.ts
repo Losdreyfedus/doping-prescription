@@ -38,7 +38,10 @@ export const tr = {
   topBar: {
     searchPlaceholder: 'Ders, ünite ya da konu ara',
     searchLabel: 'Ara',
-    logout: 'Çıkış',
+    logout: 'Çıkış Yap',
+    account: (name: string) => `${name} hesap menüsü`,
+    profile: 'Profilim',
+    settings: 'Ayarlar',
     openDopingle: 'Dopingle',
     messages: 'Mesajlar',
     calendar: 'Takvim',

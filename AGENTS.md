@@ -152,7 +152,7 @@ Her aşama bir öncekine dayanır. Bir aşamanın kabul kriterleri geçmeden son
     - `docs/veri-modeli.md` içindeki tüm tablolar (Flyway), JPA entity'leri, `docs/seed-verisi.md` içindeki içerik.
     - Kabul: migration'lar Testcontainers üzerinde temiz veritabanına uygulanır; seed tekrar çalıştırıldığında veriyi çoğaltmaz; seed sonrası 10 konu, 40 video, 2 mini deneme ve 4 kullanıcı vardır.
 2. **Kimlik ve uygulama kabuğu**
-    - Demo giriş (`auth` modülü, JWT), Spring Security yapılandırması, rol bazlı yetki; Doping benzeri uygulama kabuğu: Doping Hafıza menüsü (çalışan öğeler **Ana Sayfa**, **Testler ve Denemeler**, **Eksiklerim**), üst çubuk (Dopingle'ı açan şimşek butonu, öğrenci adı ve toplam puan), tasarım değişkenleri, yazı tipleri, API istemcisi üretimi. Giriş sonrası Ana Sayfa açılır; Dopingle tam ekran katman olarak şimşek butonundan açılır.
+    - Demo giriş (`auth` modülü, JWT), Spring Security yapılandırması, rol bazlı yetki; Doping benzeri uygulama kabuğu: Doping Hafıza menüsü (çalışan öğeler **Ana Sayfa**, **Testler ve Denemeler**, **Eksiklerim**), üst çubuk (Dopingle'ı açan şimşek butonu; öğrenci adı ve toplam puan avatarın yanındaki hesap menüsünde), tasarım değişkenleri, yazı tipleri, API istemcisi üretimi. Giriş sonrası Ana Sayfa açılır; Dopingle tam ekran katman olarak şimşek butonundan açılır.
     - Kabul: öğrenci seçilince sol menülü uygulama açılır; admin endpoint'leri öğrenciye 403 döner; sayfa yenilenince oturum korunur.
 3. **Deneme modülü**
     - Deneme listesi, çözme ekranı, gönderme, sonuç ekranı, `exam.result-published` event'i (outbox üzerinden Kafka'ya).
@@ -164,7 +164,7 @@ Her aşama bir öncekine dayanır. Bir aşamanın kabul kriterleri geçmeden son
     - Aday havuzları (`CandidatePool` bean'leri), sıralama (`FeedRanker`), kurallar, "neden bu video" şablonları (`ReasonTemplate`), Redis kuyruğu, fallback, Dopingle ekranı, simüle oynatıcı, etkileşim kaydı.
     - Kabul: demo senaryosunun 3. adımında akışın ilk 5 kartından en az 3'ü zayıf konudandır; aynı konudan art arda en fazla 2 kart gelir; kişiselleştirme kapalı öğrenci rastgele akış görür; Redis kapalıyken akış yine döner.
 6. **Mikro-soru ve puan**
-    - Quiz token'ı, mikro-soru penceresi, cevap, açıklama, puan, seri, suistimal kuralları. Puan üst çubukta ve mikro-soru panelinde görünür (Puanlarım ekranı ertelendi).
+    - Quiz token'ı, mikro-soru penceresi, cevap, açıklama, puan, seri, suistimal kuralları. Puan üst çubuktaki hesap menüsünde, Ana Sayfa profil kartında ve mikro-soru panelinde görünür (Puanlarım ekranı ertelendi).
     - Kabul: `docs/api.md` hata kodları tablosundaki her durum için entegrasyon testi vardır; aynı soruya ikinci cevap 0 puan alır; eşzamanlı iki cevap isteği çift puan üretmez.
 7. **Admin (minimum)**
     - Demo kontrolü: Sıfırla ve Persona yükle (`DemoPersona` bean'leri; bu aşamada `NEW` ve `SCRIPTED_IN_PROGRESS`), sunum cevap anahtarı kartı; "neden bu akış" yalnızca API olarak (`GET /api/admin/feed-debug`).
