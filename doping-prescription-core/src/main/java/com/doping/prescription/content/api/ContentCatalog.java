@@ -1,5 +1,6 @@
 package com.doping.prescription.content.api;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,6 +17,9 @@ public interface ContentCatalog {
 
     /** Every LIVE video with its primary topic, the feed's candidate catalogue. */
     List<VideoView> liveVideos();
+
+    /** Videos by id regardless of status, in one query. */
+    List<VideoView> videos(Collection<Integer> contentIds);
 
     /** A video by id regardless of status, for cards already served. */
     Optional<VideoView> video(Integer contentId);

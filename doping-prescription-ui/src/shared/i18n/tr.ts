@@ -144,6 +144,13 @@ export const tr = {
     question: 'Soru',
     correct: 'Doğru',
     scenario: 'Senaryo',
+    effectivenessTitle: 'Video etkinliği',
+    effectivenessHint:
+      'Her videonun mikro-sorularına verilen cevaplar ve doğruluk oranı; en etkili video en üstte.',
+    effectivenessEmpty: 'Henüz mikro-soru cevabı yok.',
+    video: 'Video',
+    answers: 'Cevap',
+    correctRate: 'Doğruluk',
   },
   exams: {
     category: 'Mini Denemeler',

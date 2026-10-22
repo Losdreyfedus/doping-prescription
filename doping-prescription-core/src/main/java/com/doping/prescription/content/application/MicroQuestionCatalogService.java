@@ -5,8 +5,11 @@ import com.doping.prescription.content.domain.MicroQuestionStatus;
 import com.doping.prescription.content.domain.QuestionContent;
 import com.doping.prescription.content.persistence.MicroQuestion;
 import com.doping.prescription.content.persistence.MicroQuestionRepository;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +36,13 @@ class MicroQuestionCatalogService implements MicroQuestionCatalog {
     @Transactional(readOnly = true)
     public Optional<QuizQuestion> question(Integer microQuestionId) {
         return questions.findById(microQuestionId).map(MicroQuestionCatalogService::view);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Integer, Integer> contentIdsOf(Collection<Integer> microQuestionIds) {
+        return questions.findAllById(microQuestionIds).stream()
+                .collect(Collectors.toMap(MicroQuestion::getId, MicroQuestion::getContentId));
     }
 
     private static QuizQuestion view(MicroQuestion question) {
