@@ -21,7 +21,10 @@ export function AnswerSheet({
 }) {
   const answered = Object.keys(answers).length;
   return (
-    <aside aria-label={tr.solve.answerSheet} className="w-[430px] shrink-0 rounded-card bg-surface-sheet p-5">
+    <aside
+      aria-label={tr.solve.answerSheet}
+      className="w-[26.875rem] shrink-0 rounded-card bg-surface-sheet p-5"
+    >
       <p className="font-bold">{attempt.title}</p>
       <p className="mb-4 text-sm">
         {tr.solve.sheetTotal(attempt.questions.length)} /{' '}

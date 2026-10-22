@@ -141,10 +141,19 @@
   --animate-bar-fill: bar-fill 0.8s ease-out;
 }
 
+html {
+  /*
+   * Doping Hafıza scales its pages with the viewport height: the layout is designed for an 864px-high viewport (a full
+   * HD screen at 125% Windows scaling) and shrinks in a smaller window. Every size is in rem, so tying the root size to
+   * the height scales the whole page (16px at 864px; about 13px in a 700px-high browser window).
+   */
+  font-size: clamp(11px, calc(100vh / 54), 18px);
+}
+
 body {
   @apply bg-surface font-sans text-ink antialiased;
-  /* Same base size as Doping Hafıza (14px), so the demo matches the real pages one to one (docs/arayuz.md). */
-  font-size: 14px;
+  /* 14px at an 864px-high viewport, like Doping Hafıza (docs/arayuz.md). */
+  font-size: 0.875rem;
 }
 
 @keyframes bar-fill {

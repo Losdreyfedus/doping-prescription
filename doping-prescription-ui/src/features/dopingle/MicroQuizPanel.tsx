@@ -53,7 +53,7 @@ export function MicroQuizPanel({ quiz, topicName, onContinue }: Props) {
   return (
     <section
       aria-label={tr.quiz.title}
-      className="flex w-[420px] flex-col gap-4 rounded-[20px] bg-surface p-6 text-ink shadow-xl"
+      className="flex w-[26.25rem] flex-col gap-4 rounded-[1.25rem] bg-surface p-6 text-ink shadow-xl"
     >
       <header className="flex items-center justify-between">
         <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-bold">{topicName}</span>

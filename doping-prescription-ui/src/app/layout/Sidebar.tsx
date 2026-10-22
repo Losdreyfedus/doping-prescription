@@ -56,7 +56,7 @@ const MENU: MenuItem[] = [
   { label: tr.menu.stories, icon: { tile: 'bg-menu-stories', glyph: <PlayCircleIcon /> } },
 ];
 
-const ITEM = 'flex w-full items-center gap-3 rounded-button px-2 py-[7px] text-left text-sm';
+const ITEM = 'flex w-full items-center gap-3 rounded-button px-2 py-[0.4375rem] text-left text-sm';
 
 function ItemIcon({ icon }: { icon: MenuItem['icon'] }) {
   if ('image' in icon) {
@@ -77,7 +77,7 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
 
   return (
     <aside
-      className={`${collapsed ? 'w-[92px] items-center' : 'w-[275px]'} flex shrink-0 flex-col gap-8 bg-surface px-3 py-8`}
+      className={`${collapsed ? 'w-[5.75rem] items-center' : 'w-[17.1875rem]'} flex shrink-0 flex-col gap-8 bg-surface px-3 py-8`}
     >
       {collapsed ? <span className="sr-only">{tr.app.logoAlt}</span> : <BrandLogo />}
       <nav aria-label={tr.menu.navigation}>

@@ -18,7 +18,7 @@ export function FinishDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="finish-title"
-        className="w-[420px] rounded-card bg-surface p-6"
+        className="w-[26.25rem] rounded-card bg-surface p-6"
       >
         <h2 id="finish-title" className="mb-2 text-xl font-bold">
           {tr.solve.confirmTitle}
