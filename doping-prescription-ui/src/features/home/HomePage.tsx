@@ -36,10 +36,10 @@ export function HomePage() {
             </div>
             <div className="flex flex-1 flex-col gap-4 pt-1">
               <div className="flex items-start justify-between">
-                <h1 className="text-2xl font-bold">{name}</h1>
+                <h1 className="text-[1.375rem] font-bold">{name}</h1>
                 <span
                   aria-label={tr.home.streak}
-                  className="flex items-center gap-1 font-display text-2xl font-bold text-sun"
+                  className="flex items-center gap-1 font-display text-[1.375rem] font-bold text-sun"
                 >
                   <img src={dopingAssets.dayCount} alt="" aria-hidden="true" className="size-6" />
                   {points.data?.streak.current ?? 0}
@@ -70,7 +70,7 @@ export function HomePage() {
         </div>
 
         <section className="flex flex-col gap-4">
-          <h2 className="text-2xl">{tr.home.performance}</h2>
+          <h2 className="text-[1.375rem]">{tr.home.performance}</h2>
           <div className="rounded-card bg-surface-muted p-2">
             <div className="relative flex h-48 items-center justify-center overflow-hidden rounded-card">
               <img
@@ -91,7 +91,7 @@ export function HomePage() {
 
         <div className="grid grid-cols-2 gap-6">
           <section className="flex flex-col gap-4">
-            <h2 className="text-2xl">{tr.home.announcements}</h2>
+            <h2 className="text-[1.375rem]">{tr.home.announcements}</h2>
             <div className="flex flex-col items-center gap-2 rounded-card bg-surface p-8 text-center">
               <img src={dopingAssets.announcement} alt="" aria-hidden="true" className="h-20" />
               <p className="font-semibold">{tr.home.noAnnouncements}</p>
@@ -99,7 +99,7 @@ export function HomePage() {
             </div>
           </section>
           <section className="flex flex-col gap-4">
-            <h2 className="text-2xl">{tr.home.recentActivity}</h2>
+            <h2 className="text-[1.375rem]">{tr.home.recentActivity}</h2>
             <div className="flex flex-col gap-4 rounded-card bg-surface p-5">
               <p className="text-sm text-brand-blue-ink">{tr.home.recentActivityHint}</p>
               {[0, 1].map((row) => (
@@ -116,10 +116,10 @@ export function HomePage() {
         </div>
       </div>
 
-      <aside className="flex w-80 shrink-0 flex-col gap-6 overflow-hidden rounded-card bg-surface">
+      <aside className="flex w-[19.375rem] shrink-0 flex-col gap-6 overflow-hidden rounded-card bg-surface">
         <WeekCalendar today={new Date()} />
         <div className="flex flex-col gap-3 px-3">
-          <h2 className="text-2xl">{tr.home.journeyTitle}</h2>
+          <h2 className="text-[1.375rem]">{tr.home.journeyTitle}</h2>
           <p className="text-sm">{tr.home.journeyText}</p>
           <span
             aria-disabled="true"

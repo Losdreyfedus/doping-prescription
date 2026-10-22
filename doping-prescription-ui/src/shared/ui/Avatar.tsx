@@ -1,6 +1,8 @@
 /** Round badge with the first letter of the name (docs/arayuz.md: no 3D avatars). */
-export function Avatar({ name, size = 'md' }: { name: string; size?: 'md' | 'lg' }) {
-  const dimensions = size === 'lg' ? 'size-16 text-2xl' : 'size-9 text-base';
+const DIMENSIONS = { md: 'size-9 text-base', bar: 'size-12 text-lg', lg: 'size-16 text-2xl' };
+
+export function Avatar({ name, size = 'md' }: { name: string; size?: keyof typeof DIMENSIONS }) {
+  const dimensions = DIMENSIONS[size];
   return (
     <span
       aria-hidden="true"

@@ -57,7 +57,7 @@ describe('demo login and app shell', () => {
     renderApp('/app/eksiklerim');
 
     expect(await screen.findByRole('heading', { name: 'Eksiklerim' })).toBeInTheDocument();
-    expect(screen.getByText('Deniz')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Deniz hesap menüsü' })).toBeInTheDocument();
   });
 
   it('sends a student away from the admin area and a guest away from the app', () => {
@@ -74,7 +74,9 @@ describe('demo login and app shell', () => {
     loggedInAs('deniz');
     const router = renderApp('/app/denemeler');
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Çıkış' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Deniz hesap menüsü' }));
+    expect(screen.getByRole('menu')).toHaveTextContent('0 puan');
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Çıkış Yap' }));
 
     expect(router.state.location.pathname).toBe('/');
     expect(sessionStorage.length).toBe(0);

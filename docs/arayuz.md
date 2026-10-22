@@ -11,7 +11,7 @@
 - **Masaüstü web düzeni** (hedef çözünürlük 1920×1080, en az 1366×768 düzgün görünmeli). Mobil uyum gerekmez.
 - Açık tema; Dopingle sayfası koyu.
 - Her veri yüklemesinde iskelet (skeleton) görünümü, her listede boş durum metni.
-- Yansıtıcıda okunabilirlik için gövde metni en az 15 px.
+- Ölçüler Doping Hafıza gibi görünür yüksekliğe göre ölçeklenir: tüm boyutlar rem, kök yazı boyutu `100vh / 54` (864 px yükseklikte 16 px, gövde metni 14 px). Sabit px ölçü kullanılmaz.
 
 ### Renkler
 
@@ -60,7 +60,7 @@ Ekran kaydındaki Doping Hafıza düzeni:
 
 - **Sol menü** (yaklaşık 300 px, beyaz): üstte logo; altında her biri **pastel renkli, yuvarlak kare ikon karosu** + metin olan menü öğeleri. Aktif öğenin arka planı `--surface-muted` ve yuvarlak köşeli. Dopingle katmanında menü yalnızca ikonlara daralır (~92 px) ve üzerine gelince ipucu (tooltip) gösterir.
 - Menü öğeleri Doping Hafıza'nın gerçek menüsüyle aynıdır (Ana Sayfa, Dersler, Testler ve Denemeler, WAY Evreni, Rehberlik Videoları, İstatistikler, Akıllı Değerlendirme Paneli, Bire Bir Uygulamalar, Yardım Merkezi, Canlı Etkinlikler, Öğrencilerimizden Dinleyin) ve Testler ve Denemeler'in altına **Eksiklerim** eklenir. Yalnızca **Ana Sayfa**, **Testler ve Denemeler** ve **Eksiklerim** ekran açar; diğerleri tıklanmayan görünüm öğeleridir. Dopingle menüde yoktur.
-- **Üst çubuk:** solda geniş, `--surface-muted` arka planlı, yuvarlak köşeli arama kutusu ("Ders, ünite ya da konu ara" yer tutucusu; demoda işlevsiz olabilir); sağda **Dopingle'ı açan** `--accent-pink` yuvarlak şimşek butonu, görünüm amaçlı mesaj, takvim ve bildirim ikonları, avatar + öğrenci adı.
+- **Üst çubuk:** solda geniş, `--surface-muted` arka planlı, yuvarlak köşeli arama kutusu ("Ders, ünite ya da konu ara" yer tutucusu; demoda işlevsiz olabilir); sağda **Dopingle'ı açan** pembe şimşek butonu, görünüm amaçlı mesaj, takvim ve bildirim ikonları, avatar (tıklanınca hesap menüsü: öğrenci adı, toplam puan, Profilim, Ayarlar, Çıkış Yap) ve görünüm amaçlı "Mezun ⌄" sınıf seçicisi.
 
 ## Sayfalar
 
