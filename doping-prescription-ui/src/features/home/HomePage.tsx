@@ -1,7 +1,6 @@
 import { useSession } from '@/app/session/sessionContext';
 import { usePoints } from '@/shared/api/points';
 import { tr } from '@/shared/i18n/tr';
-import { Avatar } from '@/shared/ui/Avatar';
 import { dopingAssets } from '@/shared/ui/dopingAssets';
 
 import { WeekCalendar } from './WeekCalendar';
@@ -26,9 +25,11 @@ export function HomePage() {
             className="flex flex-1 items-start gap-4 rounded-card bg-navy px-5 py-5 text-surface"
           >
             <div className="flex flex-col items-center">
-              <span className="flex size-24 items-center justify-center rounded-card bg-sun/90">
-                <Avatar name={name} size="lg" />
-              </span>
+              <img
+                src={dopingAssets.avatarBoy}
+                alt={tr.home.avatar(name)}
+                className="size-24 rounded-card bg-sun/90 object-cover"
+              />
               <span className="-mt-3 flex items-center gap-1 rounded-full bg-surface px-3 py-0.5 text-sm font-bold text-ink shadow">
                 <img src={dopingAssets.point} alt="" aria-hidden="true" className="size-5" />
                 <span aria-label={tr.topBar.points}>{points.data?.total ?? 0}</span>

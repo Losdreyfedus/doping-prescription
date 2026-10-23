@@ -5,6 +5,7 @@
 export const dopingAssets = {
   announcement: '/doping/announcement.png',
   assessment: '/doping/assessment.svg',
+  avatarBoy: '/doping/avatar-boy.png',
   chevronLeft: '/doping/chevron-left-gamfi.svg',
   chevronRight: '/doping/chevron-right-gamfi.svg',
   colorfulBird: '/doping/colorful-bird.png',
@@ -13,6 +14,7 @@ export const dopingAssets = {
   fiftyPoint: '/doping/fiftypoint.svg',
   kocumYanimda: '/doping/kocum-yanimda-logo.svg',
   medal: '/doping/mukemmelkosu.svg',
+  miniLogoWhite: '/doping/mini-logo-white.svg',
   playIcon: '/doping/play-icon.svg',
   point: '/doping/point.svg',
   shortVideo: '/doping/short-video-icon.png',
