@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.time.Duration;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
@@ -34,6 +35,7 @@ import org.springframework.validation.annotation.Validated;
  * @param rewatchBlockDays     rule 2
  * @param skipDeferCount       rule 3
  * @param demoVideoSpeed       how much faster the simulated player runs, passed to the web app
+ * @param pinnedContentIds     videos that open a personalized session, in order (the demo's real videos); empty by default
  */
 @Validated
 @ConfigurationProperties(prefix = "prescription.feed")
@@ -54,7 +56,12 @@ public record FeedProperties(
         @Positive int maxSameTopicInRow,
         @Positive int rewatchBlockDays,
         @Positive int skipDeferCount,
-        @Positive int demoVideoSpeed) {
+        @Positive int demoVideoSpeed,
+        @NotNull List<Integer> pinnedContentIds) {
+
+    public FeedProperties {
+        pinnedContentIds = pinnedContentIds == null ? List.of() : List.copyOf(pinnedContentIds);
+    }
 
     private static final double SUM_TOLERANCE = 1e-9;
 

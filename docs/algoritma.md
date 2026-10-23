@@ -89,6 +89,8 @@ Kart sayıları **en büyük kalan yöntemiyle** dağıtılır: her havuz `floor
 
 **Kişiselleştirme kapalı:** Tüm LIVE videolardan, `sessionId` ile tohumlanan karıştırma; havuz `FALLBACK`; yanıt `personalized: false`.
 
+**Öne çıkarılan içerik:** `feed.pinned-content-ids` listesindeki videolar, kişiselleştirilmiş bir oturumun ilk sayfasını bu sırayla açar; kalan kartlar kotalarla dolar. Her video yine kendisini sunan ilk havuzun (kota sırasıyla) havuzunu, skorunu ve "neden bu video" metnini taşır; `score_breakdown.appliedRules` alanında öne çıkarıldığı yazar. LIVE olmayan veya oturumda gösterilmiş videolar atlanır. Kişiselleştirilmemiş akışta (hiç sinyal yok, kapalı) uygulanmaz. Varsayılan liste boştur; `demo` profili gerçek demo videolarını sabitler (34, 33, 29, 2).
+
 ## 3. Sıralama
 
 Her aday için 0–1 arasında bileşenler hesaplanır:
@@ -207,6 +209,7 @@ Bu dokümandaki kısa adlar (örn. `feed.page_size`) aşağıdaki tam anahtarlar
 | feed | | `feed.rewatch-block-days` | 14 |
 | feed | | `feed.skip-defer-count` | 3 |
 | feed | | `feed.demo-video-speed` | 4 (akış yanıtıyla web'e iletilir) |
+| feed | | `feed.pinned-content-ids` | boş (`demo` profili: 34, 33, 29, 2) |
 | quiz | `QuizProperties` | `quiz.min-watch-ratio` | 0.70 |
 | quiz | | `quiz.time-limit-sec` | 60 |
 | quiz | | `quiz.token-ttl` | 5m |

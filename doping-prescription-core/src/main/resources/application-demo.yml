@@ -7,3 +7,6 @@ prescription:
   quiz:
     # Demo-only default, like the session key above; override with PRESCRIPTION_QUIZ_TOKEN_SECRET anywhere else.
     token-secret: ${PRESCRIPTION_QUIZ_TOKEN_SECRET:demo-only-quiz-secret-0123456789-abcdefghij}
+  feed:
+    # The four real demo videos (README, Demo videoları) open the prescription, in this order.
+    pinned-content-ids: [34, 33, 29, 2]
