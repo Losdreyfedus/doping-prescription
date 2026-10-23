@@ -108,7 +108,7 @@ Ekran kaydındaki Dopingle sayfasının birebir benzeri olmalı:
 
 Gerçek video dosyası olmadığında (`videoUrl: null`) kullanılır; demo bunun üzerine kuruludur.
 
-- 9:16 kart içinde konunun renginde koyu degrade arka plan; ortada büyük beyaz konu adı ve video başlığı (Doping videolarındaki gibi kalın, gölgeli altyazı stili); ortada büyük bir öğretmen baş harfi rozeti.
+- 9:16 kart, Doping'in kısa videolarına benzer: koyu, hafif bulanık bir sınıf arka planı ve ortada basit bir öğretmen silueti (projede çizilmiş SVG). Konu adı (sarı) ve video başlığı (beyaz) altta, kalın ve gölgeli altyazı stilinde. Konu rengi yalnızca ince vurgu olarak kalır: kartın kenar ışığı ve siluetin kenar ışığı.
 - Kartın altında ince ilerleme çubuğu ve sağında süre (`00:14 / 00:58`). Süre `durationSec / feed.demo-video-speed` saniyede dolar; ekranda gerçek video süresi gösterilir.
 - Kart ekrana gelince otomatik başlar; Space veya tıklama ile durur/devam eder.
 - `videoUrl` doluysa aynı arayüz HTML5 `<video>` ile çalışır (dosyalar `doping-prescription-ui/public/videos` altında, git'e eklenmez).
