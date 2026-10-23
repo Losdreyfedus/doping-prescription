@@ -1,12 +1,12 @@
 {
   "_note": "Editör kontrolünden geçmedi. Videolar temsilidir; öğretmen isimleri kurgusaldır. status DRAFT olanlar etiketsiz kaydedilir ve otomatik etiketlemeyle TAGGED olur.",
   "items": [
-    { "id": 1, "topicId": 1, "status": "LIVE", "kind": "CONCEPT", "difficulty": 1, "durationSec": 52, "qualityScore": 0.820, "publishedDaysAgo": 15, "teacherName": "Ayşe Öğretmen",
-      "title": "Tek ve çift sayılarda işlem kuralları", "description": "Tek ve çift sayıların toplamı ve çarpımı hangi durumda tek, hangi durumda çift olur; kuralları tabloyla özetliyoruz." },
+    { "id": 1, "topicId": 1, "status": "LIVE", "kind": "CONCEPT", "difficulty": 1, "durationSec": 25, "videoUrl": "/videos/temel-2.webm", "qualityScore": 0.820, "publishedDaysAgo": 15, "teacherName": "Ayşe Öğretmen",
+      "title": "Tek ve çift sayılarla işlemler", "description": "Tek ve çift sayıların toplamı, farkı ve çarpımı hangi durumda tek, hangi durumda çift olur; kuralları örneklerle gösteriyoruz." },
     { "id": 2, "topicId": 1, "status": "LIVE", "kind": "SOLVED_EXAMPLE", "difficulty": 2, "durationSec": 21, "videoUrl": "/videos/genel-1.webm", "qualityScore": 0.740, "publishedDaysAgo": 28, "teacherName": "Burak Öğretmen",
       "title": "Ardışık sayıların toplamı: kısa yol", "description": "Terim sayısı ile ortanca terimi çarparak ardışık sayıların toplamını hızlıca buluyoruz." },
-    { "id": 3, "topicId": 1, "status": "LIVE", "kind": "TIP", "difficulty": 3, "durationSec": 45, "qualityScore": 0.660, "publishedDaysAgo": 41, "teacherName": "Can Öğretmen",
-      "title": "Pozitif ve negatif sayılarda işaret tuzağı", "description": "Parantez ve üs birlikte geldiğinde işaretin nasıl değiştiğini kısa bir kuralla gösteriyoruz." },
+    { "id": 3, "topicId": 1, "status": "LIVE", "kind": "TIP", "difficulty": 3, "durationSec": 17, "videoUrl": "/videos/temel-3.webm", "qualityScore": 0.660, "publishedDaysAgo": 41, "teacherName": "Can Öğretmen",
+      "title": "Bir aralıkta kaç tam sayı var?", "description": "Bir aralıktaki tam sayıları saymanın kısa yolu: uç noktalar dahil mi, değil mi, ona göre son eksi ilk artı bir." },
     { "id": 4, "topicId": 1, "status": "LIVE", "kind": "SOLVED_EXAMPLE", "difficulty": 4, "durationSec": 80, "qualityScore": 0.900, "publishedDaysAgo": 54, "teacherName": "Derya Öğretmen",
       "title": "Rakam ve sayı sorularında en büyük değer", "description": "Rakamları farklı sayılarla kurulan ifadelerde en büyük değeri veren seçimi adım adım yapıyoruz." },
 
@@ -77,9 +77,9 @@
       "title": "Olasılığın temeli: istenen bölü tüm durumlar", "description": "Örnek uzayı yazıp istenen durumları sayarak olasılığı kesir olarak buluyoruz." },
     { "id": 34, "topicId": 9, "status": "LIVE", "kind": "SOLVED_EXAMPLE", "difficulty": 2, "durationSec": 36, "videoUrl": "/videos/olasilik-1.webm", "qualityScore": 0.880, "publishedDaysAgo": 45, "teacherName": "Burak Öğretmen",
       "title": "Zar ve para atışında olasılık, 3 örnek", "description": "İki zar ve iki para atışında örnek uzayı tablo ile kurup olasılık hesaplıyoruz." },
-    { "id": 35, "topicId": 9, "status": "LIVE", "kind": "TIP", "difficulty": 3, "durationSec": 60, "qualityScore": 0.720, "publishedDaysAgo": 58, "teacherName": "Can Öğretmen",
+    { "id": 35, "topicId": 9, "status": "LIVE", "kind": "TIP", "difficulty": 3, "durationSec": 25, "videoUrl": "/videos/olasilik-3.webm", "qualityScore": 0.720, "publishedDaysAgo": 58, "teacherName": "Can Öğretmen",
       "title": "Koşullu olasılığı 60 saniyede çöz", "description": "Bilinen bilgi örnek uzayını daraltır; yeni örnek uzayında istenen durumları sayıyoruz." },
-    { "id": 36, "topicId": 9, "status": "LIVE", "kind": "SOLVED_EXAMPLE", "difficulty": 4, "durationSec": 80, "qualityScore": 0.610, "publishedDaysAgo": 14, "teacherName": "Derya Öğretmen",
+    { "id": 36, "topicId": 9, "status": "LIVE", "kind": "SOLVED_EXAMPLE", "difficulty": 4, "durationSec": 23, "videoUrl": "/videos/olasilik-4.webm", "qualityScore": 0.610, "publishedDaysAgo": 14, "teacherName": "Derya Öğretmen",
       "title": "Bağımsız olaylar ve \"ve / veya\" kuralı", "description": "Bağımsız olaylarda ve için çarpma, ayrık olaylarda veya için toplama yapıyoruz." },
 
     { "id": 37, "topicId": 10, "status": "LIVE", "kind": "CONCEPT", "difficulty": 1, "durationSec": 57, "qualityScore": 0.790, "publishedDaysAgo": 27, "teacherName": "Ayşe Öğretmen",
