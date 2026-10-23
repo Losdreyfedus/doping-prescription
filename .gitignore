@@ -23,8 +23,6 @@ coverage/
 playwright-report/
 test-results/
 
-# Local video files are never committed (docs/arayuz.md)
-doping-prescription-ui/public/videos/
 
 # Logs
 *.log
