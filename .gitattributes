@@ -10,3 +10,5 @@
 *.jpg binary
 *.ico binary
 *.woff2 binary
+# Demo videos are stored with Git LFS (README, Demo videoları)
+*.webm filter=lfs diff=lfs merge=lfs -text

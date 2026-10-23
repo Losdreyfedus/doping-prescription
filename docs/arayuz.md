@@ -111,7 +111,7 @@ Gerçek video dosyası olmadığında (`videoUrl: null`) kullanılır; demo bunu
 - 9:16 kart, Doping'in kısa videolarına benzer: koyu, hafif bulanık bir sınıf arka planı ve ortada basit bir öğretmen silueti (projede çizilmiş SVG). Konu adı (sarı) ve video başlığı (beyaz) altta, kalın ve gölgeli altyazı stilinde. Konu rengi yalnızca ince vurgu olarak kalır: kartın kenar ışığı ve siluetin kenar ışığı.
 - Kartın altında ince ilerleme çubuğu ve sağında süre (`00:14 / 00:58`). Süre `durationSec / feed.demo-video-speed` saniyede dolar; ekranda gerçek video süresi gösterilir.
 - Kart ekrana gelince otomatik başlar; Space veya tıklama ile durur/devam eder.
-- `videoUrl` doluysa aynı arayüz HTML5 `<video>` ile normal hızda çalışır (dosyalar `doping-prescription-ui/public/videos` altında, git'e eklenmez); süre sonlu değilse (`Infinity`, kaydedilmiş WebM) içeriğin `duration_sec` değeri kullanılır, bitiş `ended` olayından gelir. Dosya yüklenemezse kart simüle oynatıcıya düşer.
+- `videoUrl` doluysa aynı arayüz HTML5 `<video>` ile normal hızda çalışır (dosyalar `doping-prescription-ui/public/videos` altında, repoda Git LFS ile); süre sonlu değilse (`Infinity`, kaydedilmiş WebM) içeriğin `duration_sec` değeri kullanılır, bitiş `ended` olayından gelir. Dosya yüklenemezse kart simüle oynatıcıya düşer.
 - Oynatıcı mantığı `useSimulatedPlayer` hook'unda (`play`, `pause`, `progress`, `onComplete`), görünüm ayrı bileşende; hook sahte zamanlayıcılarla test edilir.
 
 ### Etkileşim olayları

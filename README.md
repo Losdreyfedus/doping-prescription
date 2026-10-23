@@ -43,7 +43,12 @@ Windows PowerShell'de `-D` argümanı tırnak içinde verilmelidir: `.\mvnw.cmd 
 
 ## Demo videoları
 
-Dört demo videosu repoya eklenmez; `doping-prescription-ui/public/videos/` altına şu adlarla konur:
+Videolar repoda, Git LFS ile (`doping-prescription-ui/public/videos/`). Klonladıktan sonra indirin:
+
+```bash
+git lfs install
+git lfs pull
+```
 
 | Dosya | Video (seed) |
 | --- | --- |
@@ -51,8 +56,12 @@ Dört demo videosu repoya eklenmez; `doping-prescription-ui/public/videos/` alt�
 | `olasilik-2.webm` | Olasılığın temeli: istenen bölü tüm durumlar |
 | `perkom-1.webm` | Sayma kuralı: çarpma mı toplama mı? |
 | `genel-1.webm` | Ardışık sayıların toplamı: kısa yol (Temel Kavramlar) |
+| `olasilik-3.webm` | Koşullu olasılığı 60 saniyede çöz |
+| `olasilik-4.webm` | Bağımsız olaylar ve "ve / veya" kuralı |
+| `temel-2.webm` | Tek ve çift sayılarla işlemler (Temel Kavramlar) |
+| `temel-3.webm` | Bir aralıkta kaç tam sayı var? (Temel Kavramlar) |
 
-Dosya yoksa o kart simüle oynatıcıyla oynar (CI ve e2e dosyasız çalışır). Gerçek videolar normal hızda oynar; demo hız çarpanı (`prescription.feed.demo-video-speed`) yalnızca simüle oynatıcıda geçerlidir. Tarayıcıda kaydedilmiş WebM dosyaları süre bildirmediği için ilerleme, seed'deki `duration_sec` ile hesaplanır.
+LFS dosyaları indirilmemişse o kart simüle oynatıcıyla oynar; CI LFS dosyalarını indirmez (`lfs: false`), testler videosuz çalışır. Gerçek videolar normal hızda oynar; demo hız çarpanı (`prescription.feed.demo-video-speed`) yalnızca simüle oynatıcıda geçerlidir. Tarayıcıda kaydedilmiş WebM dosyaları süre bildirmediği için ilerleme, seed'deki `duration_sec` ile hesaplanır.
 
 ## Mimari
 
