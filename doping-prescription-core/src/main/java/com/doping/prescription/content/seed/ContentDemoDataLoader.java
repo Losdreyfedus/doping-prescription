@@ -15,6 +15,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.IntStream;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
@@ -55,13 +56,13 @@ public class ContentDemoDataLoader implements DemoDataLoader {
 
     /** Returns whether the row was inserted (xmax = 0) rather than updated. */
     private static final String UPSERT_VIDEO = """
-            insert into content_item (id, title, description, teacher_name, duration_sec, difficulty, content_kind,
-                                      quality_score, status, published_at, updated_at)
-            values (:id, :title, :description, :teacherName, :durationSec, :difficulty, :kind,
+            insert into content_item (id, title, description, teacher_name, video_url, duration_sec, difficulty,
+                                      content_kind, quality_score, status, published_at, updated_at)
+            values (:id, :title, :description, :teacherName, :videoUrl, :durationSec, :difficulty, :kind,
                     :qualityScore, :status, :publishedAt, :now)
             on conflict (id) do update set
                 title = excluded.title, description = excluded.description, teacher_name = excluded.teacher_name,
-                duration_sec = excluded.duration_sec, difficulty = excluded.difficulty,
+                video_url = excluded.video_url, duration_sec = excluded.duration_sec, difficulty = excluded.difficulty,
                 content_kind = excluded.content_kind, quality_score = excluded.quality_score,
                 published_at = coalesce(excluded.published_at, content_item.published_at),
                 updated_at = excluded.updated_at
@@ -165,6 +166,7 @@ public class ContentDemoDataLoader implements DemoDataLoader {
                 .param("title", video.title())
                 .param("description", video.description())
                 .param("teacherName", video.teacherName())
+                .param("videoUrl", video.videoUrl())
                 .param("durationSec", video.durationSec())
                 .param("difficulty", video.difficulty())
                 .param("kind", video.kind().name())
@@ -228,6 +230,8 @@ public class ContentDemoDataLoader implements DemoDataLoader {
      *
      * @param status           LIVE (approved, manually tagged) or DRAFT (untagged, auto-tagged after insert)
      * @param publishedDaysAgo publication date relative to the seed day; {@code null} for unpublished drafts
+     * @param videoUrl         a real video under the web app's public folder (not committed); {@code null} for the
+     *                         simulated player
      */
     record SeedVideo(
             Integer id,
@@ -240,5 +244,6 @@ public class ContentDemoDataLoader implements DemoDataLoader {
             Integer publishedDaysAgo,
             String teacherName,
             String title,
-            String description) {}
+            String description,
+            @Nullable String videoUrl) {}
 }

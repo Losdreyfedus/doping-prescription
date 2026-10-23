@@ -41,6 +41,19 @@ Windows PowerShell'de `-D` argümanı tırnak içinde verilmelidir: `.\mvnw.cmd 
 4. İlk kart Olasılık ("Son denemende Olasılık: 3 soruda 0 doğru"); video bitince mikro-soru açılır, doğru cevap **+15 puan** ve "%17 → %27".
 5. Sol menüden **Gelişimim**: Olasılık kırmızı ve yukarı oklu.
 
+## Demo videoları
+
+Dört demo videosu repoya eklenmez; `doping-prescription-ui/public/videos/` altına şu adlarla konur:
+
+| Dosya | Video (seed) |
+| --- | --- |
+| `olasilik-1.webm` | Zar ve para atışında olasılık, 3 örnek (reçetenin ilk kartı) |
+| `olasilik-2.webm` | Olasılığın temeli: istenen bölü tüm durumlar |
+| `perkom-1.webm` | Sayma kuralı: çarpma mı toplama mı? |
+| `genel-1.webm` | Ardışık sayıların toplamı: kısa yol (Temel Kavramlar) |
+
+Dosya yoksa o kart simüle oynatıcıyla oynar (CI ve e2e dosyasız çalışır). Gerçek videolar normal hızda oynar; demo hız çarpanı (`prescription.feed.demo-video-speed`) yalnızca simüle oynatıcıda geçerlidir. Tarayıcıda kaydedilmiş WebM dosyaları süre bildirmediği için ilerleme, seed'deki `duration_sec` ile hesaplanır.
+
 ## Mimari
 
 Tek dağıtılabilir birim, Spring Modulith ile sınırları testle doğrulanan modüller ([ADR 0001](docs/adr/0001-moduler-monolit.md)). Ayrıntı: [docs/mimari.md](docs/mimari.md).

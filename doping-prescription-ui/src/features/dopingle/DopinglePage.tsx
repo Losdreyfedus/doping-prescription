@@ -7,6 +7,7 @@ import { BookmarkIcon, ChevronDownIcon, ChevronUpIcon, HeartIcon, SpeakerIcon } 
 import { type FeedCard, useFeed, useInteractionRecorder } from './api';
 import { MicroQuizPanel } from './MicroQuizPanel';
 import { type MicroQuiz, openQuiz } from './quiz';
+import { useRealVideo } from './useRealVideo';
 import { useSimulatedPlayer } from './useSimulatedPlayer';
 import { VideoCard } from './VideoCard';
 
@@ -119,12 +120,23 @@ function Player({ card, speed, onMove }: PlayerProps) {
       void showQuiz();
     }
   }, [record, card, showQuiz]);
-  const player = useSimulatedPlayer({
+  // A real file plays when the card has one and it loads; otherwise the simulated player stands in (also in CI).
+  const [videoFailed, setVideoFailed] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const realVideo = Boolean(card.content.videoUrl) && !videoFailed;
+  const simulated = useSimulatedPlayer({
     durationSec: card.content.durationSec,
     speed,
-    active: !quizActive,
+    active: !quizActive && !realVideo,
     onComplete,
   });
+  const real = useRealVideo({
+    videoRef,
+    durationSec: card.content.durationSec,
+    active: !quizActive && realVideo,
+    onComplete,
+  });
+  const player = realVideo ? real : simulated;
 
   useEffect(() => {
     startedAt.current = Date.now();
@@ -210,6 +222,10 @@ function Player({ card, speed, onMove }: PlayerProps) {
             elapsedSec={player.elapsedSec}
             playing={player.playing}
             onToggle={toggle}
+            videoRef={realVideo ? videoRef : undefined}
+            onVideoError={() => {
+              setVideoFailed(true);
+            }}
           />
           {card.hasMicroQuiz && quizState.status === 'closed' && player.progress >= QUIZ_BUTTON_AT && (
             <button

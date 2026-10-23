@@ -48,7 +48,7 @@ class ContentSeedFilesTest {
             int topicId = video.get("topicId").asInt();
             assertThat((id - 1) / 4 + 1).as("topic of video %s", id).isEqualTo(topicId);
             assertThat(video.get("teacherName").asString()).isEqualTo(TEACHERS.get((id - 1) % 4));
-            assertThat(video.get("durationSec").asInt()).isBetween(35, 85);
+            assertThat(video.get("durationSec").asInt()).isBetween(20, 85);
             assertThat(video.get("qualityScore").asDouble()).isBetween(0.55, 0.95);
         }
     }
