@@ -84,6 +84,35 @@ class FeedComposerTest {
     }
 
     @Test
+    void pinnedVideosOpenTheFeedInOrderWithTheirOwnPoolAndReason() {
+        List<Card> cards = composer.compose(
+                FeedFixtures.context(FeedFixtures.afterScenarioExam()),
+                FeedFixtures.quotas(),
+                10,
+                3,
+                List.of(901, 900, 800, 100));
+
+        assertThat(ids(cards).subList(0, 4)).containsExactly(901, 900, 800, 100);
+        assertThat(cards.getFirst().reasonText()).isEqualTo("Son denemende Olasılık: 3 soruda 0 doğru");
+        assertThat(cards.get(3).ranked().candidate().pool()).isEqualTo(PoolType.POPULAR);
+        assertThat(cards.get(3).reasonText()).isEqualTo("Bu hafta en çok izlenenlerden");
+        assertThat(cards.getFirst().ranked().breakdown().appliedRules()).containsExactly(FeedComposer.PINNED_NOTE);
+        assertThat(ids(cards)).doesNotHaveDuplicates().hasSize(30);
+    }
+
+    @Test
+    void pinnedVideosAlreadyShownOrMissingAreSkipped() {
+        FeedContext base = FeedFixtures.context(FeedFixtures.afterScenarioExam());
+        FeedContext context = new FeedContext(
+                base.topics(), base.videos(), Set.of(), Set.of(), Set.of(901), Set.of(), base.now(), false);
+
+        List<Card> cards = composer.compose(context, FeedFixtures.quotas(), 10, 1, List.of(901, 4242, 900));
+
+        assertThat(ids(cards).getFirst()).isEqualTo(900);
+        assertThat(ids(cards)).doesNotContain(901).hasSize(10);
+    }
+
+    @Test
     void topicOnlyReturnsTheTopicsVideosBestFirst() {
         List<Card> cards = composer.topicOnly(FeedFixtures.context(FeedFixtures.afterScenarioExam()), OLASILIK, 10);
 

@@ -144,11 +144,11 @@ public class FeedService {
         Optional<List<ServedCard>> stored = store.queue(user.userId());
         if (stored.isEmpty()) {
             // Redis unavailable: compute the pages on every request; the session's seen videos come from impressions
-            return new Selection(take(compose(context, quotas), limit), personalized);
+            return new Selection(take(compose(context, quotas, personalized), limit), personalized);
         }
         List<ServedCard> queue = new ArrayList<>(newSession ? List.of() : unseen(stored.get(), context.excluded()));
         if (queue.size() < Math.max(limit, properties.queueRefillThreshold())) {
-            queue = new ArrayList<>(compose(context, quotas));
+            queue = new ArrayList<>(compose(context, quotas, personalized));
         }
         List<ServedCard> page = take(queue, limit);
         store.replaceQueue(user.userId(), queue.subList(page.size(), queue.size()));
@@ -160,8 +160,14 @@ public class FeedService {
         return new Selection(served(composer.fallback(context, seed(cursor), limit)), false);
     }
 
-    private List<ServedCard> compose(FeedContext context, Map<PoolType, Double> quotas) {
-        return served(composer.compose(context, quotas, properties.pageSize(), properties.queuePages()));
+    /** Pinned videos open only a personalized feed: before the first exam the feed must stay general. */
+    private List<ServedCard> compose(FeedContext context, Map<PoolType, Double> quotas, boolean personalized) {
+        return served(composer.compose(
+                context,
+                quotas,
+                properties.pageSize(),
+                properties.queuePages(),
+                personalized ? properties.pinnedContentIds() : List.of()));
     }
 
     private static List<ServedCard> unseen(List<ServedCard> queue, Set<Integer> seen) {

@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
  */
 public final class FeedComposer {
 
+    static final String PINNED_NOTE = "pinned by prescription.feed.pinned-content-ids";
+
     private final Map<PoolType, CandidatePool> pools;
     private final FeedRanker ranker;
     private final Map<PoolType, ReasonTemplate> templates;
@@ -40,15 +42,49 @@ public final class FeedComposer {
 
     /** {@code pages} consecutive pages; a video appears at most once, and rule 1 holds across page boundaries. */
     public List<Card> compose(FeedContext context, Map<PoolType, Double> quotas, int pageSize, int pages) {
-        List<Card> cards = new ArrayList<>();
+        return compose(context, quotas, pageSize, pages, List.of());
+    }
+
+    /**
+     * Like {@link #compose(FeedContext, Map, int, int)}, but the pinned videos open the first page in the given order
+     * (docs/algoritma.md §2, öne çıkarılan içerik). Each keeps the pool, score and reason it would have anyway; videos
+     * that are not LIVE or were already shown in the session are skipped.
+     */
+    public List<Card> compose(
+            FeedContext context, Map<PoolType, Double> quotas, int pageSize, int pages, List<Integer> pinned) {
+        List<Card> cards = new ArrayList<>(pinnedCards(context, quotas, pinned, pageSize));
         Set<Integer> chosen = new HashSet<>(context.excluded());
+        cards.forEach(card -> chosen.add(card.ranked().candidate().video().contentId()));
         for (int page = 0; page < pages; page++) {
-            List<Card> next = page(context, quotas, pageSize, chosen, cards);
+            int size = page == 0 ? pageSize - cards.size() : pageSize;
+            if (size <= 0) {
+                continue;
+            }
+            List<Card> next = page(context, quotas, size, chosen, cards);
             if (next.isEmpty()) {
                 break;
             }
             next.forEach(card -> chosen.add(card.ranked().candidate().video().contentId()));
             cards.addAll(next);
+        }
+        return cards;
+    }
+
+    private List<Card> pinnedCards(FeedContext context, Map<PoolType, Double> quotas, List<Integer> pinned, int limit) {
+        List<Card> cards = new ArrayList<>();
+        for (Integer contentId : pinned) {
+            if (cards.size() == limit || context.excluded().contains(contentId)) {
+                continue;
+            }
+            // the first pool (in quota order) that offers the video decides its pool and reason
+            quotas.keySet().stream()
+                    .map(pools::get)
+                    .filter(Objects::nonNull)
+                    .flatMap(pool -> pool.candidates(context).stream())
+                    .filter(candidate -> candidate.video().contentId().equals(contentId))
+                    .findFirst()
+                    .ifPresent(candidate ->
+                            cards.add(card(ranker.rank(candidate, context), List.of(PINNED_NOTE), context)));
         }
         return cards;
     }

@@ -122,6 +122,8 @@ prescription:
     rewatch-block-days: 14
     skip-defer-count: 3
     demo-video-speed: 4
+    # Videos that open a personalized session, in order; the demo profile pins its real videos.
+    pinned-content-ids: []
   points:
     correct: 10
     weak-topic-correct: 15
