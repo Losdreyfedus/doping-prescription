@@ -58,21 +58,21 @@ Anahtar kelimeler normalize edilmiş biçimde yazılmıştır (`docs/algoritma.m
 Toplam 40 video: konu başına 4. Bunların 36'sı `LIVE` ve `MANUAL` etiketli (`weight 1.0`, `approved_by = admin`); 4'ü `DRAFT` ve etiketsiz kaydedilir (admin etiketleme demosu için). Kayıt sırasında `content` modülü içinde `ContentCreated` uygulama event'i yayınlanır (modül içi, `@ApplicationModuleListener`; Kafka'ya gitmez, bkz. `docs/mimari.md` §3), otomatik etiketleme çalışır ve bu 4 video `TAGGED` olur. **Seed sonrası beklenen durum: 36 `LIVE` + 4 `TAGGED`.**
 
 - Etiketsiz kaydedilecek videolar: konu 2, 5, 7 ve 10'un 4. videoları. Başlıklarında konunun ilk anahtar kelimesi geçsin ki etiket önerisi çıksın (eşleşme kelime başı ile yapılır; örn. "Kümelerde" `kume` ile eşleşir, bkz. `docs/algoritma.md` §5).
-- `duration_sec` 35–85 arası; `difficulty` her konuda 1, 2, 3, 4; `content_kind` her konuda en az bir `CONCEPT`, bir `SOLVED_EXAMPLE`, bir `TIP`.
+- `duration_sec` 20–85 arası (gerçek demo videolarının süreleri ölçüldüğü gibi); `difficulty` her konuda 1, 2, 3, 4; `content_kind` her konuda en az bir `CONCEPT`, bir `SOLVED_EXAMPLE`, bir `TIP`.
 - `quality_score` 0.55–0.95 arası, konu içinde farklı.
 - `teacher_name`: Ayşe Öğretmen, Burak Öğretmen, Can Öğretmen, Derya Öğretmen (döngüsel).
 - `published_at`: son 60 gün içine yayılmış.
-- `video_url`: hepsi `null` (simüle oynatıcı).
+- `video_url`: dört videoda gerçek dosya (`/videos/olasilik-1.webm` → "Zar ve para atışında olasılık, 3 örnek" (ilk kart; bu yüzden kalite skoru 0,88, "Olasılığın temeli" 0,80), `/videos/olasilik-2.webm` → "Olasılığın temeli", `/videos/perkom-1.webm` → "Sayma kuralı", `/videos/genel-1.webm` → Temel Kavramlar "Ardışık sayıların toplamı: kısa yol"); diğerleri `null` (simüle oynatıcı). Dosyalar repoya eklenmez (`doping-prescription-ui/public/videos/`); yoksa arayüz simüle oynatıcıya düşer.
 
 Demo senaryosunda en çok görünecek iki konunun videoları:
 
 | Konu | Başlık | Tür | Zorluk | Süre (sn) |
 | --- | --- | --- | --- | --- |
-| Olasılık | Olasılığın temeli: istenen bölü tüm durumlar | CONCEPT | 1 | 58 |
-| Olasılık | Zar ve para atışında olasılık, 3 örnek | SOLVED_EXAMPLE | 2 | 72 |
+| Olasılık | Olasılığın temeli: istenen bölü tüm durumlar | CONCEPT | 1 | 29 |
+| Olasılık | Zar ve para atışında olasılık, 3 örnek | SOLVED_EXAMPLE | 2 | 36 |
 | Olasılık | Koşullu olasılığı 60 saniyede çöz | TIP | 3 | 60 |
 | Olasılık | Bağımsız olaylar ve "ve / veya" kuralı | SOLVED_EXAMPLE | 4 | 80 |
-| Permütasyon-Kombinasyon | Sayma kuralı: çarpma mı toplama mı? | CONCEPT | 1 | 55 |
+| Permütasyon-Kombinasyon | Sayma kuralı: çarpma mı toplama mı? | CONCEPT | 1 | 25 |
 | Permütasyon-Kombinasyon | Faktöriyel ve sıralama soruları | SOLVED_EXAMPLE | 2 | 70 |
 | Permütasyon-Kombinasyon | Kombinasyonda seçim mi dizilim mi? | TIP | 3 | 50 |
 | Permütasyon-Kombinasyon | Tekrarlı permütasyon, 2 zor örnek | SOLVED_EXAMPLE | 4 | 85 |

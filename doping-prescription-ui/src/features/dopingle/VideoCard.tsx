@@ -1,3 +1,5 @@
+import type { RefObject } from 'react';
+
 import { tr } from '@/shared/i18n/tr';
 import { PlayCircleIcon } from '@/shared/ui/icons';
 
@@ -39,15 +41,19 @@ interface Props {
   elapsedSec: number;
   playing: boolean;
   onToggle: () => void;
+  /** Set when the card plays its real file; the simulated scene is not drawn then. */
+  videoRef?: RefObject<HTMLVideoElement | null> | undefined;
+  onVideoError?: () => void;
 }
 
 /**
  * The 9:16 simulated video, styled like Doping's short videos: a dark, softly blurred classroom, a teacher silhouette and a
  * burned-in subtitle, plus the project's topic chip, reason pill and points badge.
  */
-export function VideoCard({ card, progress, elapsedSec, playing, onToggle }: Props) {
+export function VideoCard({ card, progress, elapsedSec, playing, onToggle, videoRef, onVideoError }: Props) {
   const { content, topic } = card;
   const accent = TOPIC_ACCENT[topic.topicId] ?? NO_ACCENT;
+  const realVideo = videoRef !== undefined && content.videoUrl !== null;
   return (
     <div className="flex h-[88vh] flex-col gap-2">
       <button
@@ -56,19 +62,21 @@ export function VideoCard({ card, progress, elapsedSec, playing, onToggle }: Pro
         aria-label={playing ? tr.dopingle.pause : tr.dopingle.play}
         className={`relative flex aspect-[9/16] h-full flex-col overflow-hidden rounded-2xl border-2 ${accent.edge} bg-gradient-to-b from-navy-end via-ink to-dopingle-bg text-left text-surface focus-visible:outline-2 focus-visible:outline-select`}
       >
-        {/* a softly blurred classroom behind the teacher: board, window light, shelf */}
-        <span aria-hidden="true" className="absolute inset-0 blur-xl">
-          <span className="absolute top-[12%] left-[10%] h-[22%] w-[80%] rounded-lg bg-surface/25" />
-          <span className="absolute top-[8%] right-[-10%] size-[45%] rounded-full bg-sun/10" />
-          <span className="absolute bottom-[30%] left-[-5%] h-[8%] w-[45%] rounded bg-orange/10" />
-        </span>
-        <span
-          aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-dopingle-bg via-transparent to-transparent"
-        />
-        <TeacherSilhouette
-          className={`absolute bottom-[14%] left-1/2 h-[58%] -translate-x-1/2 ${accent.rim} drop-shadow-[0_0_8px_currentColor]`}
-        />
+        {realVideo ? (
+          <video
+            ref={videoRef}
+            src={content.videoUrl ?? undefined}
+            preload="auto"
+            playsInline
+            onError={onVideoError}
+            className="absolute inset-0 size-full object-cover"
+          >
+            {/* Doping's videos carry burned-in subtitles */}
+            <track kind="captions" />
+          </video>
+        ) : (
+          <SimulatedScene accent={accent} />
+        )}
         <span className="absolute top-4 left-4 rounded-full bg-surface/90 px-3 py-1 text-xs font-bold text-ink">
           {topic.name}
         </span>
@@ -88,11 +96,13 @@ export function VideoCard({ card, progress, elapsedSec, playing, onToggle }: Pro
           </span>
         )}
         <span className="relative mx-4 mb-4 flex flex-col gap-2">
-          {/* burned-in subtitle like Doping's own videos: topic in yellow, title in white */}
-          <span className="mb-2 flex flex-col items-center gap-1 text-center font-display leading-tight font-bold [text-shadow:0_2px_0_rgb(0_0_0/0.9),0_0_12px_rgb(0_0_0/0.8)]">
-            <span className="text-2xl text-sun uppercase">{topic.name}</span>
-            <span className="text-xl">{content.title}</span>
-          </span>
+          {/* burned-in subtitle like Doping's own videos: topic in yellow, title in white; real videos carry their own */}
+          {!realVideo && (
+            <span className="mb-2 flex flex-col items-center gap-1 text-center font-display leading-tight font-bold [text-shadow:0_2px_0_rgb(0_0_0/0.9),0_0_12px_rgb(0_0_0/0.8)]">
+              <span className="text-2xl text-sun uppercase">{topic.name}</span>
+              <span className="text-xl">{content.title}</span>
+            </span>
+          )}
           <span
             data-testid="reason"
             className="flex w-fit items-center gap-2 rounded-full bg-dopingle-bg/75 px-3 py-1.5 text-sm font-semibold"
@@ -125,5 +135,25 @@ export function VideoCard({ card, progress, elapsedSec, playing, onToggle }: Pro
         </div>
       </div>
     </div>
+  );
+}
+
+/** The simulated video's scene: a softly blurred classroom (board, window light, shelf) and the teacher. */
+function SimulatedScene({ accent }: { accent: { rim: string } }) {
+  return (
+    <>
+      <span aria-hidden="true" className="absolute inset-0 blur-xl">
+        <span className="absolute top-[12%] left-[10%] h-[22%] w-[80%] rounded-lg bg-surface/25" />
+        <span className="absolute top-[8%] right-[-10%] size-[45%] rounded-full bg-sun/10" />
+        <span className="absolute bottom-[30%] left-[-5%] h-[8%] w-[45%] rounded bg-orange/10" />
+      </span>
+      <span
+        aria-hidden="true"
+        className="absolute inset-0 bg-gradient-to-t from-dopingle-bg via-transparent to-transparent"
+      />
+      <TeacherSilhouette
+        className={`absolute bottom-[14%] left-1/2 h-[58%] -translate-x-1/2 ${accent.rim} drop-shadow-[0_0_8px_currentColor]`}
+      />
+    </>
   );
 }

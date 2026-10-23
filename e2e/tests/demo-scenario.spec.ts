@@ -40,7 +40,7 @@ test('demo scenario: exam → prescription → micro-question → progress', asy
 
   await test.step('Adım 4: video biter, mikro-soru doğru cevaplanır', async () => {
     const quizResponse = page.waitForResponse((response) => /\/api\/feed\/cards\/.+\/quiz$/.test(response.url()), {
-      timeout: 40_000,
+      timeout: 60_000, // a real demo video plays at normal speed (up to ~36 s); CI uses the simulated player
     });
     const quiz = (await (await quizResponse).json()) as { microQuestionId: number };
     const panel = page.getByRole('region', { name: 'Mikro-soru' });
