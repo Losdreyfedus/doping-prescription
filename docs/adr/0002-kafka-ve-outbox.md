@@ -12,7 +12,7 @@ Deneme sonucu, öğrenci profilini ve akışı güncellemeli; deneme modülü bu
 - Modüller arası domain event'leri için **Apache Kafka** (KRaft, tek node).
 - Yayınlamada **transactional outbox**: Spring Modulith event publication registry, event'i iş transaction'ında `event_publication` tablosuna yazar ve commit sonrası Kafka'ya dışsallaştırır.
 - Mesaj anahtarı `userId`: bir öğrencinin event'leri aynı partition'da, sıralı işlenir.
-- Tüketicilerde idempotency `processed_event` tablosuyla; hatada 3 yeniden deneme ve `.DLT` topic'i.
+- Tüketicilerde idempotency `processed_event` tablosuyla; hatada 3 yeniden deneme ve `<topic>-dlt` topic'i.
 
 ## Değerlendirilen seçenekler
 

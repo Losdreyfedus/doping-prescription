@@ -28,6 +28,7 @@ flowchart LR
     FEED -- feed.interaction-recorded --> K
     QUIZ -->|senkron api| LEARNER
     QUIZ -->|senkron api| POINTS
+    FEED -->|senkron api, kartın puanı| POINTS
     QUIZ -- quiz.answered --> K
     api --> PG
     LEARNER --> R
@@ -44,15 +45,16 @@ Kök paket: `com.doping.prescription`. Her modül bu kökün altında bir pakett
 | `content` | Konular, videolar, etiketleme, mikro-sorular | topic, topic_keyword, content_item, content_topic_map, micro_question | `ContentCreated` (modül içi) | `ContentCreated` | `ContentCatalog`, `TopicCatalog`, `MicroQuestionCatalog` |
 | `exam` | Denemeler, çözme, sonuç | exam, exam_question, exam_attempt, exam_answer | `ExamResultPublished` | — | `ExamSubmission` (persona için) |
 | `learner` | Sinyaller, ustalık skoru, profil | learner_signal, learner_topic_mastery | `MasteryChanged` | `ExamResultPublished`, `InteractionRecorded` | `LearnerProfileQuery`, `LearnerSignalRecorder` |
-| `feed` | Aday üretimi, sıralama, kuyruk, etkileşimler | feed_impression, feed_interaction | `InteractionRecorded` | `MasteryChanged` | `ImpressionQuery`, `FeedPreview` (admin), `FeedRanker` (simülasyon) |
+| `feed` | Aday üretimi, sıralama, kuyruk, etkileşimler, kaydedilen videolar | feed_impression, feed_interaction, saved_content | `InteractionRecorded` | `MasteryChanged` | `ImpressionQuery` (`FeedPreview` ve simülasyonun kullanacağı sıralama arayüzü MVP sonrası, ADR 0007) |
 | `quiz` | Mikro-soru token'ı, cevap kontrolü | micro_quiz_attempt | `QuizAnswered` | — | — |
 | `points` | Puan defteri, seri | points_ledger, points_streak | — | — | `PointsLedger` |
 | `admin` | Demo kontrolü, debug, içerik yönetimi ekranlarının API'si | — | — | — | — |
 | `simulation` | Etki paneli simülasyonu | — | — | — | — |
-| `shared` | Ortak altyapı: hata modeli, event zarfı, saat, idempotency, mesajlaşma altyapısı (Kafka yapılandırması ve health). **Açık (OPEN) modül**, iş mantığı içermez | processed_event | — | — | `UserDataEraser`, `DomainEvent` |
+| `shared` | Ortak altyapı: hata modeli (istek kimliği filtresi `RequestIdFilter` dahil), event zarfı, saat (`Cooldown` dahil), idempotency, mesajlaşma altyapısı (Kafka yapılandırması, health, outbox yeniden gönderimi). **Açık (OPEN) modül**, iş mantığı içermez | processed_event | — | — | `UserDataEraser`, `DemoDataLoader` (her modülün kendi seed'i), `DomainEvent` |
 
 Kurallar:
 
+- Her modülün izin verilen bağımlılıkları `package-info.java` içindeki `@ApplicationModule(allowedDependencies = …)` ile yazılıdır; yeni bir modül bağımlılığı bu listeye eklenmeden `verify()` kırılır. `feed` kartın kazandıracağı puanı göstermek için `points` API'sine bağlıdır.
 - Bir modül başka bir modülün yalnızca `api` paketindeki tiplerini ve event'lerini kullanır. Repository, entity, iç servis kullanımı yasaktır. `ModularityTests` içinde `ApplicationModules.of(PrescriptionApplication.class).verify()` bunu zorlar; ayrıca Spring Modulith dokümantasyon üreticisiyle `docs/moduller/` altına modül diyagramı üretilir.
 - Döngüsel modül bağımlılığı yoktur. Örneğin `quiz` → `points` bağımlılığı tek yönlüdür: seri `points` içinde tutulur, `points` hiçbir zaman `quiz` verisini okumaz.
 - `shared`, `@ApplicationModule(type = OPEN)` ile işaretlidir: hata modeli (`shared.error`), event zarfı, idempotency, saat ve mesajlaşma altyapısını (`shared.messaging`: Kafka yapılandırması ve health) tüm modüller `api` paketi dışından da kullanabilir. Bu ayrıcalık yalnızca bu beş alan için geçerlidir; `shared` içine iş mantığı girmez.
@@ -84,19 +86,19 @@ com.doping.prescription.learner
 └── web/                     REST controller'lar ve request/response DTO'ları
 ```
 
-- `domain` paketindeki sınıflar `final`, değişmez (immutable) ve yalnızca JDK'ya bağımlıdır. Algoritmaların tamamı burada yaşar.
+- `domain` paketindeki sınıflar `final`, değişmez (immutable) ve yalnızca JDK'ya bağımlıdır (null olabilirliği belgeleyen jspecify `@Nullable` anotasyonu hariç). Algoritmaların tamamı burada yaşar.
 - `persistence` ve `messaging` sınıfları mümkün olduğunca package-private'tır.
-- Controller'lar iş mantığı içermez: isteği doğrular, `application` servisini çağırır, sonucu MapStruct ile response DTO'ya çevirir.
+- Controller'lar iş mantığı içermez: isteği doğrular, `application` servisini çağırır ve servisin döndürdüğü okuma modelini yanıt olarak verir (ADR 0008). Entity'den DTO'ya eşleme gereken yerde MapStruct kullanılır.
 
 ## 3. Event akışı
 
-**Yayınlama (outbox):** Application servisi, iş transaction'ı içinde `ApplicationEventPublisher.publishEvent(event)` çağırır. Spring Modulith event'i aynı transaction'da `event_publication` tablosuna yazar (outbox). `@Externalized("exam.result-published::#{userId()}")` ile işaretli event'ler commit'ten sonra Kafka'ya gönderilir; anahtar `userId`'dir, böylece bir öğrencinin event'leri sırayla işlenir. Uygulama gönderimden önce çökerse, tamamlanmamış yayınlar yeniden başlatmada tekrar denenir.
+**Yayınlama (outbox):** Application servisi, iş transaction'ı içinde `ApplicationEventPublisher.publishEvent(event)` çağırır. Spring Modulith event'i aynı transaction'da `event_publication` tablosuna yazar (outbox). `@Externalized("exam.result-published::#{userId()}")` ile işaretli event'ler commit'ten sonra Kafka'ya gönderilir; anahtar `userId`'dir, böylece bir öğrencinin event'leri sırayla işlenir. Uygulama gönderimden önce çökerse veya Kafka erişilemezse, tamamlanmamış yayınlar yeniden başlatmada (`spring.modulith.events.republish-outstanding-events-on-restart`) ve uygulama çalışırken periyodik olarak (`prescription.messaging.outbox`, `shared.messaging.OutboxResubmission`) tekrar gönderilir.
 
 **Tüketme:** İlgili modülün `messaging` paketinde `@KafkaListener`. Her listener:
 
 1. `processed_event` tablosunda `(consumer, eventId)` var mı bakar; varsa atlar.
 2. İşi ve `processed_event` kaydını tek transaction'da yapar.
-3. Hata olursa `DefaultErrorHandler` ile 3 kez üstel geri çekilmeyle (exponential backoff) yeniden dener, sonra `<topic>.DLT` topic'ine gönderir ve hatayı log'lar.
+3. Hata olursa `DefaultErrorHandler` ile 3 kez üstel geri çekilmeyle (exponential backoff) yeniden dener, sonra `<topic>-dlt` topic'ine gönderir ve hatayı log'lar. Okunamayan mesajlar (JSON hatası, `IllegalArgumentException`) yeniden denenmeden doğrudan `-dlt`'ye gider.
 
 **Event zarfı:** Tüm event'ler `shared.api.DomainEvent` arayüzünü uygulayan Java record'larıdır: `eventId` (UUID), `schemaVersion`, `occurredAt`, `userId`. JSON'a serileştirilir; tip bilgisi Kafka header'ında taşınır. Payload'lar `docs/api.md` §Event'ler bölümündedir.
 
@@ -107,7 +109,7 @@ com.doping.prescription.learner
 | Akış | Yol | Neden |
 | --- | --- | --- |
 | Deneme gönder → profil güncelle → akış kuyruğunu sil | Asenkron (Kafka) | Deneme modülü profil ve akıştan habersiz olmalı; ileride ayrı servis olabilir. Gecikme hedefi 2 sn. |
-| Video izleme / geçme → `last_served_at` | Asenkron (Kafka) | Kullanıcı sonucu beklemiyor. v1'de `InteractionRecorded`'ı yalnızca learner dinler; içerik kalite skoru statiktir (seed). |
+| Video izleme / geçme → `last_served_at` | Asenkron (Kafka) | Kullanıcı sonucu beklemiyor. v1'de `InteractionRecorded`'ı yalnızca learner dinler ve yalnız `VIEW_COMPLETE` ile `SKIP` olaylarını işler (mikro-soru cevabıyla aynı ustalık satırına gereksiz yazmasın diye); içerik kalite skoru statiktir (seed). |
 | Mikro-soru cevabı → ustalık değişimi + puan | **Senkron** (`LearnerSignalRecorder`, `PointsLedger`) | Kullanıcı sonucu aynı yanıtta görmeli ("%17 → %27", "+15 puan"). Ardından `QuizAnswered` analitik için yayınlanır; learner bu event'i **dinlemez** (sinyal zaten senkron yazıldı, çift sayım olmaz). |
 | Akış isteği → profil okuma | Senkron (`LearnerProfileQuery`, Redis önbellekli) | Okuma işlemi. |
 
@@ -117,18 +119,19 @@ com.doping.prescription.learner
 | --- | --- | --- |
 | `mastery:{userId}` | String: öğrencinin profil snapshot'ı (JSON; konu başına decay uygulanmamış mastery, confidence, deneme sayısı, son sinyal ve son deneme özeti). Tek değer olduğu için bütün olarak okunur ve değiştirilir. Okuyan yalnızca anahtar yoksa yazar (`SET NX`), yazan commit sonrası üzerine yazar; böylece eski değer yenisinin üzerine yazılamaz | 24 saat; her yazımda yenilenir |
 | `feed:queue:{userId}` | Liste: hazırlanmış kartlar (JSON) | `prescription.feed.queue-ttl` |
-| `feed:session:{sessionId}` | Set: oturumda gösterilen içerik id'leri (kuyruk yeniden kurulurken hariç tutulur) | 30 dk |
-| `feed:session:{sessionId}:skips` | Hash: konu başına oturum içi geçme sayaçları | 30 dk |
+| `feed:session:{userId}:{sessionId}` | Set: oturumda gösterilen içerik id'leri (kuyruk yeniden kurulurken hariç tutulur). Anahtar öğrenciye bağlıdır; istemcinin gönderdiği oturum id'siyle başka öğrencinin oturumu okunamaz | 30 dk |
 | `quiz:token-used:{jti}` | Tek kullanımlık token işareti | token ömrü |
 
-Redis erişilemezse: profil PostgreSQL'den okunur, akış kuyruksuz (her istekte hesaplanarak) döner. Redis hiçbir zaman tek doğruluk kaynağı değildir.
+Redis erişilemezse: profil PostgreSQL'den okunur, akış kuyruksuz (her istekte hesaplanarak) döner. Bir bağlantı hatasından sonra modül Redis'i kısa bir süre hiç denemez (`prescription.feed.store-retry-after`, `prescription.learner.cache-retry-after`, `shared.time.Cooldown`), böylece her istek zaman aşımı beklemez. Oturum içi geçme sayaçları Redis'te değil, `feed_interaction`'dan sayılır. Redis hiçbir zaman tek doğruluk kaynağı değildir.
 
 ## 6. Güvenlik
 
 - Spring Security, durumsuz (stateless) JWT; `HS256`, gizli anahtar `PRESCRIPTION_JWT_SECRET` ortam değişkeninden (demo profilinde varsayılan değer, loga yazılmaz).
+- Şifresiz demo girişi (`/api/auth/demo-users`, `/api/auth/demo-login`) yalnızca `prescription.auth.demo-login-enabled` açıkken vardır (`demo` profili); aksi halde bu endpoint'ler `404` döner.
+- Kimlik çerez değil `Authorization` başlığıyla taşındığı için CSRF koruması kapalıdır.
 - Roller `STUDENT`, `ADMIN`; `/api/admin/**` yalnız `ADMIN`. Kaynak sahipliği (bir öğrencinin başka öğrencinin attempt'ine erişememesi) servis katmanında kontrol edilir ve testlenir; başkasına ait kayıt `404` döner.
 - CORS yalnızca `http://localhost:5173`.
-- Quiz token'ı ayrı bir imzalı JWT'dir (`jti`, kısa ömür, tek kullanımlık).
+- Quiz token'ı ayrı bir imzalı JWT'dir (`jti`, `aud: quiz`, kısa ömür, tek kullanımlık); anahtarı oturum anahtarıyla aynıysa uygulama açılmaz.
 
 ## 7. Hata modeli
 
@@ -148,15 +151,15 @@ Zamana bağlı tüm kod `java.time.Clock` bean'ini kullanır; `Instant.now()` do
 
 ## 10. Genişleme noktaları
 
-MVP'de ertelenen özellikler (`docs/backlog.md`) sonradan **mevcut kodu değiştirmeden** eklenebilsin diye, değişmesi beklenen davranışlar arayüzlerin arkasındadır (open-closed). Her arayüzün uygulamaları Spring bean'idir; kullanan servis `List<...>` olarak hepsini alır ve tür/isim üzerinden seçer. Yeni bir davranış = yeni bir bean; çağıran kod değişmez. Arayüzler modülün `domain` paketinde saf Java'dır; bean olan uygulamalar `application` paketindedir.
+MVP'de ertelenen özellikler (`docs/backlog.md`) sonradan **mevcut kodu değiştirmeden** eklenebilsin diye, değişmesi beklenen davranışlar arayüzlerin arkasındadır (open-closed). Her arayüzün uygulamaları Spring bean'idir. Arayüzler ve uygulamaları modülün `domain` paketinde saf Java'dır; bean tanımları `application` paketindedir (örneğin `FeedBeans`). `DemoPersona`, `CandidatePool` ve `ReasonTemplate` `List<...>` olarak alınır ve tür/isim üzerinden seçilir. Hangi noktanın bugün gerçekten "yalnızca yeni bir bean" olduğu, hangisinin ek değişiklik istediği ADR 0007'dedir.
 
 | Arayüz | Modül | Sözleşme | Bugünkü uygulamalar (MVP) | Sonra eklenebilecekler |
 | --- | --- | --- | --- | --- |
-| `CandidatePool` | feed | Bir havuzun türünü (`PoolType`) ve öğrenci profili ile katalogdan aday kartlarını verir; kotalar config'den havuz türüne göre okunur | `WeakTopicPool`, `ReviewDuePool`, `ExplorePool`, `PopularPool`, `FallbackPool` | Sınıf arkadaşlarının izledikleri, öğretmen önerileri, sınav yaklaşınca tekrar havuzu |
-| `FeedRanker` | feed | Adayları skorlar ve sıralar; kartın skor bileşenlerini (`ScoreBreakdown`) döner | `WeightedLinearRanker` (docs/algoritma.md §3) | Gerçek veriyle öğrenen bir sıralama modeli (ADR 0003); A/B için config ile seçim |
+| `CandidatePool` | feed | Bir havuzun türünü (`PoolType`) ve öğrenci profili ile katalogdan aday kartlarını verir; kotalar config'den havuz türüne göre okunur | `Pools` fabrika metotlarıyla dört bean: `weakTopic`, `reviewDue`, `explore`, `popular`. Kişiselleştirme kapalıyken akış bir havuzdan değil `FeedComposer.fallback()`'ten gelir. Yeni havuz bugün enum, kota ve DB kısıtı da ister (ADR 0007) | Sınıf arkadaşlarının izledikleri, öğretmen önerileri, sınav yaklaşınca tekrar havuzu |
+| `FeedRanker` | feed | Adayları skorlar ve sıralar; kartın skor bileşenlerini (`ScoreBreakdown`) döner | `WeightedLinearRanker` (docs/algoritma.md §3); tek bean, ikinci uygulama için seçim config'i gerekir (ADR 0007) | Gerçek veriyle öğrenen bir sıralama modeli (ADR 0003); A/B için config ile seçim |
 | `ReasonTemplate` | feed | Bir havuz türü için kartın "neden bu video" metnini üretir | Havuz başına bir şablon (docs/algoritma.md §6) | Yeni havuzların şablonları, kişiselleştirilmiş/çok dilli metinler |
 | `DemoPersona` | admin | Persona adı ve öğrenciyi o duruma getiren adımlar (gerçek servis akışıyla) | `NewPersona`, `ScriptedInProgressPersona` | `ScriptedExamPersona` (Selin), `WeakProblemsPersona` (Mert) |
-| `ContentTagger` | content | Videonun başlık ve açıklamasından konu önerileri (`TagSuggestion`) üretir | `KeywordTagger` (docs/algoritma.md §5) | Müfredat kodu eşleyici, editör kural seti. Çalışma zamanında LLM kullanılmaz (AGENTS.md kural 1) |
+| `ContentTagger` | content | Videonun başlık ve açıklamasından konu önerileri (`TagSuggestion`) üretir | `KeywordTagger` (docs/algoritma.md §5); tek bean (ADR 0007) | Müfredat kodu eşleyici, editör kural seti. Çalışma zamanında LLM kullanılmaz (AGENTS.md kural 1) |
 
 Notlar:
 

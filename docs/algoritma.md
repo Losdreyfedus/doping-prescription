@@ -41,7 +41,7 @@ m_etkin = m * exp(-mastery.decay_lambda * gün)     (gün = now - last_signal_at
 
 Gün tam sayıdır (kesirli değil): aynı gün içinde decay uygulanmaz. Kesirli gün, deneme gönderildikten saniyeler sonra 0,1715'i 0,171'e yuvarlatıyor ve §1 örnekleriyle çelişiyordu.
 
-**Trend:** Eksiklerim'deki ok, konunun son ustalık sinyalinin yönüdür: doğru cevap `UP`, yanlış veya boş `DOWN`, sinyal yoksa `FLAT`. (Son 3 sinyalin çoğunluğu, demo adım 5'te 3 yanlıştan sonra gelen doğru cevabı yukarı ok olarak gösteremezdi.)
+**Trend:** Gelişimim'deki ok, konunun son ustalık sinyalinin yönüdür: doğru cevap `UP`, yanlış veya boş `DOWN`, sinyal yoksa `FLAT`. (Son 3 sinyalin çoğunluğu, demo adım 5'te 3 yanlıştan sonra gelen doğru cevabı yukarı ok olarak gösteremezdi.)
 
 **Hızlı cevap:** `responseMs < quiz.min_response_ms` olan mikro-soru cevapları sinyal üretmez ve puan almaz.
 
@@ -49,7 +49,7 @@ Gün tam sayıdır (kesirli değil): aynı gün içinde decay uygulanmaz. Kesirl
 
 ### Ustalık bandı
 
-Tek bir tanım vardır (`domain` paketinde `MasteryBand`) ve hem Eksiklerim ekranındaki renk bandı hem akışın `WEAK_TOPIC` havuzu bunu kullanır. Böylece "kırmızı konu = akışta reçete olarak gelen konu" kuralı her zaman tutarlıdır. Bant, decay uygulanmış `m_etkin` üzerinden hesaplanır.
+Tek bir tanım vardır (`domain` paketinde `MasteryBand`) ve hem Gelişimim ekranındaki renk bandı hem akışın `WEAK_TOPIC` havuzu bunu kullanır. Böylece "kırmızı konu = akışta reçete olarak gelen konu" kuralı her zaman tutarlıdır. Bant, decay uygulanmış `m_etkin` üzerinden hesaplanır.
 
 | Bant | Koşul |
 | --- | --- |
@@ -117,12 +117,12 @@ Demo kontrolü: senaryodaki deneme sonrası Olasılık için weakness = (1 − 0
 
 1. Aynı konudan art arda en fazla `feed.max_same_topic_in_row` (2) kart.
 2. Son `feed.rewatch_block_days` (14) gün içinde tamamlanmış video tekrar gösterilmez; `REVIEW_DUE` havuzu hariç.
-3. Aynı oturumda aynı konudan `feed.skip_defer_count` (3) video ilk 3 saniyede geçildiyse, o konu oturumun geri kalanında bir sonraki sayfaya ertelenir.
+3. Aynı oturumda aynı konudan `feed.skip_defer_count` (3) video ilk 3 saniyede geçildiyse, o konu oturumun geri kalanında bir sonraki sayfaya ertelenir: yeniden kurulan kuyruğun ilk sayfasına aday olarak alınmaz (öne çıkarılan videolar dahil), sonraki sayfalarda yine gelebilir. İlk sayfa diğer konularla dolar.
 4. Aynı sayfada aynı video iki kez yer almaz.
 
 Akış Redis'te kullanıcı başına bir kuyruk olarak tutulur (`feed:queue:{userId}`, en fazla `feed.queue_size` (30) kart, ömrü `feed.queue_ttl` (30m)). Kuyrukta `feed.queue_refill_threshold` (5) karttan az kalırsa yeniden doldurulur. `learner.mastery-changed` event'i geldiğinde kuyruk silinir.
 
-**Oturum bütünlüğü:** Oturumda gösterilen içerik id'leri Redis'te `feed:session:{sessionId}` altında bir set olarak tutulur. Kuyruk oturum ortasında silinip yeniden kurulduğunda (örn. mikro-soru cevabından sonra) bu setteki videolar aday dışı bırakılır; böylece aynı oturumda bir video iki kez gelmez. `cursor`, `sessionId` ve sonraki pozisyonu taşır. Redis yoksa set, `feed_impression` kayıtlarından (`session_id`) okunur.
+**Oturum bütünlüğü:** Oturumda gösterilen içerik id'leri Redis'te `feed:session:{userId}:{sessionId}` altında bir set olarak tutulur. Kuyruk oturum ortasında silinip yeniden kurulduğunda (örn. mikro-soru cevabından sonra) bu setteki videolar aday dışı bırakılır; böylece aynı oturumda bir video iki kez gelmez. `cursor`, `sessionId` ve sonraki pozisyonu taşır. Redis yoksa set, `feed_impression` kayıtlarından (`user_id`, `session_id`) okunur. Oturum okumaları her zaman öğrenciyle sınırlıdır.
 
 ## 5. Kural tabanlı etiketleme
 
@@ -208,6 +208,8 @@ Bu dokümandaki kısa adlar (örn. `feed.page_size`) aşağıdaki tam anahtarlar
 | feed | | `feed.max-same-topic-in-row` | 2 |
 | feed | | `feed.rewatch-block-days` | 14 |
 | feed | | `feed.skip-defer-count` | 3 |
+| feed | | `feed.store-retry-after` | 10s (Redis hatasından sonra Redis'i denememe süresi) |
+| learner | | `learner.cache-retry-after` | 10s (aynı, profil önbelleği için) |
 | feed | | `feed.demo-video-speed` | 4 (akış yanıtıyla web'e iletilir) |
 | feed | | `feed.pinned-content-ids` | boş (`demo` profili: 34, 33, 29, 2) |
 | quiz | `QuizProperties` | `quiz.min-watch-ratio` | 0.70 |

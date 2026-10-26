@@ -26,7 +26,7 @@ Bu proje kod incelemesinden geçecek. Aşağıdaki kurallar her commit için ge�
 
 - Yalnızca constructor injection; alan enjeksiyonu (`@Autowired` alan) yok.
 - `@Transactional` yalnızca `application` servislerinin public metotlarında; okuma metotlarında `readOnly = true`. Controller ve repository'de transaction tanımı yok.
-- Controller'lar ince: doğrulama (`@Valid`), servis çağrısı, MapStruct ile dönüşüm. İş kuralı yok.
+- Controller'lar ince: doğrulama (`@Valid`), servis çağrısı, yanıt olarak servisin okuma modeli (ADR 0008); entity'den DTO'ya eşleme gereken yerde MapStruct. İş kuralı yok.
 - Config: `@ConfigurationProperties(prefix = "prescription")` ile `@Validated` record; değerler `application.yml`'de.
 - Zamana bağlı her şey `Clock` bean'i üzerinden.
 
@@ -58,23 +58,24 @@ Bu proje kod incelemesinden geçecek. Aşağıdaki kurallar her commit için ge�
 
 ```
 doping-prescription-ui/src/
-├── app/            Router, provider'lar, layout'lar (AppShell, AdminShell)
-├── features/       Özellik bazlı klasörler
-│   ├── dopingle/   components/, hooks/, api.ts, types.ts
+├── app/            Router (iç içe layout route'ları), provider'lar, layout'lar (AppShell, DopingleLayer, PanelLayout)
+├── features/       Özellik bazlı klasörler (bileşenler, hook'lar, api.ts)
+│   ├── auth/
+│   ├── home/
+│   ├── dopingle/   Player, mikro-soru paneli, useQuizFlow, useImpression, useFeedNavigation, useQuizTimer…
 │   ├── exams/
 │   ├── learner/
-│   ├── quiz/
-│   ├── points/
 │   └── admin/
 ├── shared/
-│   ├── api/        Üretilmiş OpenAPI tipleri, fetch sarmalayıcısı, query key fabrikası
-│   ├── ui/         Button, Card, Badge, ProgressBar, AnswerBubble, Skeleton…
+│   ├── api/        Üretilmiş OpenAPI tipleri, fetch sarmalayıcısı, query key fabrikası, puan ve profil sorguları
+│   ├── session/    Oturum context'i ve useSession (provider app/session'da)
+│   ├── ui/         Paylaşılan bileşenler ve hook'lar: Skeleton, useFocusTrap, useMenuNavigation…
 │   ├── i18n/       tr.ts: tüm arayüz metinleri tek yerde
 │   └── lib/        Saf yardımcılar
 └── styles/         globals.css (tasarım değişkenleri)
 ```
 
-Bir özellik başka bir özelliğin iç dosyalarını import etmez; ortak olan `shared`'a taşınır (ESLint `import/no-restricted-paths` ile zorlanır).
+Bir özellik başka bir özelliğin iç dosyalarını ve `app` katmanını import etmez; ortak olan `shared`'a taşınır (ESLint `import/no-restricted-paths` ile zorlanır; özellik listesi `src/features` klasörlerinden okunur).
 
 ### Kurallar
 
@@ -87,7 +88,7 @@ Bir özellik başka bir özelliğin iç dosyalarını import etmez; ortak olan `
 - Renkler yalnızca tasarım değişkenleri üzerinden (Tailwind temasına bağlı); bileşen içinde sabit hex değer yok.
 - Erişilebilirlik: tıklanabilir öğeler `button`/`a`; ikon butonlarda `aria-label`; klavye ile kullanılabilirlik (Dopingle ↑/↓/Space, cevap kâğıdı); odak görünür.
 - Her veri ekranında yükleme, boş ve hata durumu; beklenmeyen hatalar için route seviyesinde error boundary.
-- Formlar React Hook Form + zod.
+- Formlar React Hook Form + zod. (MVP'de serbest metin girişi olan form yok; cevap kâğıdı ve mikro-soru tek tıklık seçimlerdir. Kütüphane ilk form ekranıyla eklenir.)
 
 ## 4. Test stratejisi
 
@@ -132,7 +133,7 @@ GitHub Actions bu adımları her push ve pull request'te çalıştırır; e2e te
 README şunları içerir:
 
 1. Projenin bir paragraflık özeti ve demo senaryosuna bağlantı
-2. Gereksinimler (Java 21, Node 20+, Docker) ve kurulum komutları
+2. Gereksinimler (Java 21, Node.js 24 LTS, Docker) ve kurulum komutları
 3. Mimari diyagramı (Mermaid) ve modül tablosu, `docs/mimari.md` bağlantısı
 4. Event akışı ve Kafka topic'leri
 5. Test ve kalite komutları

@@ -219,3 +219,136 @@ Açık `TODO(spec)` notu yok.
 - UI: `/admin` demo kontrolü (öğrenci kartları, Sıfırla, Persona yükle) ve sunum cevap anahtarı.
 - Kabul: `DemoControlIT` sıfırlamanın tüm modüllerin verisini 1 sn altında sildiğini, `SCRIPTED_IN_PROGRESS` sonrası 11 cevabın işaretli olduğunu ve henüz sinyal olmadığını, feed debug API'sinin bileşenleri döndürdüğünü doğruluyor. Senaryo (sıfırla → persona → Deniz → deneme → Dopingle → mikro-soru → Eksiklerim) tarayıcıda baştan sona oynatıldı.
 - Test düzeltmesi: `ContentTaggingIT` artık yalnız kendi outbox olaylarını bekliyor; Kafka'sız context'te diğer testlerin olayları tamamlanmadığı için sıra bağımlı kırılıyordu (6. aşamanın ilk CI koşusu buna takıldı).
+
+## 8. aşama: E2E ve README
+
+**Branch:** `feat/e2e-demo-scenario` · **Tarih:** 2026-10-22
+
+- Playwright testi (`e2e/tests/demo-scenario.spec.ts`) demo senaryosunun ana yolunu gerçek yığında oynatıyor: hazırlık (sıfırla, `SCRIPTED_IN_PROGRESS`), deneme gönderimi, reçete, mikro-soru ve Gelişimim. Yerelde çalışan uygulamayı kullanıyor, yoksa jar'ı ve Vite'ı kendisi başlatıyor; CI'da ayrı bir `e2e` job'u (Ubuntu 24.04, Docker Compose).
+- README `docs/kod-standartlari.md` §6'daki başlıkları kapsıyor.
+
+## Aşama sonrası işler (2026-10-22 / 23)
+
+Kapsam MVP'de tutuldu; aşağıdakiler sunumun görünüşü ve "işe yarıyor mu?" sorusu için eklendi.
+
+- **Doping Hafıza görselleri ve kabuk** (ADR 0006): Ana Sayfa, menü, üst çubuk, hesap menüsü; Doping Hafıza'nın ölçüleri.
+- **Gelişimim:** Eksiklerim ekranı Akıllı Değerlendirme Paneli tonlarında Gelişimim oldu (`/app/gelisimim`; eski adres yönleniyor). AGENTS.md ve dokümanlar yeni adla güncellendi.
+- **Video etkinliği:** `GET /api/admin/content-effectiveness`, video başına mikro-soru doğruluk oranı (backlog: ileride `quality_score`'u besleyebilir).
+- **Gerçek demo videoları:** ürün sahibinin hazırladığı sekiz sesli video Git LFS ile `public/videos/` altında; dosya yoksa simüle oynatıcı. `demo` profili dördünü kişiselleştirilmiş oturumun başına sabitliyor (`prescription.feed.pinned-content-ids`, docs/algoritma.md §2).
+
+## Sunum öncesi kod incelemesi düzeltmeleri
+
+**Tarih:** 2026-10-23. Bir iç kod incelemesinin "Yüksek" önemdeki bulguları düzeltildi.
+
+**Backend**
+
+- **Outbox yeniden gönderimi:** `republish-outstanding-events-on-restart` açık; uygulama çalışırken tamamlanmamış yayınlar `OutboxResubmission` ile periyodik olarak yeniden gönderiliyor (`prescription.messaging.outbox`). Testlerde ikisi de kapalı: testler tek veritabanını paylaşıyor ve Kafka'sız bağlamların tamamlanmamış olayları başka testlere karışmamalı.
+- **Mikro-soru cevabının dayanıklılığı:**
+    - Yalnız `uq_micro_quiz_attempt_user_question` ihlali "zaten cevaplandı" (0 puan) sayılıyor.
+    - Ustalık ve seri satırı cevap sırasında `SELECT … FOR UPDATE` ile kilitleniyor; satır oluşturma ya da version çakışmasında cevap bir kez yeniden deneniyor.
+    - Saklanamayan bir cevap token'ı geri bırakıyor.
+    - `feed.interaction-recorded`'dan yalnız `VIEW_COMPLETE` ve `SKIP` `last_served_at`'e yazılıyor (mimari.md §4), mikro-soruyla aynı satıra gereksiz yazım yok.
+- **Art arda en fazla 2 kural:** kuyruk oturum ortasında yeniden kurulduğunda kural oturumun son sunulan kartlarından devam ediyor (`FeedContext.recentTopics`).
+- **Sıfırlama:** tüm modüller tek transaction'da siliyor; Redis temizliği commit'ten sonra. Persona yükleme de tek transaction.
+- **Tüketiciler:** `MasteryChangedListener` işini transaction'lı `QueueInvalidation`'a devrediyor (`processed_event` ile aynı transaction, kuyruk commit sonrası siliniyor).
+- **N+1:**
+    - Id'si uygulamada atanan entity'ler `save()`'de önce SELECT yapmıyor (`Persistable` veya wrapper `Long` version).
+    - Insert'ler batch'leniyor.
+    - Deneme listesi deneme sayısından bağımsız 3 sorgu.
+    - Sınav sonucu işlenirken idempotency anahtarları tek sorguda okunuyor.
+- **Genişleme noktaları ve eşleme:** ADR 0007 (gerçek kapsam; eksik "neden bu video" şablonu artık açılışta hata veriyor) ve ADR 0008 (okuma modelleri API yanıtı, MapStruct yalnız entity eşlemesinde).
+
+**Frontend**
+
+- **Sorgulama sayacı:** profil sorgulaması (`useProfilePolling`) sayacı sayfanın açıldığı andan sayıyor; aynı sekmede ikinci provada bant "analiz ediliyor"da kalmıyor.
+- **Player bölündü:** Dopingle `Player` bileşeni hook'lara (`useQuizFlow`, `useImpression`, `useFeedNavigation`, `useAutoNext`) ve `ActionRail`'e bölündü.
+- **İki hata düzeltildi:** mikro-soru bir kartta en fazla bir kez isteniyor; `VIEW_START` StrictMode'da iki kez kaydedilmiyor.
+- **Vitest bekleme süresi:** Testing Library'nin bekleme süresi 3 sn. Paralel jsdom açılışında her dosyanın ilk render'ı 1 sn'yi aşabiliyordu.
+
+**Testler**
+
+- **Backend:**
+    - `QueryCountIT`: akış ve profil endpoint'lerinin SQL sayısı sabit; 5 ve 20 kartlık sayfa aynı sayıda ifade çalıştırıyor.
+    - `FeedFallbackIT`: profil hatasında fallback akış dönüyor.
+    - `QueueInvalidationTest`, `InteractionListenerTest` (learner'ın event kopyası feed'in event'iyle uyumlu), `MasteryServiceIT` (`recordServed` filtresi ve tekrar teslim).
+    - `QuizIT`: aynı token iki kez gönderilince; iki farklı soruya eşzamanlı cevap.
+    - `FeedComposerTest`: oturum ortası yeniden kurulum; şablonsuz havuz.
+- **E2E:** adım 1 (genel akış), sonuç ekranında 8/3/1 ve 7,25 net, ilk 5 ve ilk 10 kart kuralları, Gelişimim'de "N video hazır" ve Çalış eklendi; deneme adıyla seçiliyor.
+
+### Orta ve Düşük önemdeki bulgular
+
+**Backend: doğruluk ve güvenlik**
+
+- **Eşzamanlı deneme:**
+    - Gönderim ve cevap kaydı denemeyi satır kilidiyle okuyor. Eşzamanlı ikinci gönderim 500 yerine `409 ATTEMPT_ALREADY_SUBMITTED` alıyor.
+    - Çift "başla" aynı denemeyi paylaşıyor (`insert … on conflict do nothing`).
+    - Sonuç ekranı kayıtlı sonuçları gösteriyor, yeniden notlandırmıyor.
+- **Demo girişi:** yalnızca `prescription.auth.demo-login-enabled` açıkken (`demo` profili) var; aksi halde `404`. CSRF'in neden kapalı olduğu yorumda.
+- **Hata modeli:** Spring MVC hataları da `ProblemDetail` ve `code` ile dönüyor. Yeni kodlar: `METHOD_NOT_ALLOWED` (405), `UNSUPPORTED_MEDIA_TYPE` (415).
+- **Quiz token'ı:** `aud: quiz` taşıyor ve doğrulanıyor. Oturum ve quiz anahtarları aynıysa uygulama açılmıyor.
+- **Girdi doğrulama:** `responseMs` en çok 300000, `microQuestionId` pozitif, admin `slug`/`persona` uzunluk sınırlı.
+- **Akış ve etkileşim kapsamı:**
+    - `clientEventId` öğrenci başına tekil (V10).
+    - Oturum okumaları öğrenciyle sınırlı; Redis oturum anahtarı `feed:session:{userId}:{sessionId}`.
+    - Tekrar izleme engeli istemci saati yerine sunucunun kayıt anını kullanıyor.
+- **Kafka:** okunamayan mesajlar yeniden denenmeden `-dlt`'ye gidiyor.
+- **Redis kesintisi:** bir hatadan sonra kısa süre Redis denenmiyor (`store-retry-after`, `cache-retry-after`). Profil önbelleği okuması DB transaction'ı dışında.
+- **Akış kuralları:** sayfa boyutu config'den (`page-size`, `page-size-max`). Ertelenen konu yalnızca yeniden kurulan ilk sayfadan çıkıyor; ilk sayfa artık eksik kalmıyor.
+
+**Backend: domain ve kod düzeni**
+
+- Seri kuralı `points.domain.Streak`, çok hızlı cevap kuralı `quiz.domain.AnswerPolicy`, anlamlı değişim eşiği `learner.domain.MasteryChangePolicy` oldu.
+- Modüller arası sözleşmeler tipli: `LearnerProfileQuery.Band`/`Trend` enum'ları, `ImpressionView.weakTopic`. Quiz artık `"WEAK_TOPIC"` metnini karşılaştırmıyor.
+- Rastgelelik dışarıdan veriliyor: quiz için `RandomGenerator` bean'i, fallback akış için oturum tohumlu üreteç.
+- Kayıt bileşenlerinde `Optional` yerine `@Nullable`.
+- `ContentEffectivenessService` sıfıra bölme ve eksik konu durumlarına karşı korumalı.
+
+**Mimari testler**
+
+- `@Transactional` yalnızca `application` (ve seed) paketlerinde ve public metotlarda.
+- web → persistence yasak (`AuthWebMapper` istisnası yorumlu).
+- Alan enjeksiyonu yasak; `Clock`'suz `now()` yasak; domain sınıfları final.
+- Her modülün izinli bağımlılıkları `allowedDependencies` ile yazılı. `feed → points` bağımlılığı mimari.md'ye eklendi.
+
+**Testler**
+
+- **Yeni testler:** `ExamServiceIT`, `DemoLoginDisabledIT`, `QuizTokensTest`, `ImpressionQueryIT`, `KafkaConsumerConfigurationTest`, Redis geri çekilme testleri.
+- **Düzeltilen testler:**
+    - `AuthIT` tüm admin endpoint'lerinde 403'ü deniyor.
+    - `QuizIT` geçersiz harf durumunu deniyor.
+    - `DemoControlIT`'te süre ölçümü ayrı ve sıcak uygulamada.
+    - `OpenApiContractIT` dosya yoksa kırılıyor.
+- **Test log'u:** Kafka'sız test bağlamları event dışsallaştırmayı kapatıyor; log'daki gürültü kalktı.
+
+**Frontend**
+
+- **Yarış:** deneme cevap kaydı ve gönderim aynı mutation kapsamında, sırayla.
+- **Odak ve klavye:**
+    - Bitirme penceresinde odak tuzağı ve Escape.
+    - Hesap menüsünde ok tuşları.
+    - Mikro-soru paneli odağı alıyor; açıkken Escape katmanı kapatmıyor.
+- **Ekran durumları:** yükleme, boş ve hata durumları (cevap anahtarı, video etkinliği, Gelişimim, Ana Sayfa, akış için "Tekrar dene").
+- **Mimari:**
+    - Oturum context'i `shared/session`'da; özellikler `app` katmanını import edemiyor.
+    - Özellik listesi klasörlerden okunuyor.
+    - Layout'lar iç içe route'larla seçiliyor.
+- **Davranış:**
+    - Puan ve profil sorguları sekmeye dönünce yenileniyor.
+    - "Reçeteni gör" ve "Çalış" kapatılınca açıldıkları sayfaya dönüyor.
+    - `useQuizTimer`: şık seçilince süre duruyor.
+- **Test:** `useInteractionRecorder` testi; MSW mock'ları üretilen tiplerle; mikro-soru zaman aşımı ve 410/429 durumları.
+- **Temizlik:**
+    - Ölü export ve CSS değişkenleri silindi.
+    - Sahte beğeni sayacı kaldırıldı.
+    - Ekran okuyucu metinleri `sr-only`.
+    - Arama kutusunda görünür odak.
+
+**Bilerek bırakılanlar**
+
+- Doping'in marka turuncusu üzerindeki beyaz yazının kontrastı (≈2,4:1) değiştirilmedi.
+- Seed yükleyicileri `@Transactional`'ı kendi paketlerinde tutuyor (ArchUnit istisnası yorumlu).
+- Geçmişe ait iki eleştiri düzeltilemez: büyük commit'ler ve CI bitmeden yapılan merge'ler. Bundan sonra merge'ler PR ve yeşil CI ile.
+
+### TODO(spec) notları
+
+- `MasteryService.applyQuizAnswer`: mikro-soru güncellemesi algoritma.md §1'deki "mevcut mastery"ye, yani decay uygulanmamış saklı değere uygulanıyor. Günlerce ara verildiyse paneldeki "önce → sonra" farkı decay'in geri alınmasını da içerir. Aynı gün oynanan demoda etkisi yok; doküman netleşirse değişebilir.

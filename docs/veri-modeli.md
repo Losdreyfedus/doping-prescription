@@ -143,7 +143,7 @@ Dopingle'daki her kısa video.
 | submitted_at | timestamptz null | |
 | correct_count / wrong_count / blank_count | smallint | Gönderimde hesaplanır |
 | net | Decimal(5,2) | doğru − yanlış / 4 |
-| version | bigint not null default 0 | İyimser kilitleme: aynı denemenin eşzamanlı iki gönderimi event'i iki kez üretmez |
+| version | bigint not null default 0 | İyimser kilitleme. Gönderim ve cevap kaydı ayrıca denemeyi satır kilidiyle (`SELECT … FOR UPDATE`) okur; eşzamanlı ikinci gönderim `409 ATTEMPT_ALREADY_SUBMITTED` alır, event bir kez üretilir |
 
 Bir öğrencinin aynı denemede aynı anda tek `IN_PROGRESS` denemesi olabilir; bu kural veritabanında kısmi unique indeksle zorlanır: `unique (user_id, exam_id) where status = 'IN_PROGRESS'`. Demo öğrencisi aynı denemeyi tekrar çözebilir (her seferinde yeni attempt).
 
@@ -228,12 +228,23 @@ Kafka tüketicilerinin idempotency'si için.
 | id | bigserial PK | |
 | impression_id | uuid FK | |
 | user_id | uuid | |
-| client_event_id | varchar(64) unique | |
+| client_event_id | varchar(64) | Öğrenci başına tekil: `unique (user_id, client_event_id)` (V10) |
 | event | enum `VIEW_START`, `VIEW_COMPLETE`, `SKIP`, `LIKE`, `QUIZ_SHOWN`, `QUIZ_DISMISSED` | |
 | watch_ms | int null | |
-| client_ts | timestamptz | |
+| client_ts | timestamptz | İstemcinin saati; yalnızca bilgi amaçlı |
+| created_at | timestamptz | Sunucunun kaydı aldığı an; 14 günlük tekrar izleme engeli buna göre hesaplanır (`ix_feed_interaction_user_created (user_id, created_at)`) |
 
-Oturumda gösterilen içerik id'leri ayrıca Redis'te `feed:session:{sessionId}` setinde tutulur (bkz. `docs/algoritma.md` §4); Redis yoksa `session_id` üzerinden bu tablodan okunur, bu yüzden `(session_id)` indekslidir.
+### `saved_content` (V11)
+
+| Kolon | Tip | Açıklama |
+| --- | --- | --- |
+| user_id | uuid | PK'nin ilk kolonu |
+| content_id | int | PK'nin ikinci kolonu; content modülüne FK'siz referans |
+| created_at | timestamptz | Kaydedildiği an; Kaydedilen akışı buna göre en yeniden sıralanır (`ix_saved_content_user_created (user_id, created_at)`) |
+
+Demo sıfırlaması öğrencinin kaydedilen videolarını da siler.
+
+Oturumda gösterilen içerik id'leri ayrıca Redis'te `feed:session:{userId}:{sessionId}` setinde tutulur (bkz. `docs/algoritma.md` §4); Redis yoksa `user_id` ve `session_id` üzerinden bu tablodan okunur, bu yüzden `(session_id)` indekslidir.
 
 ## quiz
 

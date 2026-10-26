@@ -63,6 +63,8 @@ git lfs pull
 
 LFS dosyaları indirilmemişse o kart simüle oynatıcıyla oynar; CI LFS dosyalarını indirmez (`lfs: false`), testler videosuz çalışır. Gerçek videolar normal hızda oynar; demo hız çarpanı (`prescription.feed.demo-video-speed`) yalnızca simüle oynatıcıda geçerlidir. Tarayıcıda kaydedilmiş WebM dosyaları süre bildirmediği için ilerleme, seed'deki `duration_sec` ile hesaplanır.
 
+`demo` profili gerçek videolu dört içeriği (34, 33, 29, 2) kişiselleştirilmiş oturumun ilk sayfasının başına sabitler (`prescription.feed.pinned-content-ids`, [docs/algoritma.md](docs/algoritma.md) §2 "Öne çıkarılan içerik"). Her kart yine kendi havuzunun skorunu ve "neden bu video" metnini taşır; sayfanın kalanı algoritmadan gelir. Varsayılan profilde liste boştur; algoritmanın sabitlemesiz sonucu `FeedFlowIT`'te doğrulanır.
+
 ## Mimari
 
 Tek dağıtılabilir birim, Spring Modulith ile sınırları testle doğrulanan modüller ([ADR 0001](docs/adr/0001-moduler-monolit.md)). Ayrıntı: [docs/mimari.md](docs/mimari.md).
@@ -95,6 +97,7 @@ flowchart LR
 | `quiz` | Mikro-soru token'ı, sunucuda cevap kontrolü; `quiz.answered` |
 | `points` | Puan defteri, seri, günlük sınır |
 | `admin` | Demo sıfırlama, persona, cevap anahtarı, akış debug, video etkinliği |
+| `simulation` | Etki paneli için ayrılmış, MVP'de boş ([docs/backlog.md](docs/backlog.md)) |
 | `shared` | Hata modeli, event zarfı, idempotency, saat, Kafka altyapısı |
 
 ## Event akışı
@@ -131,10 +134,12 @@ CI (GitHub Actions) üç job çalıştırır: `core`, `ui` ve `e2e`.
 | [0004](docs/adr/0004-openapi-sozlesmesi.md) | OpenAPI ile backend–frontend sözleşmesi |
 | [0005](docs/adr/0005-modul-sinirlari-netlestirme.md) | Modül sınırlarının netleştirilmesi |
 | [0006](docs/adr/0006-doping-gorsel-varliklari.md) | Doping Hafıza'nın kendi görsel varlıklarının kullanılması |
+| [0007](docs/adr/0007-genisleme-noktalarinin-kapsami.md) | Genişleme noktalarının MVP'deki gerçek kapsamı |
+| [0008](docs/adr/0008-uygulama-gorunumleri-api-yaniti.md) | Uygulama katmanının okuma modelleri API yanıtıdır |
 
 ## Bilinen sınırlamalar
 
-- Videolar simüle oynatıcıyla oynatılır; gerçek video dosyası yoktur.
+- Sekiz video gerçek ve seslidir (Git LFS); diğer 32 video simüle oynatıcıyla oynar.
 - Seed soruları editör kontrolünden geçmemiştir; hesapları testle doğrulanır.
 - Etki paneli, karşılaştırma ekranı, Puanlarım, Mert ve Selin persona'ları ertelendi ([docs/backlog.md](docs/backlog.md)).
 - Video kalite skoru seed'den gelen statik değerdir; video etkinliği yalnızca admin'de raporlanır.

@@ -24,8 +24,8 @@ Hata formatı RFC 9457 `ProblemDetail`, ek alan `code`:
 | Metot | Yol | Modül | Amaç |
 | --- | --- | --- | --- |
 | GET | `/actuator/health` | — | postgres, redis ve kafka durumu (Spring Boot Actuator) |
-| GET | `/api/auth/demo-users` | auth | Giriş ekranı için kullanıcı listesi (token gerekmez) |
-| POST | `/api/auth/demo-login` | auth | `{ "slug": "deniz" }` → `{ token, user }` (token gerekmez) |
+| GET | `/api/auth/demo-users` | auth | Giriş ekranı için kullanıcı listesi (token gerekmez; yalnızca `prescription.auth.demo-login-enabled`, yani `demo` profili açıkken, aksi halde `404`) |
+| POST | `/api/auth/demo-login` | auth | `{ "slug": "deniz" }` → `{ token, user }` (token gerekmez; koşulu yukarıdakiyle aynı) |
 | GET | `/api/me` | auth | Oturumdaki kullanıcı |
 | GET | `/api/exams` | exam | Denemeler ve son sonuç özeti |
 | POST | `/api/exams/:examId/attempts` | exam | Denemeyi başlat, soruları al |
@@ -35,23 +35,28 @@ Hata formatı RFC 9457 `ProblemDetail`, ek alan `code`:
 | GET | `/api/exam-attempts/:attemptId/result` | exam | Sonuç |
 | GET | `/api/feed` | feed | Kişiselleştirilmiş akış |
 | POST | `/api/feed/interactions` | feed | İzleme, geçme, beğenme (toplu) |
+| PUT | `/api/feed/saved/:contentId` | feed | Videoyu kaydet (karttaki yer imi); tekrar kaydetmek bir şey değiştirmez, `204` |
+| DELETE | `/api/feed/saved/:contentId` | feed | Videoyu kaydedilenlerden çıkar; `204` |
 | GET | `/api/feed/cards/:impressionId/quiz` | quiz | Video sonrası mikro-soru |
 | POST | `/api/quiz/:microQuestionId/answer` | quiz | Cevap gönder |
 | GET | `/api/learner/profile` | learner | Eksikler ve güçlü konular |
-| PATCH | `/api/learner/settings` | learner | Kişiselleştirme aç/kapa, sınav tarihi |
+| PATCH | `/api/learner/settings` | learner | Kişiselleştirme aç/kapa, sınav tarihi (**MVP sonrası**, uygulanmadı; bugün seed'den gelir) |
 | GET | `/api/points` | points | Toplam puan, seri, son hareketler |
 | GET | `/api/admin/users` | admin | Tüm kullanıcılar ve özet durum |
+| GET | `/api/admin/demo/students` | admin | Demo öğrencileri: puan ve denemesi olup olmadığı (demo kontrol ekranı) |
+| GET | `/api/admin/demo/personas` | admin | Yüklenebilir persona adları |
 | POST | `/api/admin/demo/reset` | admin | `{ "slug": "deniz" }` demo öğrencisini sıfırla |
 | POST | `/api/admin/demo/persona` | admin | `{ "slug", "persona" }` hazır profil yükle |
+| GET | `/api/admin/demo/answer-key` | admin | Mini Deneme 1'in doğru ve senaryo cevapları (sunum cevap anahtarı) |
 | GET | `/api/admin/feed-debug?slug=deniz` | admin | Akışın skor dökümü |
 | GET | `/api/admin/content-effectiveness` | admin | Video başına mikro-soru cevap sayısı ve doğruluk oranı |
-| GET | `/api/admin/compare?left=deniz&right=selin` | admin | İki öğrencinin akış önizlemesi (kayıt bırakmaz) |
-| GET | `/api/admin/content?status=TAGGED` | admin | İçerik listesi |
-| POST | `/api/admin/content` | admin | Yeni video ekle (etiketleme otomatik çalışır) |
-| POST | `/api/admin/content/:contentId/tags` | admin | Önerilen etiketleri onayla veya düzelt |
-| POST | `/api/admin/content/:contentId/micro-questions` | admin | Mikro-soru ekle |
-| GET / POST / DELETE | `/api/admin/topic-keywords` | admin | Anahtar kelime sözlüğü |
-| GET | `/api/admin/impact` | admin | Etki paneli (simülasyon) |
+| GET | `/api/admin/compare?left=deniz&right=selin` | admin | İki öğrencinin akış önizlemesi (kayıt bırakmaz) (**MVP sonrası**) |
+| GET | `/api/admin/content?status=TAGGED` | admin | İçerik listesi (**MVP sonrası**) |
+| POST | `/api/admin/content` | admin | Yeni video ekle (etiketleme otomatik çalışır) (**MVP sonrası**) |
+| POST | `/api/admin/content/:contentId/tags` | admin | Önerilen etiketleri onayla veya düzelt (**MVP sonrası**) |
+| POST | `/api/admin/content/:contentId/micro-questions` | admin | Mikro-soru ekle (**MVP sonrası**) |
+| GET / POST / DELETE | `/api/admin/topic-keywords` | admin | Anahtar kelime sözlüğü (**MVP sonrası**) |
+| GET | `/api/admin/impact` | admin | Etki paneli (simülasyon) (**MVP sonrası**) |
 
 ## Deneme
 
@@ -118,9 +123,10 @@ Tek transaction'da sonuçları hesaplar, `exam_attempt` ve `exam_answer` kayıtl
 | Parametre | Tip | Varsayılan | Açıklama |
 | --- | --- | --- | --- |
 | cursor | string | — | Önceki yanıtın `nextCursor`'ı; opak, `sessionId` ve sonraki pozisyonu taşır |
-| limit | int | 10 | En çok 20 |
-| topicId | int | — | Yalnız bu konunun videoları (Eksiklerim → Çalış); bkz. `docs/arayuz.md` |
+| limit | int | `feed.page-size` (10) | En çok `feed.page-size-max` (20); aralık dışı `400 INVALID_REQUEST` |
+| topicId | int | — | Yalnız bu konunun videoları (Gelişimim → Çalış); bkz. `docs/arayuz.md` |
 | refresh | bool | false | true ise yeni oturum açılır ve kuyruk yeniden kurulur |
+| saved | bool | false | Yalnız öğrencinin kaydettiği videolar, en son kaydedilen önce (Kaydedilen); `topicId`'den önceliklidir |
 
 Yanıt `200`:
 
@@ -147,13 +153,18 @@ Yanıt `200`:
       "pool": "WEAK_TOPIC",
       "reasonText": "Son denemende Olasılık: 3 soruda 0 doğru",
       "hasMicroQuiz": true,
-      "pointsAvailable": 15
+      "pointsAvailable": 15,
+      "saved": false
     }
   ]
 }
 ```
 
-`personalized: false` → fallback akış (kişiselleştirme kapalı, hiç sinyal yok veya hata). Akış her zaman `200` döner.
+`personalized: false` → fallback akış (kişiselleştirme kapalı, hiç sinyal yok veya hata). Akış her zaman `200` döner. `saved` kartın videosunun öğrenci tarafından kaydedilip kaydedilmediğini söyler.
+
+### PUT / DELETE /api/feed/saved/:contentId
+
+Karttaki yer imi. `PUT` videoyu kaydeder, `DELETE` çıkarır; ikisi de idempotenttir ve `204` döner. Olmayan bir video için `PUT` `404 NOT_FOUND` döner. Kaydedilen videolar `GET /api/feed?saved=true` ile, en son kaydedilen önce, normal kartlar olarak (izlenim, mikro-soru ve puan dahil) gelir.
 
 Kuyruk oturum ortasında yeniden kurulsa bile (örn. mikro-soru cevabından sonra gelen `learner.mastery-changed`) aynı `sessionId` içinde daha önce gösterilmiş bir video tekrar dönmez (bkz. `docs/algoritma.md` §4, oturum bütünlüğü).
 
@@ -192,7 +203,7 @@ Yanıt `200` → `MicroQuiz`:
 
 Şıklar her istekte karıştırılır; harfler yeniden atanır ve eşleme token'ın içinde taşınır. Videonun `quiz.min_watch_ratio` kadarı izlenmediyse `409 VIDEO_NOT_WATCHED`. Videoya bağlı soru yoksa `204`. Öğrenci bu soruyu daha önce cevapladıysa aynı videonun başka sorusu, o da yoksa `204`.
 
-`quizToken`: `{ userId, impressionId, microQuestionId, optionMap, exp }` içeren, `PRESCRIPTION_QUIZ_TOKEN_SECRET` ile imzalı (oturum JWT'sinden ayrı anahtar), `jti` alanlı, `prescription.quiz.token-ttl` (varsayılan `5m`) ömürlü token.
+`quizToken`: `{ userId, impressionId, microQuestionId, optionMap, exp }` içeren, `PRESCRIPTION_QUIZ_TOKEN_SECRET` ile imzalı (oturum JWT'sinden ayrı anahtar), `jti` ve `aud: "quiz"` alanlı, `prescription.quiz.token-ttl` (varsayılan `5m`) ömürlü token. Anahtarı oturum anahtarıyla aynı olamaz (uygulama açılmaz). Cevapta `microQuestionId` pozitif, `responseMs` en çok 300000 (token ömrü) olmalıdır.
 
 ### POST /api/quiz/:microQuestionId/answer
 
@@ -278,15 +289,19 @@ Simülasyon sonuçları (bkz. `docs/algoritma.md` §8). Yanıtta `"isSimulation"
 
 | HTTP | Kod | Ne zaman |
 | --- | --- | --- |
-| 400 | INVALID_REQUEST | Şema doğrulaması başarısız |
+| 400 | INVALID_REQUEST | Şema doğrulaması başarısız, eksik parametre veya okunamayan gövde |
 | 401 | UNAUTHORIZED | Token yok veya geçersiz |
 | 403 | FORBIDDEN | Rol yetersiz |
 | 403 | QUIZ_TOKEN_INVALID | Token başka kullanıcıya ait, imza bozuk ya da soru id'si uyuşmuyor |
-| 404 | NOT_FOUND | Kayıt yok veya kullanıcıya ait değil |
+| 404 | NOT_FOUND | Kayıt veya endpoint yok, ya da kayıt kullanıcıya ait değil |
+| 405 | METHOD_NOT_ALLOWED | Endpoint bu HTTP metodunu desteklemiyor (`Allow` başlığıyla) |
+| 415 | UNSUPPORTED_MEDIA_TYPE | Gövde JSON değil |
 | 409 | ATTEMPT_ALREADY_SUBMITTED | Gönderilmiş denemeye yazma |
 | 409 | VIDEO_NOT_WATCHED | Video yeterince izlenmeden soru istendi |
 | 410 | QUIZ_EXPIRED | Token süresi doldu |
 | 429 | RATE_LIMITED | Dakikada `quiz.rate_limit_per_min`'den fazla cevap |
+
+Spring MVC'nin kendi hataları da (eksik parametre, yanlış metot, okunamayan gövde) aynı `ProblemDetail` biçiminde ve `code` alanıyla döner. Admin isteklerinde `slug` en çok 32, `persona` en çok 64 karakterdir.
 
 Aynı soruya ikinci cevap hata değildir: `200` döner, `pointsAwarded: 0`.
 
@@ -298,7 +313,7 @@ Modüller arası event'ler Kafka üzerinden, transactional outbox ile yayınlan�
 | --- | --- | --- | --- | --- |
 | `exam.result-published` | `ExamResultPublished` | exam | learner | 3 |
 | `learner.mastery-changed` | `MasteryChanged` | learner | feed (kuyruğu geçersiz kıl) | 3 |
-| `feed.interaction-recorded` | `InteractionRecorded` | feed | learner (`last_served_at`; feed zaten learner API'sine bağlı olduğu için learner bu event'i kendi yerel kaydıyla okur, modül döngüsü oluşmaz) | 3 |
+| `feed.interaction-recorded` | `InteractionRecorded` | feed | learner (yalnız `VIEW_COMPLETE` ve `SKIP` → `last_served_at`; feed zaten learner API'sine bağlı olduğu için learner bu event'i kendi yerel kaydıyla okur, modül döngüsü oluşmaz) | 3 |
 | `quiz.answered` | `QuizAnswered` | quiz | — (analitik için yayınlanır; learner dinlemez, sinyal senkron yazılır) | 3 |
 
 `ContentCreated` yalnızca `content` modülü içinde kullanılır (otomatik etiketleme) ve Kafka'ya gitmez.

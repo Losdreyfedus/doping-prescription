@@ -22,7 +22,6 @@
 | `--brand-blue` | `#3167be` | Logo, birincil vurgular |
 | `--brand-blue-ink` | `#375f99` | Logo yazısının mavi kısmı, koyu mavi metin |
 | `--brand-red` | `#eb353d` | Logo yazısının kırmızı kısmı |
-| `--accent-pink` | `#f14a8b` | Üst çubuktaki yuvarlak vurgu butonu |
 | `--navy` | `#2b3e51` | Ana sayfadaki profil kartı (hafif dikey degrade, `#2b3e51` → `#25384b`) |
 | `--navy-deep` | `#0b304c` | Sonuç ekranının üst bölümü |
 | `--ink` | `#1b2129` | Seçili kategori kartı, koyu butonlar, başlık metni |
@@ -72,7 +71,7 @@ Ekran kaydındaki Doping Hafıza düzeni:
 | `/app/denemeler` | Testler ve Denemeler listesi |
 | `/app/denemeler/[attemptId]` | Deneme çözme |
 | `/app/denemeler/[attemptId]/sonuc` | Deneme sonucu |
-| `/app/eksiklerim` | Konu ustalıkları |
+| `/app/gelisimim` | Konu ustalıkları (Gelişimim; eski `/app/eksiklerim` buraya yönlenir) |
 | `/app/puan` | Puan ve seri |
 | `/admin/demo` | Demo kontrolü |
 | `/admin/compare` | Yan yana iki öğrencinin akışı |
@@ -86,15 +85,15 @@ Giriş sonrası açılan ilk ekran; Doping Hafıza'nın ana sayfasıyla aynı d�
 
 ## Dopingle
 
-Sağ üstteki şimşek butonuyla açılan **tam ekran katmandır** (`/app/dopingle`); kapat butonu veya Escape, açıldığı sayfaya döndürür.
+Sağ üstteki şimşek butonuyla açılan **tam ekran katmandır** (`/app/dopingle`); kapat butonu veya Escape, açıldığı sayfaya döndürür (sonuç ekranındaki "Reçeteni gör" ve Gelişimim'deki "Çalış" dahil). Mikro-soru paneli açıkken Escape katmanı kapatmaz.
 
 Ekran kaydındaki Dopingle sayfasının birebir benzeri olmalı:
 
 - Tam sayfa koyu arka plan (`--dopingle-bg`), sol menü ikon moduna daralmış.
 - Ortada **dikey 9:16 video kartı** (yükseklik ekranın ~%90'ı), 16 px yuvarlak köşe. Kartın sağ üst köşesinde küçük Doping logosu filigranı.
-- **Videonun sağında, dikey sırada yuvarlak yarı saydam aksiyon butonları:** beğen (kalp, altında sayı), kaydet (yer imi), ses (hoparlör).
+- **Videonun sağında, dikey sırada yuvarlak yarı saydam aksiyon butonları:** beğen (kalp; demoda sayı gösterilmez), kaydet (yer imi; basınca dolar ve video sunucuda kaydedilir, tekrar basınca çıkar; istek başarısız olursa eski haline döner ve kısa bir uyarı görünür), ses (hoparlör; gerçek videolarda sesi açar/kapatır, seçim Dopingle kapanana kadar kartlar arasında korunur; tarayıcı sesli otomatik oynatmayı reddederse sessiz başlar ve buton bunu gösterir; simüle videoda ses olmadığı için pasiftir).
 - **Sayfanın sağ kenarında** üst üste iki yuvarlak buton: önceki video (↑) ve sonraki video (↓).
-- **Sol üstte:** gri küçük ipucu metni "↑ ↓ Video değiştir | Space: Duraklat"; altında yarı saydam koyu hap butonlar **Filtre** ve **Kaydedilen** (demoda işlevsiz olabilir).
+- **Sol üstte:** gri küçük ipucu metni "↑ ↓ Video değiştir | Space: Duraklat"; altında yarı saydam koyu hap butonlar **Filtre** (demoda işlevsiz) ve **Kaydedilen**. Kaydedilen, akışı yalnızca kaydedilen videolarla yeniden açar (`/app/dopingle?saved=1`, seçiliyken açık renkli); tekrar basınca normal akışa döner. Kaydedilen video yoksa "Henüz kaydettiğin video yok…" yazar.
 - **Sağ üstte:** iki küçük anahtar (toggle): otomatik sonraki video ve parlaklık; mavi aktif durum.
 - **Sol altta:** kalın beyaz video başlığı, altında gri yarı saydam hap içinde öğretmen adı.
 - **Bu projeye özel eklemeler** (ekran kaydında yok, aynı görsel dille ekle):
@@ -132,6 +131,7 @@ Görsel dili deneme çözme ekranıyla aynı olmalı ki öğrenci tanıdık buls
 
 - İlerleme %70'i geçince video kartının altında **Soruyu çöz** butonu belirir; video bitince pencere kendiliğinden açılır.
 - Pencere, video kartının yanında (sağında) açılan beyaz, 20 px yuvarlak köşeli bir panel; arka plan koyu kalır, video kartı soluklaşır.
+- Panel açılınca klavye odağı panele geçer; şık seçildiği anda geri sayım durur.
 - İçerik: üstte konu çipi ve sağda 60 sn geri sayım; soru metni; 4 şık, her biri **solunda harf balonu** olan satır (balon: ince gri kenarlıklı daire, seçilince `--select` dolgu, beyaz harf).
 - Şıkka tıklamak cevabı gönderir (onay adımı yok).
 - Sonuç durumu: doğruysa seçilen balon `--success` olur, panelde yeşil onay, "+15 puan" yukarı süzülen animasyonla üst çubuktaki puana eklenir. Yanlışsa seçilen balon `--danger`, doğru şık `--success` işaretlenir. Her iki durumda kısa çözüm metni ve **ustalık çubuğu**: önceki değerden yeni değere animasyonla ilerler ("Olasılık %17 → %27").

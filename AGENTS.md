@@ -21,7 +21,7 @@ Instagram, kullanıcı YDS'ye çalışıyorsa ona YDS videosu gösterir, çünk�
 1. **Teşhis:** Öğrenci denemeyi her zamanki gibi çözer. Sonuç gönderildiği anda sistem konu bazlı eksikleri otomatik çıkarır. Öğrenci hiçbir şey yüklemez veya seçmez.
 2. **Reçete:** Dopingle akışı, eksik konulardan kısa videolarla dolar. Her kartta "neden bu video" açıklaması bulunur.
 3. **Kontrol:** Video bittiğinde öğrenciye o konudan tek bir mikro-soru sorulur. Doğru cevap puan kazandırır.
-4. **İyileşme:** Her cevap öğrencinin konu ustalık skorunu günceller; "Eksiklerim" ekranında ilerleme görünür.
+4. **İyileşme:** Her cevap öğrencinin konu ustalık skorunu günceller; "Gelişimim" ekranında ilerleme görünür.
 
 **Bu proje bir sunum demosudur.** Amaç, şirket yönetimine (C-level) bu fikrin uçtan uca çalıştığını canlı göstermektir. Gerçek Doping sistemlerine bağlanılmaz; deneme, video ve puan altyapısı bu projenin içinde kurulur. Mimari ise ileride gerçek sisteme taşınabilecek şekilde, üretim kalitesinde kurulur.
 
@@ -35,7 +35,7 @@ Başarı ölçütleri:
 **Kapsam içi:**
 
 - Tek sınav ve tek ders: **TYT Matematik**, 10 konu
-- Öğrenci uygulaması (Doping Hafıza'nın mevcut web arayüzüne benzeyen masaüstü web; bkz. `docs/arayuz.md`): Dopingle, Testler ve Denemeler, Eksiklerim
+- Öğrenci uygulaması (Doping Hafıza'nın mevcut web arayüzüne benzeyen masaüstü web; bkz. `docs/arayuz.md`): Dopingle, Testler ve Denemeler, Gelişimim (ilk adı Eksiklerim)
 - Deneme modülü: hazır mini denemeler, çözme, gönderme, sonuç
 - Öğrenci profili: konu bazlı ustalık skoru
 - Kişiselleştirilmiş akış ve "neden bu video" açıklaması
@@ -68,7 +68,7 @@ Başarı ölçütleri:
 | API sözleşmesi | springdoc-openapi ile üretilen OpenAPI 3; frontend tipleri bundan üretilir |
 | Backend test | JUnit 5, AssertJ, Mockito, **Testcontainers** (PostgreSQL, Redis, Kafka), Spring Modulith test desteği, ArchUnit |
 | Kod kalitesi (backend) | Spotless (palantir-java-format), Checkstyle, SpotBugs, JaCoCo |
-| Frontend | **React 19 + TypeScript (strict) + Vite**, React Router, TanStack Query, Tailwind CSS, React Hook Form + zod, Recharts |
+| Frontend | **React 19 + TypeScript (strict) + Vite**, React Router, TanStack Query, Tailwind CSS; form gelince React Hook Form + zod, grafik gelince Recharts (MVP'de ikisi de gerekmedi, kurulu değil) |
 | Frontend API istemcisi | `openapi-typescript` ile OpenAPI'den üretilen tipler + ince bir `fetch` sarmalayıcısı |
 | Frontend test | Vitest, React Testing Library, MSW |
 | Kod kalitesi (frontend) | ESLint (typescript-eslint strict, react-hooks, jsx-a11y), Prettier |
@@ -122,13 +122,13 @@ API `http://localhost:8080`, web `http://localhost:5173`, OpenAPI arayüzü `htt
 2. **Modül sınırlarına uy.** Modüller: `auth`, `content`, `exam`, `learner`, `feed`, `quiz`, `points`, `admin`, `simulation`, ortak kod için `shared`. Bir modül başka bir modülün yalnızca `api` paketindeki public arayüzleri ve event'leri kullanabilir; repository, entity ve iç servislerine erişemez. `ApplicationModules.of(...).verify()` testi bunu zorlar. Ayrıntı: `docs/mimari.md`.
 3. **Asenkron iş akışları event ile.** Deneme sonucu → profil → akış zinciri Kafka üzerinden event'lerle akar. Senkron modül çağrısına yalnızca kullanıcının anında görmesi gereken sonuçlarda izin var (mikro-soru cevabında puan ve ustalık değişimi; bkz. `docs/mimari.md` §4).
 4. **Domain mantığı framework'ten bağımsız.** Ustalık hesabı, akış sıralaması, etiketleme ve puan kuralları Spring'e bağımlı olmayan saf Java sınıflarıdır ve birim testleriyle doğrulanır.
-5. **Doğru cevap sızmaz.** `correct_key` hiçbir öğrenci yanıtında, log'da veya event'te yer almaz; cevap kontrolü her zaman sunucuda yapılır.
+5. **Doğru cevap sızmaz.** `correct_key` cevap verilmeden önceki hiçbir öğrenci yanıtında, hiçbir log'da veya event'te yer almaz; cevap kontrolü her zaman sunucuda yapılır. Doğru cevap yalnızca iş bittikten sonra gösterilir: gönderilmiş denemenin sonucunda soru incelemesi için ve mikro-soru cevaplandıktan sonra çözümle birlikte (`docs/api.md`).
 6. **İdempotent yazma.** Event'lerde `eventId`, etkileşimlerde `clientEventId`, puanda `refId` tekrar işlenmez.
 7. **Akış asla hata vermez.** Profil veya sıralama hata verirse kullanıcıya `personalized: false` ile fallback akış döner.
 8. **Sayısal değerler config'de.** `docs/algoritma.md` §9'daki her değer `application.yml` içindeki `prescription.*` altından okunur; her modül kendi `prescription.<modül>.*` grubunu kendi doğrulanmış `@ConfigurationProperties` record'uyla bağlar.
 9. **Arayüz dili Türkçe**, kod, tablo, kolon, endpoint, commit mesajı ve kod yorumları İngilizce.
 10. **Belirsizlikte sessiz tahmin yok.** Varsayım yaptığın yere `TODO(spec):` yorumu bırak ve iş sonunda liste halinde raporla. Önemli bir teknik karar alırsan `docs/adr/` altına yeni bir ADR yaz.
-11. **Telifli içerik kullanma.** İnternetten video, görsel, logo veya soru indirme. Videolar için `docs/arayuz.md` içindeki simüle oynatıcıyı kullan. İstisna: Doping Hafıza'nın kendi görsel varlıkları `public/doping/` altında kullanılabilir (`docs/adr/0006-doping-gorsel-varliklari.md`).
+11. **Telifli içerik kullanma.** İnternetten video, görsel, logo veya soru indirme. Videolar için `docs/arayuz.md` içindeki simüle oynatıcıyı kullan. İstisnalar: Doping Hafıza'nın kendi görsel varlıkları `public/doping/` altında kullanılabilir (`docs/adr/0006-doping-gorsel-varliklari.md`); ürün sahibinin kendi hazırladığı sesli demo videoları `public/videos/` altında Git LFS ile durur, dosya yoksa simüle oynatıcı devreye girer (README, "Demo videoları").
 12. **Seed içerikleri doğru olsun.** Soruları sen yazacaksın; her sorunun tek doğru cevabı olmalı ve matematiksel olarak doğru olmalı. Seed dosyalarının başına "Editör kontrolünden geçmedi" notu koy.
 13. **Kod kalitesi pazarlık konusu değil.** `docs/kod-standartlari.md` içindeki kurallar her commit'te geçerlidir; `./mvnw verify` ve `npm run check` kırmızıyken commit atma.
 
@@ -152,14 +152,14 @@ Her aşama bir öncekine dayanır. Bir aşamanın kabul kriterleri geçmeden son
     - `docs/veri-modeli.md` içindeki tüm tablolar (Flyway), JPA entity'leri, `docs/seed-verisi.md` içindeki içerik.
     - Kabul: migration'lar Testcontainers üzerinde temiz veritabanına uygulanır; seed tekrar çalıştırıldığında veriyi çoğaltmaz; seed sonrası 10 konu, 40 video, 2 mini deneme ve 4 kullanıcı vardır.
 2. **Kimlik ve uygulama kabuğu**
-    - Demo giriş (`auth` modülü, JWT), Spring Security yapılandırması, rol bazlı yetki; Doping benzeri uygulama kabuğu: Doping Hafıza menüsü (çalışan öğeler **Ana Sayfa**, **Testler ve Denemeler**, **Eksiklerim**), üst çubuk (Dopingle'ı açan şimşek butonu; öğrenci adı ve toplam puan avatarın yanındaki hesap menüsünde), tasarım değişkenleri, yazı tipleri, API istemcisi üretimi. Giriş sonrası Ana Sayfa açılır; Dopingle tam ekran katman olarak şimşek butonundan açılır.
+    - Demo giriş (`auth` modülü, JWT), Spring Security yapılandırması, rol bazlı yetki; Doping benzeri uygulama kabuğu: Doping Hafıza menüsü (çalışan öğeler **Ana Sayfa**, **Testler ve Denemeler**, **Gelişimim**), üst çubuk (Dopingle'ı açan şimşek butonu; öğrenci adı ve toplam puan avatarın yanındaki hesap menüsünde), tasarım değişkenleri, yazı tipleri, API istemcisi üretimi. Giriş sonrası Ana Sayfa açılır; Dopingle tam ekran katman olarak şimşek butonundan açılır.
     - Kabul: öğrenci seçilince sol menülü uygulama açılır; admin endpoint'leri öğrenciye 403 döner; sayfa yenilenince oturum korunur.
 3. **Deneme modülü**
     - Deneme listesi, çözme ekranı, gönderme, sonuç ekranı, `exam.result-published` event'i (outbox üzerinden Kafka'ya).
     - Kabul: deneme gönderildiğinde event tam bir kez yayınlanır (entegrasyon testi); sonuç ekranında konu bazlı doğru/yanlış/boş görünür.
-4. **Öğrenci profili ve Eksiklerim**
-    - Kafka consumer, sinyal işleme, ustalık hesabı, decay, Redis önbelleği, `learner.mastery-changed`, Eksiklerim ekranı.
-    - Kabul: `docs/algoritma.md` §1'deki örnek değerler birim testinde birebir çıkar; deneme gönderildikten sonra en geç 2 saniye içinde Eksiklerim ekranı güncellenir; aynı event iki kez gelince skor değişmez.
+4. **Öğrenci profili ve Gelişimim** (ilk adı Eksiklerim)
+    - Kafka consumer, sinyal işleme, ustalık hesabı, decay, Redis önbelleği, `learner.mastery-changed`, Gelişimim ekranı.
+    - Kabul: `docs/algoritma.md` §1'deki örnek değerler birim testinde birebir çıkar; deneme gönderildikten sonra en geç 2 saniye içinde Gelişimim ekranı güncellenir; aynı event iki kez gelince skor değişmez.
 5. **Kişiselleştirilmiş akış ve Dopingle ekranı**
     - Aday havuzları (`CandidatePool` bean'leri), sıralama (`FeedRanker`), kurallar, "neden bu video" şablonları (`ReasonTemplate`), Redis kuyruğu, fallback, Dopingle ekranı, simüle oynatıcı, etkileşim kaydı.
     - Kabul: demo senaryosunun 3. adımında akışın ilk 5 kartından en az 3'ü zayıf konudandır; aynı konudan art arda en fazla 2 kart gelir; kişiselleştirme kapalı öğrenci rastgele akış görür; Redis kapalıyken akış yine döner.
