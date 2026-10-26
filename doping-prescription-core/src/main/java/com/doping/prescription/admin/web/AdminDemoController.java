@@ -8,6 +8,7 @@ import com.doping.prescription.admin.application.DemoControlService.FeedDebug;
 import com.doping.prescription.admin.application.DemoControlService.StudentCard;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 /** Demo control endpoints of docs/api.md (Admin); ADMIN only, enforced by the security rules on /api/admin/**. */
 @RestController
 class AdminDemoController {
+
+    // users.slug is varchar(32); persona names are short constants (GET /api/admin/demo/personas)
+    private static final int SLUG_MAX_LENGTH = 32;
+    private static final int PERSONA_MAX_LENGTH = 64;
 
     private final DemoControlService demo;
     private final ContentEffectivenessService effectiveness;
@@ -64,14 +69,19 @@ class AdminDemoController {
 
     /** docs/demo-senaryosu.md, step 7: called from Swagger UI with an admin token. */
     @GetMapping("/api/admin/feed-debug")
-    FeedDebug feedDebug(@RequestParam String slug) {
+    FeedDebug feedDebug(@RequestParam @NotBlank @Size(min = 1, max = SLUG_MAX_LENGTH) String slug) {
         return demo.feedDebug(slug);
     }
 
-    record ResetRequest(@NotBlank String slug) {}
+    record ResetRequest(
+            @NotBlank @Size(min = 1, max = SLUG_MAX_LENGTH) String slug) {}
 
     /**
      * @param persona NEW or SCRIPTED_IN_PROGRESS (see GET /api/admin/demo/personas)
      */
-    record PersonaRequest(@NotBlank String slug, @NotBlank String persona) {}
+    record PersonaRequest(
+            @NotBlank @Size(min = 1, max = SLUG_MAX_LENGTH) String slug,
+
+            @NotBlank @Size(min = 1, max = PERSONA_MAX_LENGTH)
+            String persona) {}
 }

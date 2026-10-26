@@ -20,8 +20,11 @@ public interface FeedStore {
 
     void dropQueue(UUID userId);
 
-    /** Videos shown in the session; empty Optional if the store is unavailable. */
-    Optional<Set<Integer>> seen(UUID sessionId);
+    /**
+     * Videos shown in the learner's session; empty Optional if the store is unavailable. Keyed by learner and session,
+     * because the session id comes from the client's cursor.
+     */
+    Optional<Set<Integer>> seen(UUID userId, UUID sessionId);
 
-    void markSeen(UUID sessionId, Collection<Integer> contentIds);
+    void markSeen(UUID userId, UUID sessionId, Collection<Integer> contentIds);
 }

@@ -43,7 +43,7 @@ class ExamSubmissionService implements ExamSubmission {
                     userId,
                     attemptId,
                     question.getId(),
-                    question.getScenarioAnswer(),
+                    question.getScenarioAnswer().orElse(null),
                     question.getScenarioAnswer().isPresent() ? SCENARIO_TIME_SPENT_SEC : null);
         }
     }
@@ -57,7 +57,7 @@ class ExamSubmissionService implements ExamSubmission {
                         question.getId(),
                         question.getTopicId(),
                         question.getContent().correctKey(),
-                        question.getScenarioAnswer()))
+                        question.getScenarioAnswer().orElse(null)))
                 .toList();
     }
 }

@@ -46,7 +46,11 @@ class SchemaConventionsIT {
             // only read together with its learner_topic_mastery row, never queried on its own
             "learner_topic_mastery.last_exam_attempt_id",
             // only compared with the incoming ref id of the same streak row
-            "points_streak.last_ref_id");
+            "points_streak.last_ref_id",
+            // a client idempotency key, unique per learner: indexed second in (user_id, client_event_id)
+            "feed_interaction.client_event_id",
+            // second column of saved_content's primary key; always read together with the learner
+            "saved_content.content_id");
 
     private static final Pattern QUOTED_VALUE = Pattern.compile("'([A-Z_]+)'");
 

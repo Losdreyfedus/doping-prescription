@@ -5,8 +5,10 @@ import com.doping.prescription.quiz.application.QuizService;
 import com.doping.prescription.quiz.application.QuizViews.MicroQuiz;
 import com.doping.prescription.quiz.application.QuizViews.QuizResult;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 /** Micro-question endpoints of docs/api.md; the user always comes from the token. */
 @RestController
 class QuizController {
+
+    /**
+     * Upper bound of {@code responseMs}: an answer cannot take longer than its token lives (prescription.quiz.token-ttl,
+     * 5m), which already covers the countdown (prescription.quiz.time-limit-sec). Annotations need a constant.
+     */
+    private static final int MAX_RESPONSE_MS = 300_000;
 
     private final QuizService quizzes;
 
@@ -36,7 +44,9 @@ class QuizController {
 
     @PostMapping("/api/quiz/{microQuestionId}/answer")
     QuizResult answer(
-            CurrentUser user, @PathVariable Integer microQuestionId, @Valid @RequestBody AnswerRequest request) {
+            CurrentUser user,
+            @PathVariable @Positive Integer microQuestionId,
+            @Valid @RequestBody AnswerRequest request) {
         return quizzes.answer(
                 user.userId(), microQuestionId, request.quizToken(), request.selectedKey(), request.responseMs());
     }
@@ -47,5 +57,5 @@ class QuizController {
     record AnswerRequest(
             @NotBlank String quizToken,
             @NotBlank @Pattern(regexp = "[A-D]") String selectedKey,
-            @PositiveOrZero int responseMs) {}
+            @PositiveOrZero @Max(MAX_RESPONSE_MS) int responseMs) {}
 }

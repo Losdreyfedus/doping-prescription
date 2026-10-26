@@ -3,9 +3,10 @@ import { AnswerBubble } from '@/shared/ui/AnswerBubble';
 
 import type { AttemptView } from './api';
 
-const LETTERS = ['A', 'B', 'C', 'D', 'E'];
-
-/** The optical answer sheet: one row per question, bubbles mark answers, a row click goes to the question. */
+/**
+ * The optical answer sheet: one row per question, bubbles mark answers, a row click goes to the question. The bubbles
+ * are the question's own option keys (A–E in the TYT exams).
+ */
 export function AnswerSheet({
   attempt,
   answers,
@@ -45,7 +46,7 @@ export function AnswerSheet({
             >
               {question.orderNo}
             </button>
-            {LETTERS.map((letter) => (
+            {question.options.map(({ key: letter }) => (
               <button
                 key={letter}
                 type="button"

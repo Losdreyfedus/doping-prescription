@@ -10,7 +10,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,12 +54,7 @@ class ExamController {
             @PathVariable UUID attemptId,
             @PathVariable Integer questionId,
             @Valid @RequestBody SaveAnswerRequest request) {
-        exams.saveAnswer(
-                user.userId(),
-                attemptId,
-                questionId,
-                Optional.ofNullable(request.selectedKey()),
-                request.timeSpentSec());
+        exams.saveAnswer(user.userId(), attemptId, questionId, request.selectedKey(), request.timeSpentSec());
     }
 
     @PostMapping("/api/exam-attempts/{attemptId}/submit")

@@ -11,7 +11,6 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 /** A catalogue and learner shaped like the demo seed: 10 topics with 4 videos each. */
@@ -75,17 +74,15 @@ final class FeedFixtures {
     }
 
     static FeedContext context(Map<Integer, TopicState> topics) {
-        return new FeedContext(topics, videos(), Set.of(), Set.of(), Set.of(), Set.of(), NOW, false);
+        return new FeedContext(topics, videos(), Set.of(), Set.of(), Set.of(), Set.of(), List.of(), NOW, false);
     }
 
     static TopicState state(int topic, double mastery, double confidence, TopicBand band, ExamTally exam) {
-        return new TopicState(
-                topic, name(topic), examWeight(topic), mastery, confidence, band, Optional.of(NOW), Optional.of(exam));
+        return new TopicState(topic, name(topic), examWeight(topic), mastery, confidence, band, NOW, exam);
     }
 
     private static TopicState unknown(int topic) {
-        return new TopicState(
-                topic, name(topic), examWeight(topic), 0.5, 0, TopicBand.UNKNOWN, Optional.empty(), Optional.empty());
+        return new TopicState(topic, name(topic), examWeight(topic), 0.5, 0, TopicBand.UNKNOWN, null, null);
     }
 
     static String name(int topic) {

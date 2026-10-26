@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 class GlobalExceptionHandlerTest {
@@ -56,6 +57,46 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void missingRequestParameterIsInvalidRequest() {
+        // When
+        MvcTestResult result = mvc.get().uri("/with-param").exchange();
+
+        // Then
+        assertThat(result).hasStatus(400);
+        assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("INVALID_REQUEST");
+        assertThat(result)
+                .bodyJson()
+                .extractingPath("$.detail")
+                .isEqualTo(GlobalExceptionHandler.INVALID_REQUEST_DETAIL);
+    }
+
+    @Test
+    void wrongMethodIsMethodNotAllowedProblemWithAllowHeader() {
+        // When
+        MvcTestResult result = mvc.delete().uri("/with-param").exchange();
+
+        // Then
+        assertThat(result).hasStatus(405);
+        assertThat(result).hasHeader("Allow", "GET");
+        assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("METHOD_NOT_ALLOWED");
+        assertThat(result).bodyJson().extractingPath("$.status").isEqualTo(405);
+    }
+
+    @Test
+    void nonJsonBodyIsUnsupportedMediaTypeProblem() {
+        // When
+        MvcTestResult result = mvc.post()
+                .uri("/validated")
+                .contentType(MediaType.TEXT_PLAIN)
+                .content("slug")
+                .exchange();
+
+        // Then
+        assertThat(result).hasStatus(415);
+        assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("UNSUPPORTED_MEDIA_TYPE");
+    }
+
+    @Test
     void unexpectedErrorRevealsNoDetails() {
         MvcTestResult result = mvc.get().uri("/boom").exchange();
 
@@ -93,6 +134,11 @@ class GlobalExceptionHandlerTest {
         @PostMapping("/validated")
         void validated(@Valid @RequestBody Body body) {
             // validation happens before the method runs
+        }
+
+        @GetMapping("/with-param")
+        String withParam(@RequestParam String slug) {
+            return slug;
         }
 
         @GetMapping("/boom")

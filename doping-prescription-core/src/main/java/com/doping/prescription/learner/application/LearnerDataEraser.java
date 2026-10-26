@@ -6,6 +6,8 @@ import java.util.UUID;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /** Erases one learner's learner data for the demo reset (docs/api.md, POST /api/admin/demo/reset). */
 @Component
@@ -33,6 +35,12 @@ class LearnerDataEraser implements UserDataEraser {
     @Transactional
     public void erase(UUID userId) {
         STATEMENTS.forEach(sql -> jdbc.sql(sql).param("userId", userId).update());
-        cache.evict(userId);
+        // After commit: a read running alongside the reset would otherwise cache the old rows again.
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                cache.evict(userId);
+            }
+        });
     }
 }

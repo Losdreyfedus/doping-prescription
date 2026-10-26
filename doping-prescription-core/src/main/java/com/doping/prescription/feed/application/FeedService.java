@@ -13,6 +13,9 @@ import com.doping.prescription.feed.domain.FeedComposer.Card;
 import com.doping.prescription.feed.domain.FeedContext;
 import com.doping.prescription.feed.domain.PoolType;
 import com.doping.prescription.feed.domain.ServedCard;
+import com.doping.prescription.feed.persistence.SavedContentQueries;
+import com.doping.prescription.shared.error.DomainException;
+import com.doping.prescription.shared.error.ErrorCode;
 import com.doping.prescription.shared.error.NotFoundException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -20,9 +23,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.random.RandomGenerator;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -49,8 +54,9 @@ public class FeedService {
     private final ContentCatalog content;
     private final TopicCatalog topics;
     private final FeedProperties properties;
+    private final SavedContentQueries saved;
 
-    @SuppressWarnings("checkstyle:ParameterNumber") // the feed coordinates nine collaborators; each is one concern
+    @SuppressWarnings("checkstyle:ParameterNumber") // the feed coordinates ten collaborators; each is one concern
     FeedService(
             FeedComposer composer,
             FeedContextLoader loader,
@@ -60,7 +66,8 @@ public class FeedService {
             UserDirectory users,
             ContentCatalog content,
             TopicCatalog topics,
-            FeedProperties properties) {
+            FeedProperties properties,
+            SavedContentQueries saved) {
         this.composer = composer;
         this.loader = loader;
         this.store = store;
@@ -70,17 +77,38 @@ public class FeedService {
         this.content = content;
         this.topics = topics;
         this.properties = properties;
+        this.saved = saved;
     }
 
     /**
-     * @param cursorText {@code nextCursor} of the previous page; none starts a new session
-     * @param limit      cards on this page
-     * @param topicId    only this topic's videos (Eksiklerim → Çalış)
-     * @param refresh    start a new session and rebuild the queue
+     * @param cursorText     {@code nextCursor} of the previous page; none starts a new session
+     * @param requestedLimit cards on this page; none means {@code prescription.feed.page-size}, more than
+     *                       {@code page-size-max} is rejected
+     * @param topicId        only this topic's videos (Gelişimim → Çalış)
+     * @param refresh        start a new session and rebuild the queue
+     */
+    public FeedPage page(
+            UUID userId,
+            @Nullable String cursorText,
+            @Nullable Integer requestedLimit,
+            @Nullable Integer topicId,
+            boolean refresh) {
+        return page(userId, cursorText, requestedLimit, topicId, refresh, false);
+    }
+
+    /**
+     * @param savedOnly only the learner's saved videos, newest saved first (Kaydedilen); takes precedence over
+     *     {@code topicId}
      */
     @SuppressWarnings("checkstyle:IllegalCatch") // any failure of personalization falls back (AGENTS.md rule 7)
     public FeedPage page(
-            UUID userId, @Nullable String cursorText, int limit, @Nullable Integer topicId, boolean refresh) {
+            UUID userId,
+            @Nullable String cursorText,
+            @Nullable Integer requestedLimit,
+            @Nullable Integer topicId,
+            boolean refresh,
+            boolean savedOnly) {
+        int limit = pageLimit(requestedLimit, properties);
         boolean newSession = refresh || cursorText == null;
         FeedCursor cursor = newSession ? FeedCursor.start() : FeedCursor.decode(cursorText);
         UserSummary user = users.findById(userId).orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı."));
@@ -93,10 +121,12 @@ public class FeedService {
         Selection selection;
         try {
             FeedContext context = loader.load(user, cursor.sessionId(), videos, catalog);
-            selection = select(user, context, cursor, limit, topicId, newSession);
+            selection = savedOnly
+                    ? new Selection(served(composer.chosen(context, saved.newestFirst(userId), limit)), true)
+                    : select(user, context, cursor, limit, topicId, newSession);
         } catch (RuntimeException e) {
             log.warn("Personalized feed failed for session {}, serving the fallback feed", cursor.sessionId(), e);
-            selection = fallback(cursor, videos, limit);
+            selection = fallback(userId, cursor, videos, limit);
         }
 
         Map<Integer, VideoView> videosById =
@@ -105,11 +135,11 @@ public class FeedService {
         List<ServedCard> live = selection.cards().stream()
                 .filter(card -> videosById.containsKey(card.contentId()))
                 .toList();
-        List<CardView> cards = impressions.write(userId, cursor, live, composer.algoVersion()).stream()
-                .map(served -> views.card(served, videosById, catalog))
-                .toList();
+        List<CardView> cards = cardViews(userId, cursor, live, videosById, catalog);
         store.markSeen(
-                cursor.sessionId(), live.stream().map(ServedCard::contentId).toList());
+                userId,
+                cursor.sessionId(),
+                live.stream().map(ServedCard::contentId).toList());
         return new FeedPage(
                 cursor.sessionId(),
                 selection.personalized(),
@@ -117,11 +147,6 @@ public class FeedService {
                 cursor.advance(cards.size()).encode(),
                 properties.demoVideoSpeed(),
                 cards);
-    }
-
-    /** Called when the learner's mastery changed: the next request rebuilds the queue (docs/algoritma.md §4). */
-    public void invalidateQueue(UUID userId) {
-        store.dropQueue(userId);
     }
 
     private Selection select(
@@ -132,7 +157,7 @@ public class FeedService {
             @Nullable Integer topicId,
             boolean newSession) {
         if (!user.personalizationEnabled()) {
-            return new Selection(served(composer.fallback(context, seed(cursor), limit)), false);
+            return new Selection(served(composer.fallback(context, sessionRandom(cursor), limit)), false);
         }
         if (topicId != null) {
             return new Selection(served(composer.topicOnly(context, topicId, limit)), true);
@@ -155,9 +180,38 @@ public class FeedService {
         return new Selection(page, personalized);
     }
 
-    private Selection fallback(FeedCursor cursor, List<VideoView> videos, int limit) {
-        FeedContext context = loader.fallbackContext(cursor.sessionId(), videos);
-        return new Selection(served(composer.fallback(context, seed(cursor), limit)), false);
+    private Selection fallback(UUID userId, FeedCursor cursor, List<VideoView> videos, int limit) {
+        FeedContext context = loader.fallbackContext(userId, cursor.sessionId(), videos);
+        return new Selection(served(composer.fallback(context, sessionRandom(cursor), limit)), false);
+    }
+
+    /** Records the cards as impressions and renders them, marking the videos the learner saved. */
+    private List<CardView> cardViews(
+            UUID userId,
+            FeedCursor cursor,
+            List<ServedCard> live,
+            Map<Integer, VideoView> videosById,
+            Map<Integer, TopicView> catalog) {
+        Set<Integer> savedIds = saved.savedAmong(
+                userId, live.stream().map(ServedCard::contentId).toList());
+        return impressions.write(userId, cursor, live, composer.algoVersion()).stream()
+                .map(served -> views.card(
+                        served,
+                        videosById,
+                        catalog,
+                        savedIds.contains(served.card().contentId())))
+                .toList();
+    }
+
+    /** The page size: the configured default if none was asked for, else within 1..page-size-max (docs/api.md). */
+    static int pageLimit(@Nullable Integer requested, FeedProperties properties) {
+        if (requested == null) {
+            return properties.pageSize();
+        }
+        if (requested < 1 || requested > properties.pageSizeMax()) {
+            throw new InvalidLimitException(properties.pageSizeMax());
+        }
+        return requested;
     }
 
     /** Pinned videos open only a personalized feed: before the first exam the feed must stay general. */
@@ -191,9 +245,21 @@ public class FeedService {
                 .toList();
     }
 
-    private static long seed(FeedCursor cursor) {
-        return cursor.sessionId().getMostSignificantBits() ^ cursor.sessionId().getLeastSignificantBits();
+    /** The same session always gets the same fallback order (docs/algoritma.md §2, seeded by sessionId). */
+    private static RandomGenerator sessionRandom(FeedCursor cursor) {
+        return new Random(
+                cursor.sessionId().getMostSignificantBits() ^ cursor.sessionId().getLeastSignificantBits());
     }
 
     private record Selection(List<ServedCard> cards, boolean personalized) {}
+
+    /** A page size outside 1..page-size-max (docs/api.md: 400). */
+    static final class InvalidLimitException extends DomainException {
+
+        private static final long serialVersionUID = 1L;
+
+        InvalidLimitException(int max) {
+            super(ErrorCode.INVALID_REQUEST, "Sayfa boyutu 1 ile %d arasında olmalı.".formatted(max));
+        }
+    }
 }

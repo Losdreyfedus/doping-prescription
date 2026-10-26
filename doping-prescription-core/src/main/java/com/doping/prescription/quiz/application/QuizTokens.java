@@ -5,14 +5,16 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtClaimNames;
+import org.springframework.security.oauth2.jwt.JwtClaimValidator;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.JwtException;
@@ -27,9 +29,11 @@ import org.springframework.stereotype.Component;
 @Component
 class QuizTokens {
 
-    private static final String IMPRESSION = "imp";
-    private static final String QUESTION = "mq";
-    private static final String OPTIONS = "opt";
+    static final String IMPRESSION = "imp";
+    static final String QUESTION = "mq";
+    static final String OPTIONS = "opt";
+    /** Marks quiz tokens, so a token signed with the same key for another purpose is not accepted as one. */
+    static final String AUDIENCE = "quiz";
 
     private final NimbusJwtEncoder encoder;
     private final NimbusJwtDecoder decoder;
@@ -42,8 +46,10 @@ class QuizTokens {
         this.decoder = NimbusJwtDecoder.withSecretKey(key)
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
-        // expiry is checked below against the application clock, so it can answer 410 instead of 403
-        this.decoder.setJwtValidator(token -> OAuth2TokenValidatorResult.success());
+        // Only the audience is validated here; expiry is checked below against the application clock, so it can answer
+        // 410 instead of 403
+        this.decoder.setJwtValidator(new JwtClaimValidator<List<String>>(
+                JwtClaimNames.AUD, audience -> audience != null && audience.contains(AUDIENCE)));
         this.properties = properties;
         this.clock = clock;
     }
@@ -53,6 +59,7 @@ class QuizTokens {
         JwtClaimsSet set = JwtClaimsSet.builder()
                 .id(claims.tokenId().toString())
                 .subject(claims.userId().toString())
+                .audience(List.of(AUDIENCE))
                 .issuedAt(now)
                 .expiresAt(now.plus(properties.tokenTtl()))
                 .claim(IMPRESSION, claims.impressionId().toString())

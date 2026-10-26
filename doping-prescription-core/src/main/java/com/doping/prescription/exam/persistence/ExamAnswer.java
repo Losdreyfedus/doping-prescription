@@ -6,15 +6,20 @@ import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostPersist;
+import jakarta.persistence.Transient;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.jspecify.annotations.NonNull;
+import org.springframework.data.domain.Persistable;
 
 /** The learner's answer to one question of an attempt; an empty selection means the question was left blank. */
 @Entity
-public class ExamAnswer {
+public class ExamAnswer implements Persistable<ExamAnswerId> {
 
     @EmbeddedId
     private ExamAnswerId id;
@@ -31,6 +36,10 @@ public class ExamAnswer {
     private Instant createdAt;
 
     private Instant updatedAt;
+
+    /** The id is assigned by the application, so Spring Data cannot tell a new row by it; save() then inserts directly. */
+    @Transient
+    private boolean newRow = true;
 
     protected ExamAnswer() {
         // for JPA
@@ -55,8 +64,21 @@ public class ExamAnswer {
         this.updatedAt = now;
     }
 
-    public ExamAnswerId getId() {
+    // Persistable declares the id nullable for unsaved entities; here it is assigned in the constructor
+    @Override
+    public @NonNull ExamAnswerId getId() {
         return id;
+    }
+
+    @Override
+    public boolean isNew() {
+        return newRow;
+    }
+
+    @PostLoad
+    @PostPersist
+    void markStored() {
+        newRow = false;
     }
 
     public Optional<String> getSelectedKey() {

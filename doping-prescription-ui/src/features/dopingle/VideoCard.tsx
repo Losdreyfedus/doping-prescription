@@ -1,4 +1,4 @@
-import type { RefObject } from 'react';
+import { type RefObject, useId } from 'react';
 
 import { tr } from '@/shared/i18n/tr';
 import { PlayCircleIcon } from '@/shared/ui/icons';
@@ -7,7 +7,10 @@ import type { FeedCard } from './api';
 import { TeacherSilhouette } from './TeacherSilhouette';
 import { formatClock } from './time';
 
-/** The topic colour as a thin accent only: the card's edge light and the silhouette's rim (docs/arayuz.md). */
+/**
+ * The topic colour as a thin accent only: the card's edge light and the silhouette's rim (docs/arayuz.md). Keyed by the
+ * ids of the ten seed topics (docs/seed-verisi.md), whose colours are design tokens; any other topic gets NO_ACCENT.
+ */
 const TOPIC_ACCENT: Record<number, { edge: string; rim: string }> = {
   1: { edge: 'border-topic-1/60', rim: 'text-topic-1' },
   2: { edge: 'border-topic-2/60', rim: 'text-topic-2' },
@@ -22,6 +25,7 @@ const TOPIC_ACCENT: Record<number, { edge: string; rim: string }> = {
 };
 const NO_ACCENT = { edge: 'border-surface/20', rim: 'text-surface' };
 
+/** The reason pill's topic dot, keyed like TOPIC_ACCENT; other topics get a plain white dot. */
 const TOPIC_DOT: Record<number, string> = {
   1: 'bg-topic-1',
   2: 'bg-topic-2',
@@ -54,12 +58,15 @@ export function VideoCard({ card, progress, elapsedSec, playing, onToggle, video
   const { content, topic } = card;
   const accent = TOPIC_ACCENT[topic.topicId] ?? NO_ACCENT;
   const realVideo = videoRef !== undefined && content.videoUrl !== null;
+  const topicId = useId();
+  const reasonId = useId();
   return (
     <div className="flex h-[88vh] flex-col gap-2">
       <button
         type="button"
         onClick={onToggle}
         aria-label={playing ? tr.dopingle.pause : tr.dopingle.play}
+        aria-describedby={`${topicId} ${reasonId}`}
         className={`relative flex aspect-[9/16] h-full flex-col overflow-hidden rounded-2xl border-2 ${accent.edge} bg-gradient-to-b from-navy-end via-ink to-dopingle-bg text-left text-surface focus-visible:outline-2 focus-visible:outline-select`}
       >
         {realVideo ? (
@@ -70,14 +77,14 @@ export function VideoCard({ card, progress, elapsedSec, playing, onToggle, video
             playsInline
             onError={onVideoError}
             className="absolute inset-0 size-full object-cover"
-          >
-            {/* Doping's videos carry burned-in subtitles */}
-            <track kind="captions" />
-          </video>
+          />
         ) : (
           <SimulatedScene accent={accent} />
         )}
-        <span className="absolute top-4 left-4 rounded-full bg-surface/90 px-3 py-1 text-xs font-bold text-ink">
+        <span
+          id={topicId}
+          className="absolute top-4 left-4 rounded-full bg-surface/90 px-3 py-1 text-xs font-bold text-ink"
+        >
           {topic.name}
         </span>
         <span
@@ -104,6 +111,7 @@ export function VideoCard({ card, progress, elapsedSec, playing, onToggle, video
             </span>
           )}
           <span
+            id={reasonId}
             data-testid="reason"
             className="flex w-fit items-center gap-2 rounded-full bg-dopingle-bg/75 px-3 py-1.5 text-sm font-semibold"
           >

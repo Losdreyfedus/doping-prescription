@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { type InfiniteData, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { api, type Schemas, unwrap } from '@/shared/api/client';
@@ -10,10 +10,15 @@ export type FeedPage = Schemas['FeedPage'];
 export type FeedCard = Schemas['CardView'];
 type InteractionEvent = Schemas['InteractionEvent'];
 
-/** Pages of one feed session; opening Dopingle always starts a new session (docs/arayuz.md). */
-export function useFeed(topicId: number | undefined, sessionKey: string) {
+type FeedKey = ReturnType<typeof queryKeys.feed>;
+
+/**
+ * Pages of one feed session; opening Dopingle always starts a new session (docs/arayuz.md). {@code saved} shows only
+ * the learner's saved videos (Kaydedilen).
+ */
+export function useFeed(topicId: number | undefined, saved: boolean, sessionKey: string) {
   return useInfiniteQuery({
-    queryKey: queryKeys.feed(topicId, sessionKey),
+    queryKey: queryKeys.feed(topicId, saved, sessionKey),
     // the empty cursor stands for the first page, which starts a new session
     initialPageParam: FIRST_PAGE,
     queryFn: async ({ pageParam }) =>
@@ -23,13 +28,56 @@ export function useFeed(topicId: number | undefined, sessionKey: string) {
             query: {
               ...(pageParam === FIRST_PAGE ? { refresh: true } : { cursor: pageParam }),
               ...(topicId === undefined ? {} : { topicId }),
+              ...(saved ? { saved } : {}),
             },
           },
         }),
       ),
     getNextPageParam: (last) => (last.cards.length > 0 ? last.nextCursor : undefined),
+    // A session's pages never refetch (not on focus either): a refetch would start a new session under the cards.
     staleTime: Infinity,
+    refetchOnWindowFocus: false,
     gcTime: 0,
+  });
+}
+
+/**
+ * Saves or removes a card's video (docs/api.md, PUT/DELETE /api/feed/saved/:contentId). The bookmark changes at once in
+ * the session's cached pages and goes back if the request fails.
+ */
+export function useSaveVideo(feedKey: FeedKey) {
+  const queryClient = useQueryClient();
+  const markSaved = (contentId: number, saved: boolean) => {
+    queryClient.setQueryData<InfiniteData<FeedPage>>(feedKey, (data) =>
+      data
+        ? {
+            ...data,
+            pages: data.pages.map((page) => ({
+              ...page,
+              cards: page.cards.map((card) =>
+                card.content.contentId === contentId ? { ...card, saved } : card,
+              ),
+            })),
+          }
+        : data,
+    );
+  };
+  return useMutation({
+    mutationFn: async ({ contentId, saved }: { contentId: number; saved: boolean }) => {
+      const request = { params: { path: { contentId } } };
+      const { response, error } = saved
+        ? await api.PUT('/api/feed/saved/{contentId}', request)
+        : await api.DELETE('/api/feed/saved/{contentId}', request);
+      if (!response.ok) {
+        unwrap({ error, response });
+      }
+    },
+    onMutate: ({ contentId, saved }) => {
+      markSaved(contentId, saved);
+    },
+    onError: (_error, { contentId, saved }) => {
+      markSaved(contentId, !saved);
+    },
   });
 }
 
@@ -81,3 +129,5 @@ export function useInteractionRecorder() {
 
   return { record, flush };
 }
+
+export type RecordInteraction = ReturnType<typeof useInteractionRecorder>['record'];

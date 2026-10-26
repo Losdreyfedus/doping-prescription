@@ -14,13 +14,16 @@ import org.springframework.validation.annotation.Validated;
 /**
  * Configuration of the learner module, {@code prescription.learner.*} (docs/algoritma.md §9).
  *
- * @param mastery  mastery model coefficients
- * @param cacheTtl lifetime of a cached profile in Redis (docs/mimari.md §5)
+ * @param mastery         mastery model coefficients
+ * @param cacheTtl        lifetime of a cached profile in Redis (docs/mimari.md §5)
+ * @param cacheRetryAfter after a Redis failure profile reads skip the cache for this long
  */
 @Validated
 @ConfigurationProperties(prefix = "prescription.learner")
 public record LearnerProperties(
-        @NotNull @Valid Mastery mastery, @NotNull Duration cacheTtl) {
+        @NotNull @Valid Mastery mastery,
+        @NotNull Duration cacheTtl,
+        @NotNull Duration cacheRetryAfter) {
 
     /**
      * @param changeEventThreshold smallest mastery change that publishes learner.mastery-changed

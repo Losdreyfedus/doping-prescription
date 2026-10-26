@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.util.random.RandomGenerator;
 
 /**
  * Shuffles a question's options and relabels them A, B, C, ... (docs/api.md: the mapping travels inside the quiz
@@ -19,7 +19,7 @@ public final class OptionShuffle {
      * @param options stored key → text, in stored order
      * @return the shown options and, for each shown key, the stored key
      */
-    public static Shuffled shuffle(Map<String, String> options, Random random) {
+    public static Shuffled shuffle(Map<String, String> options, RandomGenerator random) {
         List<String> storedKeys = new ArrayList<>(options.keySet());
         Collections.shuffle(storedKeys, random);
         Map<String, String> shown = new LinkedHashMap<>();

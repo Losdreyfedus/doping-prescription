@@ -2,15 +2,10 @@ package com.doping.prescription.learner.application;
 
 import com.doping.prescription.content.api.TopicCatalog;
 import com.doping.prescription.learner.api.LearnerProfileQuery;
-import com.doping.prescription.learner.application.LearnerSnapshot.ExamSummary;
 import com.doping.prescription.learner.application.LearnerSnapshot.TopicSnapshot;
 import com.doping.prescription.learner.domain.MasteryBand;
 import com.doping.prescription.learner.domain.MasteryCalculator;
 import com.doping.prescription.learner.domain.SignalType;
-import com.doping.prescription.learner.domain.Trend;
-import com.doping.prescription.learner.persistence.SignalQueries;
-import com.doping.prescription.learner.persistence.TopicMastery;
-import com.doping.prescription.learner.persistence.TopicMasteryRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Map;
@@ -20,14 +15,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-/** Reads a learner's profile through the cache and derives decay, bands and trends at read time. */
+/**
+ * Reads a learner's profile through the cache and derives decay, bands and trends at read time. The cache is used
+ * outside any transaction, so a slow Redis never holds a database connection; only a miss reads PostgreSQL.
+ */
 @Service
 public class LearnerProfileService implements LearnerProfileQuery {
 
-    private final TopicMasteryRepository masteries;
-    private final SignalQueries signalQueries;
+    private final LearnerSnapshotLoader loader;
     private final SnapshotCache cache;
     private final TopicCatalog topics;
     private final MasteryCalculator calculator;
@@ -35,15 +31,13 @@ public class LearnerProfileService implements LearnerProfileQuery {
     private final Clock clock;
 
     LearnerProfileService(
-            TopicMasteryRepository masteries,
-            SignalQueries signalQueries,
+            LearnerSnapshotLoader loader,
             SnapshotCache cache,
             TopicCatalog topics,
             MasteryCalculator calculator,
             LearnerProperties properties,
             Clock clock) {
-        this.masteries = masteries;
-        this.signalQueries = signalQueries;
+        this.loader = loader;
         this.cache = cache;
         this.topics = topics;
         this.calculator = calculator;
@@ -52,10 +46,9 @@ public class LearnerProfileService implements LearnerProfileQuery {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public LearnerProfile profile(UUID userId) {
         LearnerSnapshot snapshot = cache.get(userId).orElseGet(() -> {
-            LearnerSnapshot loaded = load(userId);
+            LearnerSnapshot loaded = loader.load(userId);
             cache.putIfAbsent(userId, loaded);
             return loaded;
         });
@@ -64,65 +57,57 @@ public class LearnerProfileService implements LearnerProfileQuery {
         Instant now = clock.instant();
         return new LearnerProfile(
                 userId,
-                Optional.ofNullable(snapshot.lastExamAttemptId()),
+                snapshot.lastExamAttemptId(),
                 topics.allTopics().stream()
                         .map(topic -> topicProfile(topic.topicId(), byTopic.get(topic.topicId()), now))
                         .toList());
     }
 
     /** Reloads the snapshot after a committed write and overwrites the cached one. */
-    @Transactional(readOnly = true)
     public void refreshCache(UUID userId) {
-        cache.replace(userId, load(userId));
+        cache.replace(userId, loader.load(userId));
     }
 
     private TopicProfile topicProfile(Integer topicId, @Nullable TopicSnapshot topic, Instant now) {
         Instant lastSignalAt = topic == null ? null : topic.lastSignalAt();
         if (topic == null || lastSignalAt == null) {
             return new TopicProfile(
-                    topicId,
-                    properties.mastery().initial(),
-                    0,
-                    MasteryBand.UNKNOWN.name(),
-                    Trend.FLAT.name(),
-                    0,
-                    Optional.empty(),
-                    Optional.empty());
+                    topicId, properties.mastery().initial(), 0, Band.UNKNOWN, Trend.FLAT, 0, null, null);
         }
         double effective = calculator.effectiveMastery(topic.mastery(), lastSignalAt, now);
         MasteryBand band = MasteryBand.of(
                 effective, topic.attempts(), properties.mastery().band().thresholds());
+        LearnerSnapshot.ExamSummary exam = topic.lastExam();
         return new TopicProfile(
                 topicId,
                 effective,
                 topic.confidence(),
-                band.name(),
-                Trend.fromLastSignal(Optional.ofNullable(topic.lastSignal())).name(),
+                toApi(band),
+                trend(topic.lastSignal()),
                 topic.attempts(),
-                Optional.of(lastSignalAt),
-                Optional.ofNullable(topic.lastExam())
-                        .map(exam -> new LastExam(exam.attemptId(), exam.total(), exam.correct())));
+                lastSignalAt,
+                exam == null ? null : new LastExam(exam.attemptId(), exam.total(), exam.correct()));
     }
 
-    private LearnerSnapshot load(UUID userId) {
-        Map<Integer, SignalType> lastSignals = signalQueries.lastMasterySignalPerTopic(userId);
-        return new LearnerSnapshot(
-                signalQueries.lastExamAttempt(userId).orElse(null),
-                masteries.findByIdUserId(userId).stream()
-                        .map(row -> snapshotOf(row, lastSignals.get(row.getTopicId())))
-                        .toList());
+    /**
+     * The trend of the latest signal as the api enum. {@code Trend} alone is the inherited api type here, so the domain
+     * type is spelled out.
+     */
+    private static Trend trend(@Nullable SignalType lastSignal) {
+        return switch (com.doping.prescription.learner.domain.Trend.fromLastSignal(Optional.ofNullable(lastSignal))) {
+            case UP -> Trend.UP;
+            case DOWN -> Trend.DOWN;
+            case FLAT -> Trend.FLAT;
+        };
     }
 
-    private static TopicSnapshot snapshotOf(TopicMastery row, @Nullable SignalType lastSignal) {
-        return new TopicSnapshot(
-                row.getTopicId(),
-                row.getMastery(),
-                row.getConfidence(),
-                row.getAttempts(),
-                row.getLastSignalAt().orElse(null),
-                lastSignal,
-                row.getLastExamSummary()
-                        .map(exam -> new ExamSummary(exam.attemptId(), exam.total(), exam.correct()))
-                        .orElse(null));
+    /** The domain band as the api enum; a new domain band does not compile until it is mapped here. */
+    static Band toApi(MasteryBand band) {
+        return switch (band) {
+            case UNKNOWN -> Band.UNKNOWN;
+            case WEAK -> Band.WEAK;
+            case MEDIUM -> Band.MEDIUM;
+            case STRONG -> Band.STRONG;
+        };
     }
 }

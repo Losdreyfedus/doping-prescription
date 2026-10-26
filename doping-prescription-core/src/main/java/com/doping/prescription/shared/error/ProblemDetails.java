@@ -3,6 +3,7 @@ package com.doping.prescription.shared.error;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 
 /** Builds the RFC 9457 problem details of docs/api.md: standard fields plus {@code code}. */
@@ -14,7 +15,12 @@ public final class ProblemDetails {
     private ProblemDetails() {}
 
     public static ProblemDetail of(ErrorCode code, String detail) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.valueOf(code.httpStatus()), detail);
+        return of(HttpStatus.valueOf(code.httpStatus()), code, detail);
+    }
+
+    /** A problem whose status differs from the code's own, for framework errors without a code of their own. */
+    public static ProblemDetail of(HttpStatusCode status, ErrorCode code, String detail) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
         problem.setProperty(CODE, code.name());
         return problem;
     }

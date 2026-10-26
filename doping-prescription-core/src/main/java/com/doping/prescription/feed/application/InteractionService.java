@@ -63,7 +63,8 @@ public class InteractionService {
                     interaction.clientEventId(),
                     interaction.event().name(),
                     interaction.watchMs(),
-                    interaction.clientTs()));
+                    interaction.clientTs(),
+                    now));
             if (stored) {
                 ServedCard card = impression.getCard();
                 events.publishEvent(new InteractionRecorded(

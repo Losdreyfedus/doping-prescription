@@ -12,7 +12,7 @@ export const demoUsers: Schemas['DemoUserResponse'][] = [
   { slug: 'admin', displayName: 'Admin', role: 'ADMIN' },
 ];
 
-export function meOf(slug: string) {
+export function meOf(slug: string): Schemas['MeResponse'] {
   const user = demoUsers.find((candidate) => candidate.slug === slug);
   if (!user) {
     throw new Error(`unknown demo user ${slug}`);
@@ -27,29 +27,43 @@ export function meOf(slug: string) {
   };
 }
 
+// The default responses are typed with the generated schema, so a changed API contract breaks the mocks at compile time.
+const emptyFeed: Schemas['FeedPage'] = {
+  sessionId: '00000000-0000-4000-8000-000000000099',
+  personalized: false,
+  algoVersion: 'v1',
+  nextCursor: 'end',
+  demoVideoSpeed: 4,
+  cards: [],
+};
+
+const noPoints: Schemas['Summary'] = {
+  total: 0,
+  today: 0,
+  dailyCap: 200,
+  streak: { current: 0, best: 0 },
+  recent: [],
+};
+
+const emptyProfile = (): Schemas['ProfileView'] => ({
+  userId: meOf('deniz').userId,
+  personalizationEnabled: true,
+  lastExamAttemptId: null,
+  updatedAt: null,
+  topics: [],
+});
+
 /** Default API handlers; tests override them with server.use(...). */
 export const server = setupServer(
   http.get(`${API}/api/auth/demo-users`, () => HttpResponse.json(demoUsers)),
   http.post(`${API}/api/auth/demo-login`, async ({ request }) => {
     const body = await request.json();
     const slug = typeof body === 'object' && body !== null && 'slug' in body ? String(body.slug) : '';
-    return HttpResponse.json({ token: `token-${slug}`, user: meOf(slug) });
+    const login: Schemas['DemoLoginResponse'] = { token: `token-${slug}`, user: meOf(slug) };
+    return HttpResponse.json(login);
   }),
-  http.get(`${API}/api/feed`, () =>
-    HttpResponse.json({
-      sessionId: '00000000-0000-4000-8000-000000000099',
-      personalized: false,
-      algoVersion: 'v1',
-      nextCursor: 'end',
-      demoVideoSpeed: 4,
-      cards: [],
-    }),
-  ),
-  http.get(`${API}/api/points`, () =>
-    HttpResponse.json({ total: 0, today: 0, dailyCap: 200, streak: { current: 0, best: 0 }, recent: [] }),
-  ),
+  http.get(`${API}/api/feed`, () => HttpResponse.json(emptyFeed)),
+  http.get(`${API}/api/points`, () => HttpResponse.json(noPoints)),
   http.post(`${API}/api/feed/interactions`, () => new HttpResponse(null, { status: 202 })),
-  http.get(`${API}/api/learner/profile`, () =>
-    HttpResponse.json({ userId: meOf('deniz').userId, personalizationEnabled: true, topics: [] }),
-  ),
+  http.get(`${API}/api/learner/profile`, () => HttpResponse.json(emptyProfile())),
 );

@@ -28,6 +28,10 @@ class ModularityTests {
                         "shared");
     }
 
+    /**
+     * Besides api-only access, each module's package-info declares the modules it may depend on (allowedDependencies),
+     * so a new dependency against the intended direction (e.g. exam on learner, points on quiz) fails here.
+     */
     @Test
     void modulesOnlyDependOnEachOthersPublicApi() {
         MODULES.verify();

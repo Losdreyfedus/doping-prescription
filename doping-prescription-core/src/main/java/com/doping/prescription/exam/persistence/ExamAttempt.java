@@ -17,8 +17,9 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 /**
- * A learner's attempt at an exam. The database allows one IN_PROGRESS attempt per learner and exam; the version column
- * makes a second concurrent submit fail instead of publishing the result twice.
+ * A learner's attempt at an exam. The database allows one IN_PROGRESS attempt per learner and exam. Answers and submits
+ * lock the row ({@link ExamAttemptRepository#findByIdForUpdate}), so a second concurrent submit finds it submitted; the
+ * version column stays as a guard against any other concurrent update.
  */
 @Entity
 public class ExamAttempt {
@@ -48,8 +49,9 @@ public class ExamAttempt {
 
     private BigDecimal net;
 
+    // A wrapper type: null marks a new row, so save() inserts without first selecting it
     @Version
-    private long version;
+    private Long version;
 
     @Column(insertable = false, updatable = false)
     private Instant createdAt;

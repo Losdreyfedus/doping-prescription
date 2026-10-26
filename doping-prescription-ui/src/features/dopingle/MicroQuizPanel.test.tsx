@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { API, server } from '@/test/server';
 
@@ -85,4 +85,92 @@ describe('MicroQuizPanel', () => {
     expect(await screen.findByText('Yanlış.')).toBeInTheDocument();
     expect(screen.queryByText(/^\+\d+ puan$/)).not.toBeInTheDocument();
   });
+
+  it.each([
+    [410, 'QUIZ_EXPIRED', 'Sorunun süresi doldu.'],
+    [429, 'RATE_LIMITED', 'Çok hızlı cevap veriyorsun.'],
+  ])(
+    'shows the problem detail of a %i answer and lets the learner continue',
+    async (status, code, detail) => {
+      server.use(
+        http.post(`${API}/api/quiz/37/answer`, () => HttpResponse.json({ status, code, detail }, { status })),
+      );
+      renderPanel();
+
+      await userEvent.click(screen.getByRole('button', { name: 'B 1/3' }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(detail);
+      expect(screen.queryByText('Süre doldu.')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Devam' })).toBeInTheDocument();
+    },
+  );
+
+  it('takes focus when it opens and keeps Escape from reaching the Dopingle layer', () => {
+    renderPanel();
+
+    expect(screen.getByRole('region', { name: 'Mikro-soru' })).toHaveFocus();
+    const escape = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+    window.dispatchEvent(escape);
+    expect(escape.defaultPrevented).toBe(true);
+  });
+
+  describe('timer', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('locks the options and offers Devam when the 60 seconds run out', () => {
+      vi.useFakeTimers();
+      const onContinue = renderPanel();
+
+      passSeconds(59);
+      expect(screen.getByText('Kalan süre:', { exact: false }).parentElement).toHaveTextContent(
+        'Kalan süre: 1',
+      );
+      passSeconds(1);
+
+      expect(screen.getByText('Süre doldu.')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'A 1/6' })).toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name: 'Devam' }));
+      expect(onContinue).toHaveBeenCalledOnce();
+    });
+
+    it('stops once an option is chosen, so a slow answer never shows as timed out', async () => {
+      let respond: (() => void) | undefined;
+      server.use(
+        http.post(
+          `${API}/api/quiz/37/answer`,
+          () =>
+            new Promise<Response>((resolve) => {
+              respond = () => {
+                resolve(HttpResponse.json(correct));
+              };
+            }),
+        ),
+      );
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+      renderPanel();
+
+      fireEvent.click(screen.getByRole('button', { name: 'B 1/3' }));
+      passSeconds(120);
+      expect(screen.queryByText('Süre doldu.')).not.toBeInTheDocument();
+
+      vi.useRealTimers();
+      await vi.waitFor(() => {
+        expect(respond).toBeDefined();
+      });
+      respond?.();
+      expect(await screen.findByText('Doğru!')).toBeInTheDocument();
+      expect(screen.queryByText('Süre doldu.')).not.toBeInTheDocument();
+    });
+  });
 });
+
+/** Lets the countdown tick: each second's timeout is scheduled by the render that follows the previous one. */
+function passSeconds(seconds: number) {
+  for (let second = 0; second < seconds; second += 1) {
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+  }
+}

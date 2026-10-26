@@ -1,5 +1,6 @@
 package com.doping.prescription.points.persistence;
 
+import com.doping.prescription.points.domain.Streak;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -10,7 +11,8 @@ import java.util.UUID;
 
 /**
  * A learner's streak of consecutive correct micro-question answers. Applying the same answer ({@code refId}) twice has
- * no effect; the version column turns concurrent updates into a retryable conflict.
+ * no effect. Answers lock the row while they apply; the version column turns any other concurrent update into a
+ * conflict the answer retries.
  */
 @Entity
 public class PointsStreak {
@@ -26,8 +28,9 @@ public class PointsStreak {
 
     private String lastRefId;
 
+    // A wrapper type: null marks a new row, so save() inserts without first selecting it
     @Version
-    private long version;
+    private Long version;
 
     @Column(insertable = false, updatable = false)
     private Instant createdAt;
@@ -43,16 +46,21 @@ public class PointsStreak {
         this.updatedAt = Objects.requireNonNull(now, "now");
     }
 
-    /** A correct answer extends the streak, a wrong one resets it. */
+    /** Stores the answer's effect by the rule of {@link Streak#apply}. */
     public void apply(String refId, boolean correct, Instant now) {
-        Objects.requireNonNull(refId, "refId");
-        if (refId.equals(lastRefId)) {
+        Streak before = streak();
+        Streak after = before.apply(refId, correct);
+        if (after.equals(before)) {
             return;
         }
-        currentStreak = correct ? currentStreak + 1 : 0;
-        bestStreak = Math.max(bestStreak, currentStreak);
-        lastRefId = refId;
+        currentStreak = after.current();
+        bestStreak = after.best();
+        lastRefId = after.lastRefId();
         updatedAt = now;
+    }
+
+    public Streak streak() {
+        return new Streak(currentStreak, bestStreak, lastRefId);
     }
 
     public UUID getUserId() {

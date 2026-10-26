@@ -4,6 +4,7 @@ import com.doping.prescription.content.api.ContentCatalog;
 import com.doping.prescription.content.api.ContentCatalog.VideoView;
 import com.doping.prescription.content.api.MicroQuestionCatalog;
 import com.doping.prescription.content.api.TopicCatalog;
+import com.doping.prescription.content.api.TopicCatalog.TopicView;
 import com.doping.prescription.quiz.api.QuizStatistics;
 import com.doping.prescription.quiz.api.QuizStatistics.QuestionStats;
 import java.util.Comparator;
@@ -20,6 +21,9 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class ContentEffectivenessService {
+
+    /** Shown for a video whose primary topic is not in the catalog; the row still counts, only its label is unknown. */
+    static final String UNKNOWN_TOPIC = "?";
 
     /** Best first; among equal rates, the one with more evidence first. */
     private static final Comparator<VideoEffectiveness> ORDER = Comparator.comparingDouble(
@@ -42,37 +46,53 @@ public class ContentEffectivenessService {
     }
 
     public List<VideoEffectiveness> byVideo() {
-        List<QuestionStats> stats = quizzes.answersByQuestion();
+        Map<Integer, Tally> tallies = talliesByVideo(quizzes.answersByQuestion());
+        Map<Integer, VideoView> videos = content.videos(tallies.keySet()).stream()
+                .collect(Collectors.toMap(VideoView::contentId, Function.identity()));
+        Map<Integer, TopicView> catalog = topics.topicsById();
+        return tallies.entrySet().stream()
+                .filter(entry -> videos.containsKey(entry.getKey()))
+                .map(entry -> effectiveness(videos.get(entry.getKey()), entry.getValue(), catalog))
+                .sorted(ORDER)
+                .toList();
+    }
+
+    /** Sums the questions' answers per video; questions the content module no longer knows are left out. */
+    private Map<Integer, Tally> talliesByVideo(List<QuestionStats> stats) {
         Map<Integer, Integer> videoOf = questions.contentIdsOf(
                 stats.stream().map(QuestionStats::microQuestionId).toList());
-        Map<Integer, long[]> totals = new HashMap<>();
+        Map<Integer, Tally> tallies = new HashMap<>();
         for (QuestionStats question : stats) {
             Integer contentId = videoOf.get(question.microQuestionId());
             if (contentId != null) {
-                long[] total = totals.computeIfAbsent(contentId, id -> new long[2]);
-                total[0] += question.answers();
-                total[1] += question.correct();
+                tallies.merge(contentId, new Tally(question.answers(), question.correct()), Tally::plus);
             }
         }
-        Map<Integer, VideoView> videos = content.videos(totals.keySet()).stream()
-                .collect(Collectors.toMap(VideoView::contentId, Function.identity()));
-        Map<Integer, TopicCatalog.TopicView> catalog = topics.topicsById();
-        return totals.entrySet().stream()
-                .filter(entry -> videos.containsKey(entry.getKey()))
-                .map(entry -> {
-                    VideoView video = videos.get(entry.getKey());
-                    long answers = entry.getValue()[0];
-                    long correct = entry.getValue()[1];
-                    return new VideoEffectiveness(
-                            video.contentId(),
-                            video.title(),
-                            catalog.get(video.primaryTopic()).name(),
-                            answers,
-                            correct,
-                            (double) correct / answers);
-                })
-                .sorted(ORDER)
-                .toList();
+        return tallies;
+    }
+
+    private static VideoEffectiveness effectiveness(VideoView video, Tally tally, Map<Integer, TopicView> catalog) {
+        TopicView topic = catalog.get(video.primaryTopic());
+        return new VideoEffectiveness(
+                video.contentId(),
+                video.title(),
+                topic == null ? UNKNOWN_TOPIC : topic.name(),
+                tally.answers(),
+                tally.correct(),
+                tally.correctRate());
+    }
+
+    /** Answers and correct answers of one video's questions. */
+    record Tally(long answers, long correct) {
+
+        Tally plus(Tally other) {
+            return new Tally(answers + other.answers, correct + other.correct);
+        }
+
+        /** 0 without answers, so a video nobody answered yet never divides by zero. */
+        double correctRate() {
+            return answers == 0 ? 0 : (double) correct / answers;
+        }
     }
 
     /**

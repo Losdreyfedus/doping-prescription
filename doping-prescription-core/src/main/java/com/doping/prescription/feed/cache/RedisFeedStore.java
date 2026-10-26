@@ -3,6 +3,8 @@ package com.doping.prescription.feed.cache;
 import com.doping.prescription.feed.application.FeedProperties;
 import com.doping.prescription.feed.application.FeedStore;
 import com.doping.prescription.feed.domain.ServedCard;
+import com.doping.prescription.shared.time.Cooldown;
+import java.time.Clock;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -18,8 +20,12 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * {@code feed:queue:{userId}} as a Redis list of card JSON and {@code feed:session:{sessionId}} as a set of content
- * ids (docs/mimari.md §5). Failures are logged and reported as "unavailable", never thrown.
+ * {@code feed:queue:{userId}} as a Redis list of card JSON and {@code feed:session:{userId}:{sessionId}} as a set of
+ * content ids (docs/mimari.md §5). Failures are logged and reported as "unavailable", never thrown.
+ *
+ * <p>After a Redis failure the request path (queue and session reads and writes) skips Redis for
+ * {@code prescription.feed.store-retry-after}, so an outage costs one timeout per window instead of several per feed
+ * request. Dropping a queue never skips: a queue left behind after a mastery change would be served stale.
  */
 @Component
 class RedisFeedStore implements FeedStore {
@@ -29,15 +35,20 @@ class RedisFeedStore implements FeedStore {
     private final StringRedisTemplate redis;
     private final JsonMapper json;
     private final FeedProperties properties;
+    private final Cooldown unavailable;
 
-    RedisFeedStore(StringRedisTemplate redis, JsonMapper json, FeedProperties properties) {
+    RedisFeedStore(StringRedisTemplate redis, JsonMapper json, FeedProperties properties, Clock clock) {
         this.redis = redis;
         this.json = json;
         this.properties = properties;
+        this.unavailable = new Cooldown(clock, properties.storeRetryAfter());
     }
 
     @Override
     public Optional<List<ServedCard>> queue(UUID userId) {
+        if (unavailable.active()) {
+            return Optional.empty();
+        }
         try {
             List<String> values = redis.opsForList().range(queueKey(userId), 0, -1);
             return Optional.of(
@@ -46,14 +57,20 @@ class RedisFeedStore implements FeedStore {
                             : values.stream()
                                     .map(value -> json.readValue(value, ServedCard.class))
                                     .toList());
-        } catch (DataAccessException | JacksonException e) {
-            log.warn("Feed queue read failed, computing the feed without it: {}", e.getMessage());
+        } catch (DataAccessException e) {
+            failed("Feed queue read failed, computing the feed without it", e);
+            return Optional.empty();
+        } catch (JacksonException e) {
+            log.warn("Feed queue unreadable, computing the feed without it: {}", e.getMessage());
             return Optional.empty();
         }
     }
 
     @Override
     public void replaceQueue(UUID userId, List<ServedCard> cards) {
+        if (unavailable.active()) {
+            return;
+        }
         String key = queueKey(userId);
         try {
             redis.delete(key);
@@ -64,7 +81,9 @@ class RedisFeedStore implements FeedStore {
                                 cards.stream().map(json::writeValueAsString).toList());
                 redis.expire(key, properties.queueTtl());
             }
-        } catch (DataAccessException | JacksonException e) {
+        } catch (DataAccessException e) {
+            failed("Feed queue write failed", e);
+        } catch (JacksonException e) {
             log.warn("Feed queue write failed: {}", e.getMessage());
         }
     }
@@ -79,39 +98,47 @@ class RedisFeedStore implements FeedStore {
     }
 
     @Override
-    public Optional<Set<Integer>> seen(UUID sessionId) {
+    public Optional<Set<Integer>> seen(UUID userId, UUID sessionId) {
+        if (unavailable.active()) {
+            return Optional.empty();
+        }
         try {
-            Set<String> members = redis.opsForSet().members(sessionKey(sessionId));
+            Set<String> members = redis.opsForSet().members(sessionKey(userId, sessionId));
             return Optional.of(
                     members == null
                             ? Set.of()
                             : members.stream().map(Integer::valueOf).collect(Collectors.toSet()));
         } catch (DataAccessException e) {
-            log.warn("Feed session read failed, reading it from impressions: {}", e.getMessage());
+            failed("Feed session read failed, reading it from impressions", e);
             return Optional.empty();
         }
     }
 
     @Override
-    public void markSeen(UUID sessionId, Collection<Integer> contentIds) {
-        if (contentIds.isEmpty()) {
+    public void markSeen(UUID userId, UUID sessionId, Collection<Integer> contentIds) {
+        if (contentIds.isEmpty() || unavailable.active()) {
+            // impressions remain the source of truth for the session
             return;
         }
-        String key = sessionKey(sessionId);
+        String key = sessionKey(userId, sessionId);
         try {
             redis.opsForSet().add(key, contentIds.stream().map(String::valueOf).toArray(String[]::new));
             redis.expire(key, properties.sessionTtl());
         } catch (DataAccessException e) {
-            // impressions remain the source of truth for the session
-            log.warn("Feed session write failed: {}", e.getMessage());
+            failed("Feed session write failed", e);
         }
+    }
+
+    private void failed(String message, DataAccessException e) {
+        unavailable.start();
+        log.warn("{}; skipping Redis for {}: {}", message, properties.storeRetryAfter(), e.getMessage());
     }
 
     private static String queueKey(UUID userId) {
         return "feed:queue:" + userId;
     }
 
-    private static String sessionKey(UUID sessionId) {
-        return "feed:session:" + sessionId;
+    private static String sessionKey(UUID userId, UUID sessionId) {
+        return "feed:session:" + userId + ":" + sessionId;
     }
 }

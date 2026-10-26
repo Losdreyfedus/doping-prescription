@@ -4,7 +4,6 @@ import { api, type Schemas, unwrap } from '@/shared/api/client';
 import { queryKeys } from '@/shared/api/queryKeys';
 
 export type StudentCard = Schemas['StudentCard'];
-export type AnswerKeyRow = Schemas['AnswerKeyRow'];
 
 export function useStudents() {
   return useQuery({
@@ -51,8 +50,6 @@ export function useDemoActions() {
   });
   return { reset, persona };
 }
-
-export type VideoEffectiveness = Schemas['VideoEffectiveness'];
 
 export function useContentEffectiveness() {
   return useQuery({

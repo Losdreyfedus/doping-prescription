@@ -13,4 +13,7 @@ public interface QuizTokenRegistry {
      *     question constraint in the database still holds)
      */
     boolean firstUse(UUID tokenId, Duration ttl);
+
+    /** Makes the token usable again; for answers that failed before they were stored. */
+    void release(UUID tokenId);
 }

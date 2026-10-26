@@ -51,8 +51,8 @@ public final class ExamGrader {
         return new AttemptScore(correct, wrong, blank, net);
     }
 
-    /** Topic totals in order of the topic's first question in the exam. */
-    private static List<TopicScore> byTopic(List<GradedQuestion> graded) {
+    /** Topic totals in order of the topic's first question in the exam; also used for grades stored on submit. */
+    public static List<TopicScore> byTopic(List<GradedQuestion> graded) {
         Map<Integer, List<GradedQuestion>> perTopic = new LinkedHashMap<>();
         graded.forEach(question -> perTopic.computeIfAbsent(question.topicId(), topic -> new ArrayList<>())
                 .add(question));

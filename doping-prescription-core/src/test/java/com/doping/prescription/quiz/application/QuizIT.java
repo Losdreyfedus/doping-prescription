@@ -16,8 +16,9 @@ import com.doping.prescription.feed.domain.InteractionType;
 import com.doping.prescription.learner.application.MasteryService;
 import com.doping.prescription.quiz.application.QuizTokens.QuizClaims;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -49,6 +50,8 @@ class QuizIT {
     private static final int PERKOM = 8;
     private static final int OLASILIK = 9;
     private static final int SLOW_ENOUGH_MS = 9000;
+    private static final int MAX_QUESTIONS_PER_CARD = 5;
+    private static final Instant LONG_AGO = Instant.parse("2025-01-01T00:00:00Z");
 
     @Autowired
     private MockMvcTester mvc;
@@ -191,6 +194,48 @@ class QuizIT {
     }
 
     @Test
+    void theSameTokenSentTwiceEarnsThePointsOnce() {
+        // Given
+        CardView card = firstCard(null);
+        watch(card);
+        JsonNode quiz = openQuiz(card).getFirst();
+        answer(quiz, correctShownKey(quiz), SLOW_ENOUGH_MS);
+
+        // When: a retried request with the same token (no Redis here: the database constraint decides)
+        MvcTestResult again = answer(quiz, correctShownKey(quiz), SLOW_ENOUGH_MS);
+
+        // Then
+        assertThat(again).hasStatusOk();
+        assertThat(read(again).get("pointsAwarded").asInt()).isZero();
+        assertThat(read(get("/api/points")).get("total").asInt()).isEqualTo(10);
+    }
+
+    @Test
+    void concurrentAnswersToTwoQuestionsBothEarnPoints() throws Exception {
+        // Given: two cards, and no streak row yet, so both answers would create it
+        List<CardView> cards = feed.page(userId, null, 2, null, true).cards();
+        cards.forEach(this::watch);
+        JsonNode first = openQuiz(cards.get(0)).getFirst();
+        JsonNode second = openQuiz(cards.get(1)).getFirst();
+        CountDownLatch start = new CountDownLatch(1);
+
+        // When
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            Future<Integer> one = pool.submit(answerWhenStarted(first, start));
+            Future<Integer> other = pool.submit(answerWhenStarted(second, start));
+            start.countDown();
+
+            // Then
+            assertThat(List.of(one.get(), other.get()))
+                    .allSatisfy(points -> assertThat(points).isPositive());
+        } finally {
+            pool.shutdown();
+        }
+        assertThat(read(get("/api/points")).at("/streak/current").asInt()).isEqualTo(2);
+    }
+
+    @Test
     void aTooFastAnswerEarnsNothing() {
         CardView card = firstCard(null);
         watch(card);
@@ -214,16 +259,42 @@ class QuizIT {
 
     @Test
     void aCardWithoutUnansweredQuestionsAnswersNoContent() {
+        // Given
         CardView card = firstCard(null);
         watch(card);
-        for (int question = 0; question < 3; question++) {
-            List<JsonNode> quiz = openQuiz(card);
-            if (quiz.isEmpty()) {
-                return;
-            }
-            answer(quiz.getFirst(), "A", SLOW_ENOUGH_MS);
+        List<JsonNode> quiz = openQuiz(card);
+        int answered = 0;
+
+        // When: every question of the card is answered (the bound only stops a broken endpoint from looping forever)
+        while (!quiz.isEmpty() && answered < MAX_QUESTIONS_PER_CARD) {
+            assertThat(answer(quiz.getFirst(), "A", SLOW_ENOUGH_MS)).hasStatusOk();
+            answered++;
+            quiz = openQuiz(card);
         }
-        assertThat(openQuiz(card)).isEmpty();
+
+        // Then
+        assertThat(answered).isPositive();
+        assertThat(quiz).as("204 No Content once the card has no question left").isEmpty();
+    }
+
+    @Test
+    void aLetterTheTokenDoesNotOfferIsInvalidRequest() {
+        // Given: a token whose question showed only three options, A-C
+        CardView card = firstCard(null);
+        watch(card);
+        QuizClaims claims =
+                tokens.verify(openQuiz(card).getFirst().get("quizToken").asString());
+        Map<String, String> threeOptions = new HashMap<>(claims.shownToStored());
+        threeOptions.remove("D");
+        String token = tokens.issue(new QuizClaims(
+                UUID.randomUUID(), claims.userId(), claims.impressionId(), claims.microQuestionId(), threeOptions));
+
+        // When: D passes the request validation ([A-D]) but is not an option of this token
+        MvcTestResult result = answerWith(claims.microQuestionId(), token, "D");
+
+        // Then
+        assertError(result, 400, "INVALID_REQUEST");
+        assertThat(read(get("/api/points")).get("total").asInt()).isZero();
     }
 
     @Test
@@ -246,7 +317,8 @@ class QuizIT {
                 "QUIZ_TOKEN_INVALID");
 
         QuizClaims claims = tokens.verify(quiz.get("quizToken").asString());
-        QuizTokens past = new QuizTokens(properties, Clock.offset(Clock.systemUTC(), Duration.ofMinutes(-10)));
+        // issued at a fixed past instant, so the token expired long before the application clock's now
+        QuizTokens past = new QuizTokens(properties, Clock.fixed(LONG_AGO, ZoneOffset.UTC));
         assertError(answerWith(questionId, past.issue(claims), "A"), 410, "QUIZ_EXPIRED");
         assertError(answerWith(questionId, quiz.get("quizToken").asString(), "E"), 400, "INVALID_REQUEST");
     }
@@ -312,6 +384,19 @@ class QuizIT {
         JsonNode quiz = read(result);
         assertThat(quiz.toString()).doesNotContain("correctKey", "explanation");
         return List.of(quiz);
+    }
+
+    private Callable<Integer> answerWhenStarted(JsonNode quiz, CountDownLatch start) {
+        return () -> {
+            start.await();
+            return quizzes.answer(
+                            userId,
+                            quiz.get("microQuestionId").asInt(),
+                            quiz.get("quizToken").asString(),
+                            correctShownKey(quiz),
+                            SLOW_ENOUGH_MS)
+                    .pointsAwarded();
+        };
     }
 
     /** A second token for the same question, as a second browser tab would get. */

@@ -36,6 +36,7 @@ class MigrationIT {
             "learner_topic_mastery",
             "feed_impression",
             "feed_interaction",
+            "saved_content",
             "micro_quiz_attempt",
             "points_ledger",
             "points_streak");

@@ -145,6 +145,8 @@
           "name" : "slug",
           "required" : true,
           "schema" : {
+            "maxLength" : 32,
+            "minLength" : 1,
             "type" : "string"
           }
         } ],
@@ -209,7 +211,7 @@
             "description" : "OK"
           }
         },
-        "tags" : [ "auth-controller" ]
+        "tags" : [ "demo-login-controller" ]
       }
     },
     "/api/auth/demo-users" : {
@@ -230,7 +232,7 @@
             "description" : "OK"
           }
         },
-        "tags" : [ "auth-controller" ]
+        "tags" : [ "demo-login-controller" ]
       }
     },
     "/api/exam-attempts/{attemptId}" : {
@@ -411,15 +413,13 @@
             "type" : "string"
           }
         }, {
+          "description" : "Cards on the page; prescription.feed.page-size (10) if absent, at most page-size-max (20)",
           "in" : "query",
           "name" : "limit",
           "required" : false,
           "schema" : {
-            "maximum" : 20,
-            "minimum" : 1,
             "type" : "integer",
-            "format" : "int32",
-            "default" : 10
+            "format" : "int32"
           }
         }, {
           "in" : "query",
@@ -432,6 +432,15 @@
         }, {
           "in" : "query",
           "name" : "refresh",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "description" : "Only the learner's saved videos, newest saved first (Kaydedilen)",
+          "in" : "query",
+          "name" : "saved",
           "required" : false,
           "schema" : {
             "type" : "boolean",
@@ -501,6 +510,48 @@
         "tags" : [ "feed-controller" ]
       }
     },
+    "/api/feed/saved/{contentId}" : {
+      "delete" : {
+        "operationId" : "remove",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "contentId",
+          "required" : true,
+          "schema" : {
+            "minimum" : 0,
+            "exclusiveMinimum" : true,
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [ "feed-controller" ]
+      },
+      "put" : {
+        "operationId" : "save",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "contentId",
+          "required" : true,
+          "schema" : {
+            "minimum" : 0,
+            "exclusiveMinimum" : true,
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [ "feed-controller" ]
+      }
+    },
     "/api/learner/profile" : {
       "get" : {
         "operationId" : "profile",
@@ -563,6 +614,8 @@
           "name" : "microQuestionId",
           "required" : true,
           "schema" : {
+            "minimum" : 0,
+            "exclusiveMinimum" : true,
             "type" : "integer",
             "format" : "int32"
           }
@@ -624,6 +677,7 @@
             "type" : "string"
           },
           "responseMs" : {
+            "maximum" : 300000,
             "minimum" : 0,
             "type" : "integer",
             "format" : "int32"
@@ -673,7 +727,7 @@
         }
       },
       "CardView" : {
-        "required" : [ "content", "hasMicroQuiz", "impressionId", "pointsAvailable", "pool", "position", "reasonText", "topic" ],
+        "required" : [ "content", "hasMicroQuiz", "impressionId", "pointsAvailable", "pool", "position", "reasonText", "saved", "topic" ],
         "type" : "object",
         "properties" : {
           "content" : {
@@ -700,6 +754,9 @@
           },
           "reasonText" : {
             "type" : "string"
+          },
+          "saved" : {
+            "type" : "boolean"
           },
           "topic" : {
             "$ref" : "#/components/schemas/TopicRef"
@@ -1146,10 +1203,12 @@
         "type" : "object",
         "properties" : {
           "persona" : {
+            "maxLength" : 64,
             "minLength" : 1,
             "type" : "string"
           },
           "slug" : {
+            "maxLength" : 32,
             "minLength" : 1,
             "type" : "string"
           }
@@ -1287,6 +1346,7 @@
         "type" : "object",
         "properties" : {
           "slug" : {
+            "maxLength" : 32,
             "minLength" : 1,
             "type" : "string"
           }

@@ -8,16 +8,21 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostPersist;
+import jakarta.persistence.Transient;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.jspecify.annotations.NonNull;
+import org.springframework.data.domain.Persistable;
 
 /** A card shown to a learner. Immutable once served; interactions refer to it by id. */
 @Entity
-public class FeedImpression {
+public class FeedImpression implements Persistable<UUID> {
 
     @Id
     private UUID id;
@@ -50,6 +55,10 @@ public class FeedImpression {
     @Column(insertable = false, updatable = false)
     private Instant createdAt;
 
+    /** The id is assigned by the application, so Spring Data cannot tell a new row by it; save() then inserts directly. */
+    @Transient
+    private boolean newRow = true;
+
     protected FeedImpression() {
         // for JPA
     }
@@ -70,8 +79,21 @@ public class FeedImpression {
         this.servedAt = Objects.requireNonNull(servedAt, "servedAt");
     }
 
-    public UUID getId() {
+    // Persistable declares the id nullable for unsaved entities; here it is assigned in the constructor
+    @Override
+    public @NonNull UUID getId() {
         return id;
+    }
+
+    @Override
+    public boolean isNew() {
+        return newRow;
+    }
+
+    @PostLoad
+    @PostPersist
+    void markStored() {
+        newRow = false;
     }
 
     public UUID getUserId() {

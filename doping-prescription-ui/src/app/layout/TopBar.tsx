@@ -29,12 +29,13 @@ export function TopBar() {
 
   return (
     <header className="flex items-center gap-4 bg-surface px-6 pt-8 pb-5">
-      <label className="flex h-12 flex-1 items-center gap-3 rounded-button bg-surface-muted px-4 text-text-muted [&_svg]:size-6">
+      <label className="flex h-12 flex-1 items-center gap-3 rounded-button bg-surface-muted px-4 text-text-muted focus-within:outline-2 focus-within:outline-brand-blue [&_svg]:size-6">
         <SearchIcon />
         <span className="sr-only">{tr.topBar.searchLabel}</span>
         <input
           type="search"
           placeholder={tr.topBar.searchPlaceholder}
+          // the label draws the focus ring around the whole search box (focus-within)
           className="w-full bg-transparent outline-none placeholder:text-text-muted"
         />
       </label>

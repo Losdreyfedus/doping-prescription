@@ -68,4 +68,19 @@ describe('admin demo control', () => {
     const effectiveness = screen.getByRole('table', { name: 'Video etkinliği' });
     expect(within(effectiveness).getByText('Olasılığın temeli').closest('tr')).toHaveTextContent('%67');
   });
+
+  it('shows loading and error states for the answer key and the video effectiveness', async () => {
+    server.use(
+      http.get(`${API}/api/admin/demo/students`, () => HttpResponse.json([])),
+      http.get(`${API}/api/admin/demo/answer-key`, () =>
+        HttpResponse.json({ status: 500, detail: 'Cevap anahtarı okunamadı' }, { status: 500 }),
+      ),
+      http.get(`${API}/api/admin/content-effectiveness`, () => new Promise<Response>(() => undefined)),
+    );
+    writeSession({ token: 'token-admin', user: meOf('admin') });
+    renderApp('/admin');
+
+    expect(await screen.findByText('Video etkinliği yükleniyor…')).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent('Cevap anahtarı okunamadı');
+  });
 });

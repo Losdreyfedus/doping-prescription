@@ -23,8 +23,9 @@ class ImpressionWriter {
         this.clock = clock;
     }
 
+    /** All impressions of a page in one transaction; public like every transaction boundary (kod-standartlari §2). */
     @Transactional
-    List<Served> write(UUID userId, FeedCursor cursor, List<ServedCard> cards, String algoVersion) {
+    public List<Served> write(UUID userId, FeedCursor cursor, List<ServedCard> cards, String algoVersion) {
         Instant now = clock.instant();
         List<Served> served = new ArrayList<>();
         for (int index = 0; index < cards.size(); index++) {

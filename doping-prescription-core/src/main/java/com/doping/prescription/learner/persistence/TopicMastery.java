@@ -43,8 +43,9 @@ public class TopicMastery {
     @JdbcTypeCode(SqlTypes.SMALLINT)
     private Integer lastExamCorrect;
 
+    // A wrapper type: null marks a new row, so save() inserts without first selecting it
     @Version
-    private long version;
+    private Long version;
 
     @Column(insertable = false, updatable = false)
     private Instant createdAt;

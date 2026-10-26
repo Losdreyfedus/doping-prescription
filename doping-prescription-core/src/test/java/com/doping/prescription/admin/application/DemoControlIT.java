@@ -31,6 +31,7 @@ class DemoControlIT {
 
     private static final String SLUG = "deniz";
     private static final int OLASILIK = 9;
+    private static final Duration RESET_BUDGET = Duration.ofSeconds(1);
 
     @Autowired
     private MockMvcTester mvc;
@@ -72,14 +73,15 @@ class DemoControlIT {
     }
 
     @Test
-    void resetErasesEveryModulesDataQuickly() {
+    void resetErasesEveryModulesData() {
+        // Given
         weakOlasilik();
         feed.page(deniz, null, 10, null, true);
 
-        Instant started = Instant.now();
+        // When
         assertThat(post("/api/admin/demo/reset", "{\"slug\":\"deniz\"}", admin)).hasStatus(204);
 
-        assertThat(Duration.between(started, Instant.now())).isLessThan(Duration.ofSeconds(1));
+        // Then
         for (String table : List.of(
                 "exam_attempt",
                 "learner_signal",
@@ -89,6 +91,59 @@ class DemoControlIT {
                 "points_ledger")) {
             assertThat(count(table)).as(table).isZero();
         }
+    }
+
+    /**
+     * docs/demo-senaryosu.md: "Sıfırla" takes under a second on stage. Measured on a warm application (weakOlasilik
+     * already reset once) with the monotonic clock; the budget is the requirement itself, a typical reset takes far
+     * less, so only a real slowdown fails it.
+     */
+    @Test
+    void resetOfAWarmApplicationTakesUnderOneSecond() {
+        // Given
+        weakOlasilik();
+        feed.page(deniz, null, 10, null, true);
+
+        // When
+        long started = System.nanoTime();
+        MvcTestResult reset = post("/api/admin/demo/reset", "{\"slug\":\"deniz\"}", admin);
+        Duration took = Duration.ofNanos(System.nanoTime() - started);
+
+        // Then
+        assertThat(reset).hasStatus(204);
+        assertThat(took).isLessThan(RESET_BUDGET);
+    }
+
+    @Test
+    void feedDebugWithoutSlugIsAnInvalidRequestProblem() {
+        // When
+        MvcTestResult missing = mvc.get()
+                .uri("/api/admin/feed-debug")
+                .header("Authorization", "Bearer " + admin)
+                .exchange();
+        MvcTestResult tooLong = mvc.get()
+                .uri("/api/admin/feed-debug?slug=" + "x".repeat(33))
+                .header("Authorization", "Bearer " + admin)
+                .exchange();
+
+        // Then
+        assertThat(missing).hasStatus(400);
+        assertThat(missing).bodyJson().extractingPath("$.code").isEqualTo("INVALID_REQUEST");
+        assertThat(tooLong).hasStatus(400);
+        assertThat(tooLong).bodyJson().extractingPath("$.code").isEqualTo("INVALID_REQUEST");
+    }
+
+    @Test
+    void aWrongMethodIsAMethodNotAllowedProblem() {
+        // When
+        MvcTestResult result = mvc.get()
+                .uri("/api/admin/demo/reset")
+                .header("Authorization", "Bearer " + admin)
+                .exchange();
+
+        // Then
+        assertThat(result).hasStatus(405);
+        assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("METHOD_NOT_ALLOWED");
     }
 
     @Test

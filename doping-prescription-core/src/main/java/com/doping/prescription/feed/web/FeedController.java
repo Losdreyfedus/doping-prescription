@@ -5,13 +5,14 @@ import com.doping.prescription.feed.application.FeedService;
 import com.doping.prescription.feed.application.FeedViews.FeedPage;
 import com.doping.prescription.feed.application.InteractionService;
 import com.doping.prescription.feed.application.InteractionService.Interaction;
+import com.doping.prescription.feed.application.SavedContentService;
 import com.doping.prescription.feed.domain.InteractionType;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
@@ -19,8 +20,11 @@ import java.util.List;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -30,27 +34,47 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 class FeedController {
 
-    /** docs/api.md: limit defaults to 10, at most 20 (prescription.feed.page-size / page-size-max). */
-    private static final int MAX_LIMIT = 20;
-
     private static final int MAX_BATCH = 100;
 
     private final FeedService feed;
     private final InteractionService interactions;
+    private final SavedContentService savedContent;
 
-    FeedController(FeedService feed, InteractionService interactions) {
+    FeedController(FeedService feed, InteractionService interactions, SavedContentService savedContent) {
         this.feed = feed;
         this.interactions = interactions;
+        this.savedContent = savedContent;
     }
 
     @GetMapping("/api/feed")
     FeedPage feed(
             CurrentUser user,
             @RequestParam(required = false) @Nullable String cursor,
-            @RequestParam(defaultValue = "10") @Min(1) @Max(MAX_LIMIT) int limit,
+            @Parameter(
+                            description =
+                                    "Cards on the page; prescription.feed.page-size (10) if absent, at most page-size-max"
+                                            + " (20)")
+                    @RequestParam(required = false)
+                    @Nullable
+                    Integer limit,
             @RequestParam(required = false) @Nullable Integer topicId,
-            @RequestParam(defaultValue = "false") boolean refresh) {
-        return feed.page(user.userId(), cursor, limit, topicId, refresh);
+            @RequestParam(defaultValue = "false") boolean refresh,
+            @Parameter(description = "Only the learner's saved videos, newest saved first (Kaydedilen)")
+                    @RequestParam(defaultValue = "false")
+                    boolean saved) {
+        return feed.page(user.userId(), cursor, limit, topicId, refresh, saved);
+    }
+
+    @PutMapping("/api/feed/saved/{contentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void save(CurrentUser user, @PathVariable @Positive Integer contentId) {
+        savedContent.save(user.userId(), contentId);
+    }
+
+    @DeleteMapping("/api/feed/saved/{contentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void remove(CurrentUser user, @PathVariable @Positive Integer contentId) {
+        savedContent.remove(user.userId(), contentId);
     }
 
     @PostMapping("/api/feed/interactions")

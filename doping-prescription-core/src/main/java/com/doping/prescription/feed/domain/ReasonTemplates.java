@@ -3,6 +3,7 @@ package com.doping.prescription.feed.domain;
 import com.doping.prescription.feed.domain.FeedContext.TopicState;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * The "neden bu video" templates of docs/algoritma.md §6, one per pool. Suffixes are never attached to topic names, so
@@ -19,7 +20,7 @@ public final class ReasonTemplates {
     public static ReasonTemplate weakTopic() {
         return of(PoolType.WEAK_TOPIC, (candidate, context) -> {
             TopicState topic = context.topic(candidate.targetTopicId());
-            return topic.lastExam()
+            return Optional.ofNullable(topic.lastExam())
                     .map(exam -> "Son denemende %s: %d soruda %d doğru"
                             .formatted(topic.name(), exam.total(), exam.correct()))
                     .orElseGet(() -> "%s sorularında zorlanıyorsun".formatted(topic.name()));
@@ -29,7 +30,7 @@ public final class ReasonTemplates {
     public static ReasonTemplate reviewDue() {
         return of(PoolType.REVIEW_DUE, (candidate, context) -> {
             TopicState topic = context.topic(candidate.targetTopicId());
-            long days = topic.lastSignalAt()
+            long days = Optional.ofNullable(topic.lastSignalAt())
                     .map(last -> Duration.between(last, context.now()).toDays())
                     .orElse(0L);
             return "%s konusunu %d gündür tekrar etmedin".formatted(topic.name(), days);

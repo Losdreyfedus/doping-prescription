@@ -101,6 +101,18 @@ class FeedServiceIT {
     }
 
     @Test
+    void withoutALimitThePageHasTheConfiguredPageSize() {
+        assertThat(mvc.get()
+                        .uri("/api/feed")
+                        .header("Authorization", "Bearer " + jwt("mert"))
+                        .exchange())
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.cards.length()")
+                .isEqualTo(10);
+    }
+
+    @Test
     void invalidRequestsAreRejected() {
         String bearer = "Bearer " + jwt("mert");
 
@@ -114,6 +126,14 @@ class FeedServiceIT {
                 .isEqualTo("INVALID_REQUEST");
         assertThat(mvc.get()
                         .uri("/api/feed?limit=21")
+                        .header("Authorization", bearer)
+                        .exchange())
+                .hasStatus(400)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("INVALID_REQUEST");
+        assertThat(mvc.get()
+                        .uri("/api/feed?limit=0")
                         .header("Authorization", bearer)
                         .exchange())
                 .hasStatus(400);

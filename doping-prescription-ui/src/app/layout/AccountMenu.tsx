@@ -1,17 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { useSession } from '@/app/session/sessionContext';
 import { usePoints } from '@/shared/api/points';
 import { tr } from '@/shared/i18n/tr';
+import { useSession } from '@/shared/session/sessionContext';
 import { dopingAssets } from '@/shared/ui/dopingAssets';
 import { ChevronDownIcon, ChevronRightIcon, LogoutIcon, SettingsIcon, UserIcon } from '@/shared/ui/icons';
+import { useMenuNavigation } from '@/shared/ui/useMenuNavigation';
 
 const ROW = 'flex w-full items-center gap-4 rounded-button px-3 py-2.5 text-left text-sm';
 
 /**
  * The avatar of Doping Hafıza's top bar opens the account menu: the student, their points (AGENTS.md:
- * points in the top bar), Profilim and Ayarlar (not in the demo) and logout.
+ * points in the top bar), Profilim and Ayarlar (not in the demo) and logout. Keyboard: see useMenuNavigation.
  */
 export function AccountMenu() {
   const { session, endSession } = useSession();
@@ -19,27 +20,28 @@ export function AccountMenu() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const container = useRef<HTMLDivElement>(null);
+  const close = useCallback(() => {
+    setOpen(false);
+  }, []);
+  const { menuRef, triggerRef, onKeyDown } = useMenuNavigation<HTMLDivElement, HTMLButtonElement>(
+    open,
+    close,
+  );
 
   useEffect(() => {
     if (!open) {
       return;
     }
-    const close = (event: MouseEvent | KeyboardEvent) => {
-      const outside =
-        event instanceof MouseEvent &&
-        event.target instanceof Node &&
-        !container.current?.contains(event.target);
-      if (outside || (event instanceof KeyboardEvent && event.key === 'Escape')) {
-        setOpen(false);
+    const closeOutside = (event: MouseEvent) => {
+      if (event.target instanceof Node && !container.current?.contains(event.target)) {
+        close();
       }
     };
-    document.addEventListener('mousedown', close);
-    document.addEventListener('keydown', close);
+    document.addEventListener('mousedown', closeOutside);
     return () => {
-      document.removeEventListener('mousedown', close);
-      document.removeEventListener('keydown', close);
+      document.removeEventListener('mousedown', closeOutside);
     };
-  }, [open]);
+  }, [open, close]);
 
   if (!session) {
     return null;
@@ -49,6 +51,7 @@ export function AccountMenu() {
   return (
     <div ref={container} className="relative flex items-center gap-3">
       <button
+        ref={triggerRef}
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -71,7 +74,11 @@ export function AccountMenu() {
       </span>
       {open && (
         <div
+          ref={menuRef}
           role="menu"
+          tabIndex={-1}
+          aria-label={tr.topBar.account(name)}
+          onKeyDown={onKeyDown}
           className="absolute top-full right-0 z-20 mt-2 flex w-72 flex-col gap-1 rounded-card bg-surface p-3 text-ink shadow-xl"
         >
           <div className="flex items-center gap-3 px-3 py-2">
@@ -91,34 +98,42 @@ export function AccountMenu() {
           </div>
           <div className="flex items-center gap-2 px-3 pb-2 text-sm font-bold">
             <img src={dopingAssets.point} alt="" aria-hidden="true" className="size-5" />
-            <span aria-label={tr.topBar.points}>{tr.points.label(points.data?.total ?? 0)}</span>
+            <span>
+              <span className="sr-only">{tr.topBar.points}: </span>
+              {points.isSuccess ? tr.points.label(points.data.total) : tr.points.unknown}
+            </span>
           </div>
-          <span
-            role="menuitem"
-            aria-disabled="true"
-            title={tr.menu.notInDemo}
-            className={`${ROW} cursor-default`}
-          >
-            <UserIcon />
-            {tr.topBar.profile}
-          </span>
-          <span
-            role="menuitem"
-            aria-disabled="true"
-            title={tr.menu.notInDemo}
-            className={`${ROW} cursor-default`}
-          >
-            <SettingsIcon />
-            {tr.topBar.settings}
-          </span>
           <button
             type="button"
             role="menuitem"
+            tabIndex={-1}
+            aria-disabled="true"
+            title={tr.menu.notInDemo}
+            className={`${ROW} cursor-default focus-visible:outline-2 focus-visible:outline-brand-blue`}
+          >
+            <UserIcon />
+            {tr.topBar.profile}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            tabIndex={-1}
+            aria-disabled="true"
+            title={tr.menu.notInDemo}
+            className={`${ROW} cursor-default focus-visible:outline-2 focus-visible:outline-brand-blue`}
+          >
+            <SettingsIcon />
+            {tr.topBar.settings}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            tabIndex={-1}
             onClick={() => {
               endSession();
               void navigate('/');
             }}
-            className={`${ROW} hover:bg-surface-muted`}
+            className={`${ROW} hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-brand-blue`}
           >
             <LogoutIcon />
             {tr.topBar.logout}

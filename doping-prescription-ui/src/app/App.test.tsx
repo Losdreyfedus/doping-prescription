@@ -90,4 +90,41 @@ describe('demo login and app shell', () => {
     expect(router.state.location.pathname).toBe('/');
     expect(sessionStorage.length).toBe(0);
   });
+
+  it('drives the account menu with the keyboard and gives focus back on Escape', async () => {
+    loggedInAs('deniz');
+    renderApp('/app/denemeler');
+
+    const trigger = await screen.findByRole('button', { name: 'Deniz hesap menüsü' });
+    await userEvent.click(trigger);
+    const items = screen.getAllByRole('menuitem');
+    expect(items.map((item) => item.textContent)).toEqual(['Profilim', 'Ayarlar', 'Çıkış Yap']);
+    expect(items[0]).toHaveFocus();
+
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+    expect(items[2]).toHaveFocus();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(items[0]).toHaveFocus();
+    await userEvent.keyboard('{ArrowUp}');
+    expect(items[2]).toHaveFocus();
+
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
+  it('keeps the Dopingle layer open when Escape was already handled (an open micro-question)', async () => {
+    loggedInAs('deniz');
+    const router = renderApp('/app/denemeler');
+    await userEvent.click(await screen.findByRole('link', { name: 'Dopingle' }));
+    const handled = (event: KeyboardEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener('keydown', handled, { capture: true });
+
+    await userEvent.keyboard('{Escape}');
+    window.removeEventListener('keydown', handled, { capture: true });
+
+    expect(router.state.location.pathname).toBe('/app/dopingle');
+  });
 });

@@ -24,6 +24,7 @@ import org.springframework.validation.annotation.Validated;
  * @param queueTtl             lifetime of a prepared queue
  * @param queueRefillThreshold the queue is rebuilt when fewer cards are left
  * @param sessionTtl           lifetime of a session's seen-video set
+ * @param storeRetryAfter      after a Redis failure the feed skips Redis for this long (docs/mimari.md §5)
  * @param quota                pool shares of a personalized page
  * @param coldStartQuota       pool shares for a learner without signals
  * @param weakTopicCount       weakest topics feeding WEAK_TOPIC
@@ -46,6 +47,7 @@ public record FeedProperties(
         @NotNull Duration queueTtl,
         @Positive int queueRefillThreshold,
         @NotNull Duration sessionTtl,
+        @NotNull Duration storeRetryAfter,
         @NotNull @Valid Quota quota,
         @NotNull @Valid ColdStartQuota coldStartQuota,
         @Positive int weakTopicCount,

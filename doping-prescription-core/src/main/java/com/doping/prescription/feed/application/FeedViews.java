@@ -24,7 +24,7 @@ public class FeedViews {
     }
 
     /** @param videos LIVE videos by id; the card's video must be among them */
-    CardView card(Served served, Map<Integer, VideoView> videos, Map<Integer, TopicView> catalog) {
+    CardView card(Served served, Map<Integer, VideoView> videos, Map<Integer, TopicView> catalog, boolean saved) {
         VideoView video = Objects.requireNonNull(videos.get(served.card().contentId()), "served video is not LIVE");
         TopicView topic = catalog.get(served.card().targetTopicId());
         return new CardView(
@@ -41,7 +41,8 @@ public class FeedViews {
                 served.card().pool().name(),
                 served.card().reasonText(),
                 video.hasMicroQuiz(),
-                points.pointsAvailable(served.card().pool() == PoolType.WEAK_TOPIC));
+                points.pointsAvailable(served.card().pool() == PoolType.WEAK_TOPIC),
+                saved);
     }
 
     /**
@@ -66,6 +67,7 @@ public class FeedViews {
      * @param pool            WEAK_TOPIC, REVIEW_DUE, EXPLORE, POPULAR or FALLBACK
      * @param reasonText      the "neden bu video" text
      * @param pointsAvailable points a correct micro-question answer earns
+     * @param saved           whether the learner saved the video (the card's bookmark)
      */
     public record CardView(
             UUID impressionId,
@@ -78,7 +80,8 @@ public class FeedViews {
 
             String reasonText,
             boolean hasMicroQuiz,
-            int pointsAvailable) {}
+            int pointsAvailable,
+            boolean saved) {}
 
     /**
      * @param videoUrl {@code null}: the web app uses the simulated player

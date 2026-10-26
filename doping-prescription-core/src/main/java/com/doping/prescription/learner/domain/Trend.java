@@ -2,7 +2,7 @@ package com.doping.prescription.learner.domain;
 
 import java.util.Optional;
 
-/** Direction of a topic's mastery shown next to its bar on Eksiklerim. */
+/** Direction of a topic's mastery shown next to its bar on Gelişimim. */
 public enum Trend {
     UP,
     DOWN,

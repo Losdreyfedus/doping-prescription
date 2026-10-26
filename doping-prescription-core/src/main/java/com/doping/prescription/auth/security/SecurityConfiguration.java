@@ -38,6 +38,8 @@ class SecurityConfiguration {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, ProblemAuthenticationHandlers problemHandlers)
             throws Exception {
+        // No CSRF protection needed: the token travels in the Authorization header, never in a cookie the browser
+        // would attach to a forged request
         http.csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

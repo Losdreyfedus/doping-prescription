@@ -1,4 +1,5 @@
 import { screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
@@ -49,7 +50,7 @@ describe('Gelişimim', () => {
 
     const weak = rowAt(rows, 0);
     expect(weak.getByRole('meter', { name: 'Olasılık ustalığı' })).toHaveAttribute('aria-valuenow', '17');
-    expect(weak.getByLabelText('Düşüyor')).toBeInTheDocument();
+    expect(weak.getByText('Düşüyor')).toBeInTheDocument();
     expect(weak.getByText('Bu konudan 6 video hazır')).toBeInTheDocument();
     expect(weak.getByRole('link', { name: 'Olasılık çalış' })).toHaveAttribute(
       'href',
@@ -59,6 +60,29 @@ describe('Gelişimim', () => {
     const unknown = rowAt(rows, 2);
     expect(unknown.getByText('Henüz veri yok, bir deneme çöz')).toBeInTheDocument();
     expect(unknown.queryByRole('meter')).not.toBeInTheDocument();
+  });
+
+  it('says so when the profile has no topics yet', async () => {
+    server.use(http.get(`${API}/api/learner/profile`, () => HttpResponse.json({ ...profile, topics: [] })));
+    writeSession({ token: 'token-deniz', user: meOf('deniz') });
+    renderApp('/app/gelisimim');
+
+    expect(
+      await screen.findByText('Henüz konu bilgisi yok. Bir deneme çözünce konuların burada görünür.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Konu ustalıkları' })).not.toBeInTheDocument();
+  });
+
+  it('opens Dopingle for a topic and returns to Gelişimim when it closes', async () => {
+    server.use(http.get(`${API}/api/learner/profile`, () => HttpResponse.json(profile)));
+    writeSession({ token: 'token-deniz', user: meOf('deniz') });
+    const router = renderApp('/app/gelisimim');
+
+    await userEvent.click(await screen.findByRole('link', { name: 'Olasılık çalış' }));
+    expect(router.state.location.pathname).toBe('/app/dopingle');
+    await userEvent.click(screen.getByRole('button', { name: "Dopingle'ı kapat" }));
+
+    expect(router.state.location.pathname).toBe('/app/gelisimim');
   });
 
   it('shows an error when the profile cannot be loaded', async () => {

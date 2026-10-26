@@ -36,7 +36,7 @@ const MENU: MenuItem[] = [
   {
     to: '/app/gelisimim',
     label: tr.menu.progress,
-    icon: { tile: 'bg-menu-weak-topics', glyph: <TargetIcon /> },
+    icon: { tile: 'bg-menu-progress', glyph: <TargetIcon /> },
   },
   { label: tr.menu.way, icon: { image: dopingAssets.colorfulBird } },
   { label: tr.menu.guidance, icon: { tile: 'bg-menu-guidance', glyph: <ScreenIcon /> } },
@@ -71,8 +71,10 @@ function ItemIcon({ icon }: { icon: MenuItem['icon'] }) {
   );
 }
 
-/** Left menu; an icon rail inside the Dopingle layer (docs/arayuz.md). */
 /**
+ * Left menu; an icon rail inside the Dopingle layer (docs/arayuz.md).
+ *
+ * @param collapsed the icon rail of the Dopingle layer and the panel layout
  * @param dark the Akıllı Değerlendirme Paneli look: dark rail, the active item on a white tile
  */
 export function Sidebar({ collapsed = false, dark = false }: { collapsed?: boolean; dark?: boolean }) {

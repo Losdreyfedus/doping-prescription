@@ -27,7 +27,14 @@ describe('useRealVideo', () => {
     const onComplete = vi.fn();
     const videoRef = { current: video };
     const { result } = renderHook(() =>
-      useRealVideo({ videoRef, durationSec: 40, active: true, onComplete }),
+      useRealVideo({
+        videoRef,
+        durationSec: 40,
+        active: true,
+        muted: false,
+        onMutedByBrowser: vi.fn(),
+        onComplete,
+      }),
     );
     expect(play).toHaveBeenCalled();
 
@@ -47,12 +54,50 @@ describe('useRealVideo', () => {
     expect(onComplete).toHaveBeenCalledOnce();
   });
 
+  it('follows the sound choice and reports when the browser refuses autoplay with sound', async () => {
+    const { video, play } = recordedVideo();
+    play.mockRejectedValueOnce(new Error('NotAllowedError'));
+    const videoRef = { current: video };
+    const onMutedByBrowser = vi.fn();
+    const { rerender } = renderHook(
+      ({ muted }) =>
+        useRealVideo({
+          videoRef,
+          durationSec: 40,
+          active: true,
+          muted,
+          onMutedByBrowser,
+          onComplete: vi.fn(),
+        }),
+      { initialProps: { muted: false } },
+    );
+
+    await vi.waitFor(() => {
+      expect(onMutedByBrowser).toHaveBeenCalledOnce();
+    });
+    expect(video.muted).toBe(true);
+    expect(play).toHaveBeenCalledTimes(2);
+
+    // the page records the browser's choice, then the learner turns the sound on
+    rerender({ muted: true });
+    rerender({ muted: false });
+    expect(video.muted).toBe(false);
+  });
+
   it('pauses while inactive or toggled off', () => {
     const { video, pause } = recordedVideo();
     const videoRef = { current: video };
     const onComplete = vi.fn();
     const { result, rerender } = renderHook(
-      ({ active }) => useRealVideo({ videoRef, durationSec: 40, active, onComplete }),
+      ({ active }) =>
+        useRealVideo({
+          videoRef,
+          durationSec: 40,
+          active,
+          muted: false,
+          onMutedByBrowser: vi.fn(),
+          onComplete,
+        }),
       { initialProps: { active: false } },
     );
     expect(pause).toHaveBeenCalled();

@@ -4,8 +4,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Everything the feed algorithm needs about one learner at one moment, gathered by the application layer so the
@@ -17,6 +17,8 @@ import java.util.Set;
  * @param completedRecently  videos completed within the rewatch block window (rule 2)
  * @param excluded           videos already shown in this session, never offered again (session integrity)
  * @param deferredTopics     topics skipped too often in this session (rule 3)
+ * @param recentTopics       target topics of the session's last served cards, oldest first; rule 1 continues from them
+ *                           when the queue is rebuilt mid-session
  * @param now                the current instant
  * @param examNear           whether the learner's exam date is close (examImportance weight changes)
  */
@@ -27,6 +29,7 @@ public record FeedContext(
         Set<Integer> completedRecently,
         Set<Integer> excluded,
         Set<Integer> deferredTopics,
+        List<Integer> recentTopics,
         Instant now,
         boolean examNear) {
 
@@ -37,6 +40,7 @@ public record FeedContext(
         completedRecently = Set.copyOf(completedRecently);
         excluded = Set.copyOf(excluded);
         deferredTopics = Set.copyOf(deferredTopics);
+        recentTopics = List.copyOf(recentTopics);
         Objects.requireNonNull(now, "now");
     }
 
@@ -53,8 +57,8 @@ public record FeedContext(
      * A topic as the feed sees it: the learner's decayed mastery and band from the learner module, plus catalogue
      * data.
      *
-     * @param lastSignalAt when the learner last produced a mastery signal on the topic
-     * @param lastExam     the topic's result in the learner's latest exam
+     * @param lastSignalAt when the learner last produced a mastery signal on the topic; {@code null} without data
+     * @param lastExam     the topic's result in the learner's latest exam; {@code null} if it was not in that exam
      */
     public record TopicState(
             Integer topicId,
@@ -63,8 +67,8 @@ public record FeedContext(
             double mastery,
             double confidence,
             TopicBand band,
-            Optional<Instant> lastSignalAt,
-            Optional<ExamTally> lastExam) {}
+            @Nullable Instant lastSignalAt,
+            @Nullable ExamTally lastExam) {}
 
     /** "3 questions, 0 correct". */
     public record ExamTally(int total, int correct) {}

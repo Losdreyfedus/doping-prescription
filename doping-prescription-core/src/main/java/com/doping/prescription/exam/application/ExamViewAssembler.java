@@ -13,12 +13,12 @@ import com.doping.prescription.exam.application.ExamViews.TopicResult;
 import com.doping.prescription.exam.domain.AnswerResult;
 import com.doping.prescription.exam.domain.AttemptScore;
 import com.doping.prescription.exam.domain.ExamGrader;
+import com.doping.prescription.exam.domain.ExamGrader.GradedQuestion;
 import com.doping.prescription.exam.domain.ExamGrader.QuestionKey;
 import com.doping.prescription.exam.persistence.Exam;
 import com.doping.prescription.exam.persistence.ExamAnswer;
 import com.doping.prescription.exam.persistence.ExamAttempt;
 import com.doping.prescription.exam.persistence.ExamQuestion;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -82,12 +82,15 @@ final class ExamViewAssembler {
                 .toList();
     }
 
+    /** Built from the totals and per-answer results stored on submit, so the screen shows exactly what was graded. */
     ExamResult result(Exam exam, ExamAttempt attempt, List<ExamQuestion> questions, Map<Integer, ExamAnswer> answers) {
         AttemptScore score = attempt.getScore().orElseThrow();
-        Map<Integer, Optional<String>> selections = new HashMap<>();
-        answers.forEach((questionId, answer) -> selections.put(questionId, answer.getSelectedKey()));
+        List<GradedQuestion> stored = questions.stream()
+                .map(question ->
+                        new GradedQuestion(question.getId(), question.getTopicId(), storedResult(question, answers)))
+                .toList();
         Map<Integer, TopicCatalog.TopicView> topicsById = topics.topicsById();
-        List<TopicResult> byTopic = ExamGrader.grade(keys(questions), selections).topics().stream()
+        List<TopicResult> byTopic = ExamGrader.byTopic(stored).stream()
                 .map(topic -> new TopicResult(
                         topic.topicId(),
                         topicName(topicsById, topic.topicId()),
@@ -120,8 +123,15 @@ final class ExamViewAssembler {
                 question.getContent().options(),
                 answer.flatMap(ExamAnswer::getSelectedKey).orElse(null),
                 question.getContent().correctKey(),
-                answer.flatMap(ExamAnswer::getResult).orElse(AnswerResult.BLANK),
+                storedResult(question, answers),
                 question.getContent().explanation());
+    }
+
+    /** Submit stores a result for every question, so a missing one only occurs for data written before grading. */
+    private static AnswerResult storedResult(ExamQuestion question, Map<Integer, ExamAnswer> answers) {
+        return Optional.ofNullable(answers.get(question.getId()))
+                .flatMap(ExamAnswer::getResult)
+                .orElse(AnswerResult.BLANK);
     }
 
     private static String topicName(Map<Integer, TopicCatalog.TopicView> topicsById, Integer topicId) {

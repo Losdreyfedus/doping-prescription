@@ -3,7 +3,6 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { api, type Schemas, unwrap } from '@/shared/api/client';
 import { queryKeys } from '@/shared/api/queryKeys';
 
-export type DemoUser = Schemas['DemoUserResponse'];
 export type DemoLogin = Schemas['DemoLoginResponse'];
 
 export function useDemoUsers() {

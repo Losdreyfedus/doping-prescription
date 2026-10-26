@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { useSession } from '@/app/session/sessionContext';
 import { tr } from '@/shared/i18n/tr';
+import { useSession } from '@/shared/session/sessionContext';
 import { AnswerBubble } from '@/shared/ui/AnswerBubble';
 import { Avatar } from '@/shared/ui/Avatar';
 import { BrandLogo } from '@/shared/ui/BrandLogo';
@@ -131,7 +131,10 @@ function AnswerKey() {
     <section className="flex flex-col gap-3 rounded-card bg-surface p-5">
       <h2 className="text-xl font-bold">{tr.admin.answerKeyTitle}</h2>
       <p className="text-sm text-text-muted">{tr.admin.answerKeyHint}</p>
-      {key.isSuccess && (
+      {key.isPending && <p>{tr.admin.answerKeyLoading}</p>}
+      {key.isError && <p role="alert">{key.error.message}</p>}
+      {key.isSuccess && key.data.length === 0 && <p>{tr.admin.answerKeyEmpty}</p>}
+      {key.isSuccess && key.data.length > 0 && (
         <table className="text-left text-sm">
           <thead>
             <tr className="text-text-muted">
@@ -143,7 +146,7 @@ function AnswerKey() {
           </thead>
           <tbody>
             {key.data.map((row) => (
-              <tr key={row.orderNo} data-differs={row.scenarioKey !== row.correctKey}>
+              <tr key={row.orderNo}>
                 <td className="py-1">{row.orderNo}</td>
                 <td>{row.topic}</td>
                 <td>

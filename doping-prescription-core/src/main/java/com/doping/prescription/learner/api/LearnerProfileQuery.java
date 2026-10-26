@@ -2,8 +2,8 @@ package com.doping.prescription.learner.api;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Read access to a learner's topic profile for other modules (the feed). Values are at full precision with decay
@@ -14,10 +14,10 @@ public interface LearnerProfileQuery {
     LearnerProfile profile(UUID userId);
 
     /**
-     * @param lastExamAttemptId the latest exam attempt the profile has processed
+     * @param lastExamAttemptId the latest exam attempt the profile has processed; {@code null} before the first exam
      * @param topics            every curriculum topic, including those without signals
      */
-    record LearnerProfile(UUID userId, Optional<UUID> lastExamAttemptId, List<TopicProfile> topics) {
+    record LearnerProfile(UUID userId, @Nullable UUID lastExamAttemptId, List<TopicProfile> topics) {
 
         public LearnerProfile {
             topics = List.copyOf(topics);
@@ -26,21 +26,40 @@ public interface LearnerProfileQuery {
 
     /**
      * @param effectiveMastery mastery after decay
-     * @param band             UNKNOWN, WEAK, MEDIUM or STRONG (single definition, docs/algoritma.md §1)
-     * @param trend            UP, DOWN or FLAT
+     * @param band             single definition of docs/algoritma.md §1
      * @param attempts         mastery-affecting signals; 0 means no data
-     * @param lastExam         the topic's result in the latest exam, if any
+     * @param lastSignalAt     the latest mastery-affecting signal; {@code null} without data
+     * @param lastExam         the topic's result in the latest exam; {@code null} if the topic was not in one
      */
     record TopicProfile(
             Integer topicId,
             double effectiveMastery,
             double confidence,
-            String band,
-            String trend,
+            Band band,
+            Trend trend,
             int attempts,
-            Optional<Instant> lastSignalAt,
-            Optional<LastExam> lastExam) {}
+            @Nullable Instant lastSignalAt,
+            @Nullable LastExam lastExam) {}
 
     /** "3 questions, 0 correct" for the why-this-video template. */
     record LastExam(UUID attemptId, int total, int correct) {}
+
+    /**
+     * A topic's mastery band as other modules see it. The thresholds stay inside the learner module, so a WEAK topic on
+     * Gelişimim is exactly a topic the feed prescribes (docs/algoritma.md §1).
+     */
+    enum Band {
+        /** No mastery-affecting signal yet. */
+        UNKNOWN,
+        WEAK,
+        MEDIUM,
+        STRONG
+    }
+
+    /** Direction of the topic's latest mastery-affecting signal (docs/algoritma.md §1, Trend). */
+    enum Trend {
+        UP,
+        DOWN,
+        FLAT
+    }
 }

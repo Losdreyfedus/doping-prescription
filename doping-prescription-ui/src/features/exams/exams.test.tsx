@@ -187,4 +187,78 @@ describe('exam flow', () => {
       { questionId: '101', body: { selectedKey: null, timeSpentSec: null } },
     ]);
   });
+
+  it('sends the submit only after a pending answer save has finished', async () => {
+    const order: string[] = [];
+    let finishSave: (() => void) | undefined;
+    examApi([]);
+    server.use(
+      http.put(
+        `${API}/api/exam-attempts/${ATTEMPT_ID}/answers/:questionId`,
+        () =>
+          new Promise<Response>((resolve) => {
+            order.push('save started');
+            finishSave = () => {
+              order.push('save finished');
+              resolve(new HttpResponse(null, { status: 204 }));
+            };
+          }),
+      ),
+      http.post(`${API}/api/exam-attempts/${ATTEMPT_ID}/submit`, () => {
+        order.push('submit');
+        return HttpResponse.json(result);
+      }),
+    );
+    writeSession({ token: 'token-deniz', user: meOf('deniz') });
+    renderApp(`/app/denemeler/${ATTEMPT_ID}`);
+
+    await userEvent.click(await screen.findByRole('button', { name: /^B 24$/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Testi Bitir' }));
+    const confirm = within(screen.getByRole('dialog')).getByRole('button', { name: 'Bitir' });
+    await userEvent.click(confirm);
+
+    await expect.poll(() => order).toEqual(['save started']);
+    expect(confirm).toBeDisabled();
+    finishSave?.();
+
+    expect(await screen.findByText('Denemeyi Tamamladın!')).toBeInTheDocument();
+    expect(order).toEqual(['save started', 'save finished', 'submit']);
+  });
+
+  it('keeps focus in the finish dialog, closes it with Escape and returns focus to the button', async () => {
+    examApi([]);
+    writeSession({ token: 'token-deniz', user: meOf('deniz') });
+    renderApp(`/app/denemeler/${ATTEMPT_ID}`);
+
+    const finish = await screen.findByRole('button', { name: 'Testi Bitir' });
+    await userEvent.click(finish);
+    const dialog = screen.getByRole('dialog');
+    const cancel = within(dialog).getByRole('button', { name: 'Vazgeç' });
+    const confirm = within(dialog).getByRole('button', { name: 'Bitir' });
+
+    expect(cancel).toHaveFocus();
+    await userEvent.tab();
+    expect(confirm).toHaveFocus();
+    await userEvent.tab();
+    expect(cancel).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    expect(confirm).toHaveFocus();
+
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(finish).toHaveFocus();
+  });
+
+  it('opens the prescribed feed so that closing it returns to the result screen', async () => {
+    examApi([]);
+    server.use(http.get(`${API}/api/exam-attempts/${ATTEMPT_ID}/result`, () => HttpResponse.json(result)));
+    writeSession({ token: 'token-deniz', user: meOf('deniz') });
+    const router = renderApp(`/app/denemeler/${ATTEMPT_ID}/sonuc`);
+
+    await userEvent.click(await screen.findByRole('link', { name: 'Reçeteni gör' }, { timeout: 2000 }));
+    expect(router.state.location.pathname).toBe('/app/dopingle');
+    await userEvent.click(screen.getByRole('button', { name: "Dopingle'ı kapat" }));
+
+    expect(router.state.location.pathname).toBe(`/app/denemeler/${ATTEMPT_ID}/sonuc`);
+  });
 });

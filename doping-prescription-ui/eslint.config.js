@@ -1,3 +1,5 @@
+import { readdirSync } from 'node:fs';
+
 import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
@@ -9,8 +11,10 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 // Feature folders may not import each other's internals; shared code moves to src/shared
-// (docs/kod-standartlari.md §3).
-const FEATURES = ['auth', 'dopingle', 'exams', 'learner', 'quiz', 'points', 'admin'];
+// (docs/kod-standartlari.md §3). The list is read from disk so a new feature is covered without editing this file.
+const FEATURES = readdirSync(new URL('./src/features', import.meta.url), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name);
 
 const featureIsolationZones = FEATURES.map((feature) => ({
   target: `./src/features/${feature}`,
@@ -18,6 +22,15 @@ const featureIsolationZones = FEATURES.map((feature) => ({
   except: [`./${feature}`],
   message: 'Features must not import each other; move shared code to src/shared.',
 }));
+
+// The app layer (router, providers, layouts) composes the features, so the dependency only points that way.
+const featureLayerZones = [
+  {
+    target: './src/features',
+    from: './src/app',
+    message: 'Features must not depend on the app layer; move what they need to src/shared.',
+  },
+];
 
 const sharedIsolationZones = [
   {
@@ -62,7 +75,7 @@ export default tseslint.config(
       '@typescript-eslint/ban-ts-comment': 'error',
       'import-x/no-restricted-paths': [
         'error',
-        { zones: [...featureIsolationZones, ...sharedIsolationZones] },
+        { zones: [...featureIsolationZones, ...featureLayerZones, ...sharedIsolationZones] },
       ],
       'import-x/order': [
         'error',
@@ -74,6 +87,12 @@ export default tseslint.config(
         },
       ],
     },
+  },
+  {
+    // The demo videos carry burned-in subtitles (docs/arayuz.md, Dopingle) and the API has no caption files, so an
+    // empty <track> would only satisfy the rule without helping anyone. Scoped to the one component that plays them.
+    files: ['src/features/dopingle/VideoCard.tsx'],
+    rules: { 'jsx-a11y/media-has-caption': 'off' },
   },
   {
     files: ['vite.config.ts', 'vitest.config.ts', 'eslint.config.js'],

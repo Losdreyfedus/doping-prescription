@@ -1,6 +1,7 @@
 package com.doping.prescription.feed.application;
 
 import com.doping.prescription.feed.api.ImpressionQuery;
+import com.doping.prescription.feed.domain.PoolType;
 import com.doping.prescription.feed.domain.ScoreBreakdown;
 import com.doping.prescription.feed.domain.ServedCard;
 import com.doping.prescription.feed.persistence.FeedImpression;
@@ -35,7 +36,8 @@ class ImpressionQueryService implements ImpressionQuery {
                     card.contentId(),
                     card.targetTopicId(),
                     card.pool().name(),
-                    queries.maxWatchMs(impressionId));
+                    queries.maxWatchMs(impressionId),
+                    card.pool() == PoolType.WEAK_TOPIC);
         });
     }
 

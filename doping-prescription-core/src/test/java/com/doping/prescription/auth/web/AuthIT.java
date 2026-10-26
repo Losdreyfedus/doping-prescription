@@ -6,8 +6,11 @@ import com.doping.prescription.IntegrationTest;
 import com.doping.prescription.auth.seed.AuthDemoDataLoader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
@@ -92,13 +95,30 @@ class AuthIT {
         assertThat(result).hasStatus(401);
     }
 
-    @Test
-    void adminEndpointsAreForbiddenForStudents() {
-        MvcTestResult result = mvc.get()
-                .uri("/api/admin/users")
-                .header("Authorization", "Bearer " + login("deniz"))
+    @ParameterizedTest(name = "{0} {1}")
+    @CsvSource({
+        "GET, /api/admin/users",
+        "GET, /api/admin/demo/students",
+        "GET, /api/admin/demo/personas",
+        "GET, /api/admin/demo/answer-key",
+        "GET, /api/admin/feed-debug?slug=deniz",
+        "GET, /api/admin/content-effectiveness",
+        "POST, /api/admin/demo/reset",
+        "POST, /api/admin/demo/persona"
+    })
+    void adminEndpointsAreForbiddenForStudents(HttpMethod method, String uri) {
+        // Given
+        String student = login("deniz");
+
+        // When: a valid body, so only the role can be the reason for the answer
+        MvcTestResult result = mvc.method(method)
+                .uri(uri)
+                .header("Authorization", "Bearer " + student)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"slug\":\"deniz\",\"persona\":\"NEW\"}")
                 .exchange();
 
+        // Then
         assertThat(result).hasStatus(403);
         assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("FORBIDDEN");
     }

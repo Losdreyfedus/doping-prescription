@@ -36,9 +36,16 @@ export function useAttempt(attemptId: string) {
   });
 }
 
+/**
+ * Answer saves and the submit of one attempt share a mutation scope, so TanStack Query runs them one after another in
+ * the order they were made: two quick clicks reach the server in order and a submit waits for the pending saves.
+ */
+const attemptScope = (attemptId: string) => ({ id: `attempt-${attemptId}` });
+
 /** Saves (or clears with null) one answer; the solve screen keeps its own optimistic copy. */
 export function useSaveAnswer(attemptId: string) {
   return useMutation({
+    scope: attemptScope(attemptId),
     mutationFn: async ({ questionId, selectedKey }: { questionId: number; selectedKey: string | null }) => {
       const { response, error } = await api.PUT('/api/exam-attempts/{attemptId}/answers/{questionId}', {
         params: { path: { attemptId, questionId } },
@@ -54,6 +61,7 @@ export function useSaveAnswer(attemptId: string) {
 export function useSubmitAttempt(attemptId: string, onSubmitted: (result: ExamResult) => void) {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: attemptScope(attemptId),
     mutationFn: async () =>
       unwrap(await api.POST('/api/exam-attempts/{attemptId}/submit', { params: { path: { attemptId } } })),
     onSuccess: (result) => {

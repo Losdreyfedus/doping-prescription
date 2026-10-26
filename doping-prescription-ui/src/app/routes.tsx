@@ -1,4 +1,4 @@
-import { Navigate, type RouteObject } from 'react-router';
+import { Navigate, Outlet, type RouteObject } from 'react-router';
 
 import { AdminDemoPage } from '@/features/admin/AdminDemoPage';
 import { LoginPage } from '@/features/auth/LoginPage';
@@ -10,27 +10,38 @@ import { HomePage } from '@/features/home/HomePage';
 import { ProgressPage } from '@/features/learner/ProgressPage';
 
 import { AppShell } from './layout/AppShell';
+import { DopingleLayer } from './layout/DopingleLayer';
+import { PanelLayout } from './layout/PanelLayout';
 import { RouteError } from './layout/RouteError';
 import { RequireRole } from './session/RequireRole';
 
-/** Routes of docs/arayuz.md in MVP scope; after login a student lands on Ana Sayfa and opens Dopingle from the top bar. */
+/**
+ * Routes of docs/arayuz.md in MVP scope; after login a student lands on Ana Sayfa and opens Dopingle from the top bar.
+ * The student pages pick their layout by nesting: the app shell with menu and top bar, the full-screen Dopingle layer,
+ * or the dark panel layout of Gelişimim.
+ */
 export const routes: RouteObject[] = [
   { path: '/', element: <LoginPage />, errorElement: <RouteError /> },
   {
     path: '/app',
     element: (
       <RequireRole allow="STUDENT">
-        <AppShell />
+        <Outlet />
       </RequireRole>
     ),
     errorElement: <RouteError />,
     children: [
-      { index: true, element: <HomePage /> },
-      { path: 'dopingle', element: <DopinglePage /> },
-      { path: 'denemeler', element: <ExamsPage /> },
-      { path: 'denemeler/:attemptId', element: <ExamSolvePage /> },
-      { path: 'denemeler/:attemptId/sonuc', element: <ExamResultPage /> },
-      { path: 'gelisimim', element: <ProgressPage /> },
+      {
+        element: <AppShell />,
+        children: [
+          { index: true, element: <HomePage /> },
+          { path: 'denemeler', element: <ExamsPage /> },
+          { path: 'denemeler/:attemptId', element: <ExamSolvePage /> },
+          { path: 'denemeler/:attemptId/sonuc', element: <ExamResultPage /> },
+        ],
+      },
+      { element: <DopingleLayer />, children: [{ path: 'dopingle', element: <DopinglePage /> }] },
+      { element: <PanelLayout />, children: [{ path: 'gelisimim', element: <ProgressPage /> }] },
       // the screen was called Eksiklerim before the demo rename; old links keep working
       { path: 'eksiklerim', element: <Navigate to="/app/gelisimim" replace /> },
     ],

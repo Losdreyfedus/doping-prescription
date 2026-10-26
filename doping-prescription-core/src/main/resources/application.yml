@@ -11,10 +11,19 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+    properties:
+      hibernate:
+        # Inserts of one table reach the database as one batch: a feed page writes all its impressions at once.
+        jdbc:
+          batch_size: 20
+        order_inserts: true
   flyway:
     locations: classpath:db/migration
   modulith:
     events:
+      # Publications that did not reach Kafka before a crash or broker outage are sent again on startup (ADR 0002);
+      # prescription.messaging.outbox resubmits them while the application keeps running.
+      republish-outstanding-events-on-restart: true
       # The event_publication table is created by Flyway (V2), never by Modulith itself.
       jdbc:
         schema-initialization:
@@ -72,9 +81,16 @@ prescription:
     jwt-secret: ${PRESCRIPTION_JWT_SECRET}
     token-ttl: 12h
     cors-allowed-origin: http://localhost:5173
+    # Passwordless login as any user (docs/api.md, demo-login); only the demo profile switches it on.
+    demo-login-enabled: false
   health:
     kafka:
       timeout: 2s
+  messaging:
+    outbox:
+      resubmit-enabled: true
+      resubmit-after: 1m
+      resubmit-interval: 1m
   content:
     tagging:
       min-confidence: 0.5
@@ -93,6 +109,8 @@ prescription:
         weak-threshold: 0.6
         strong-threshold: 0.8
     cache-ttl: 24h
+    # After a Redis failure profile reads go straight to PostgreSQL for this long (docs/mimari.md §5).
+    cache-retry-after: 10s
   feed:
     page-size: 10
     page-size-max: 20
@@ -100,6 +118,8 @@ prescription:
     queue-ttl: 30m
     queue-refill-threshold: 5
     session-ttl: 30m
+    # After a Redis failure feed requests skip Redis for this long instead of waiting for its timeout each time.
+    store-retry-after: 10s
     quota:
       weak-topic: 0.60
       review-due: 0.15

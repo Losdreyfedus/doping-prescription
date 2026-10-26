@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 
 import type { TopicProfile } from '@/shared/api/learnerProfile';
 import { tr } from '@/shared/i18n/tr';
@@ -21,6 +21,7 @@ export function TopicMasteryRow({ topic }: { topic: TopicProfile }) {
   const unknown = topic.band === 'UNKNOWN';
   const percent = Math.round(topic.mastery * 100);
   const trend = TREND[topic.trend];
+  const location = useLocation();
 
   return (
     <li
@@ -46,14 +47,17 @@ export function TopicMasteryRow({ topic }: { topic: TopicProfile }) {
             />
           </div>
           <span className="w-12 text-right font-bold">%{percent}</span>
-          <span aria-label={trend.label} className={`w-4 text-lg font-bold ${trend.className}`}>
-            {trend.arrow}
+          <span className={`w-4 text-lg font-bold ${trend.className}`}>
+            <span aria-hidden="true">{trend.arrow}</span>
+            <span className="sr-only">{trend.label}</span>
           </span>
         </>
       )}
       <span className="w-40 text-xs text-surface/60">{tr.progress.readyVideos(topic.readyContentCount)}</span>
       <Link
         to={`/app/dopingle?topicId=${String(topic.topicId)}`}
+        // closing Dopingle returns to Gelişimim (docs/arayuz.md)
+        state={{ from: location.pathname }}
         className="rounded-button border border-surface/25 bg-ink px-5 py-2 font-semibold text-surface hover:border-surface/60"
         aria-label={tr.progress.studyTopic(topic.name)}
       >

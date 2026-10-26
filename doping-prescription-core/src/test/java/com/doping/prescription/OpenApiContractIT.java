@@ -38,10 +38,14 @@ class OpenApiContractIT {
         assertThat(result).hasStatusOk();
         JsonNode generated = JSON.readTree(result.getResponse().getContentAsByteArray());
 
-        if (Boolean.getBoolean(UPDATE_PROPERTY) || !Files.exists(CONTRACT)) {
+        if (Boolean.getBoolean(UPDATE_PROPERTY)) {
             Files.writeString(CONTRACT, JSON.writeValueAsString(generated) + "\n", StandardCharsets.UTF_8);
         }
 
+        // A missing contract fails like an outdated one; it is only ever written on request
+        assertThat(CONTRACT)
+                .as("%s is missing; run ./mvnw verify -D%s=true and commit the file", CONTRACT, UPDATE_PROPERTY)
+                .exists();
         JsonNode committed = JSON.readTree(Files.readString(CONTRACT, StandardCharsets.UTF_8));
         assertThat(generated)
                 .as("openapi.json is out of date; run ./mvnw verify -D%s=true and commit the file", UPDATE_PROPERTY)

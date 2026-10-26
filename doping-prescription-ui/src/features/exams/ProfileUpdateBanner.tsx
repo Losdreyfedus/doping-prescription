@@ -1,6 +1,6 @@
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 
-import { useProfileUpdate } from '@/shared/api/learnerProfile';
+import { useProfilePolling } from '@/shared/api/learnerProfile';
 import { tr } from '@/shared/i18n/tr';
 
 const topicList = new Intl.ListFormat('tr', { style: 'long', type: 'conjunction' });
@@ -10,7 +10,8 @@ const topicList = new Intl.ListFormat('tr', { style: 'long', type: 'conjunction'
  * prescribed topics and a link to the refreshed feed.
  */
 export function ProfileUpdateBanner({ attemptId }: { attemptId: string }) {
-  const { profile, updated, gaveUp } = useProfileUpdate(attemptId);
+  const { profile, updated, gaveUp } = useProfilePolling(attemptId);
+  const location = useLocation();
 
   if (!updated && !gaveUp) {
     return (
@@ -36,6 +37,8 @@ export function ProfileUpdateBanner({ attemptId }: { attemptId: string }) {
       </p>
       <Link
         to="/app/dopingle?refresh=1"
+        // closing Dopingle returns here, like the top bar's lightning button (docs/arayuz.md)
+        state={{ from: location.pathname }}
         className="rounded-button bg-orange px-6 py-2 font-semibold whitespace-nowrap text-surface"
       >
         {tr.result.seePrescription}

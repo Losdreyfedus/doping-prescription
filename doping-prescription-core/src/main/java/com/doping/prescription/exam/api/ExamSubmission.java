@@ -1,8 +1,8 @@
 package com.doping.prescription.exam.api;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Exam actions for the admin module's demo personas (docs/api.md, POST /api/admin/demo/persona): personas go through
@@ -20,7 +20,12 @@ public interface ExamSubmission {
     List<KeyRow> answerKey(Integer examId);
 
     /**
-     * @param scenarioKey the answer given in the demo scenario; empty means left blank
+     * @param scenarioKey the answer given in the demo scenario; {@code null} means left blank
      */
-    record KeyRow(int orderNo, Integer questionId, Integer topicId, String correctKey, Optional<String> scenarioKey) {}
+    record KeyRow(
+            int orderNo,
+            Integer questionId,
+            Integer topicId,
+            String correctKey,
+            @Nullable String scenarioKey) {}
 }

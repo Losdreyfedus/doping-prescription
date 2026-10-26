@@ -14,11 +14,19 @@ public interface ImpressionQuery {
     List<DebugCard> lastSession(UUID userId);
 
     /**
-     * @param pool       WEAK_TOPIC, REVIEW_DUE, EXPLORE, POPULAR or FALLBACK
+     * @param pool       WEAK_TOPIC, REVIEW_DUE, EXPLORE, POPULAR or FALLBACK; for display and analytics only
      * @param maxWatchMs furthest point watched, in real video milliseconds
+     * @param weakTopic  the card came from the WEAK_TOPIC pool, i.e. it prescribes a weak topic (docs/algoritma.md §7:
+     *                   a correct answer earns the weak-topic points); use this instead of comparing {@code pool}
      */
     record ImpressionView(
-            UUID impressionId, UUID userId, Integer contentId, Integer topicId, String pool, int maxWatchMs) {}
+            UUID impressionId,
+            UUID userId,
+            Integer contentId,
+            Integer topicId,
+            String pool,
+            int maxWatchMs,
+            boolean weakTopic) {}
 
     /**
      * @param appliedRules notes of the diversity rules that moved this or other cards

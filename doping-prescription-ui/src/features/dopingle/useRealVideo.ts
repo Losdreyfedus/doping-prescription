@@ -6,6 +6,10 @@ interface Options {
   durationSec: number;
   /** Only the card on screen plays. */
   active: boolean;
+  /** The learner's sound choice, kept across cards. */
+  muted: boolean;
+  /** The browser refused to autoplay with sound, so the video plays muted; the sound button should show that. */
+  onMutedByBrowser: () => void;
   onComplete: () => void;
 }
 
@@ -13,15 +17,31 @@ interface Options {
  * Playback state of a real video file with the same shape as {@link useSimulatedPlayer}: progress from the element's
  * time, completion from its `ended` event. Real videos always play at normal speed.
  */
-export function useRealVideo({ videoRef, durationSec, active, onComplete }: Options) {
+export function useRealVideo({
+  videoRef,
+  durationSec,
+  active,
+  muted,
+  onMutedByBrowser,
+  onComplete,
+}: Options) {
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
   const completed = useRef(false);
   const onCompleteRef = useRef(onComplete);
+  const onMutedRef = useRef(onMutedByBrowser);
 
   useEffect(() => {
     onCompleteRef.current = onComplete;
-  }, [onComplete]);
+    onMutedRef.current = onMutedByBrowser;
+  }, [onComplete, onMutedByBrowser]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.muted = muted;
+    }
+  }, [videoRef, muted]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -56,9 +76,10 @@ export function useRealVideo({ videoRef, durationSec, active, onComplete }: Opti
       return;
     }
     if (shouldPlay) {
-      // Autoplay with sound can be refused; the video then plays muted (the sound button is not functional in the demo).
+      // Autoplay with sound can be refused; the video then plays muted and the learner can turn the sound on.
       Promise.resolve(video.play()).catch(() => {
         video.muted = true;
+        onMutedRef.current();
         return Promise.resolve(video.play()).catch(() => undefined);
       });
     } else {

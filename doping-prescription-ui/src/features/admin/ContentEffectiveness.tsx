@@ -11,6 +11,7 @@ export function ContentEffectiveness() {
     <section className="flex flex-col gap-3 rounded-card bg-surface p-5">
       <h2 className="text-xl font-bold">{tr.admin.effectivenessTitle}</h2>
       <p className="text-sm text-text-muted">{tr.admin.effectivenessHint}</p>
+      {videos.isPending && <p>{tr.admin.effectivenessLoading}</p>}
       {videos.isError && <p role="alert">{videos.error.message}</p>}
       {videos.isSuccess && videos.data.length === 0 && <p>{tr.admin.effectivenessEmpty}</p>}
       {videos.isSuccess && videos.data.length > 0 && (

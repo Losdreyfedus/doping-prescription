@@ -21,6 +21,7 @@ const card: FeedCard = {
   reasonText: 'Son denemende Olasılık: 3 soruda 0 doğru',
   hasMicroQuiz: true,
   pointsAvailable: 15,
+  saved: false,
 };
 
 const props = { card, progress: 0, elapsedSec: 0, playing: true, onToggle: vi.fn() };
@@ -49,5 +50,13 @@ describe('VideoCard', () => {
     expect(container.querySelector('video')).not.toBeInTheDocument();
     expect(screen.getByText('Zar ve para atışında olasılık, 3 örnek')).toBeInTheDocument();
     expect(screen.getByText('Son denemende Olasılık: 3 soruda 0 doğru')).toBeInTheDocument();
+  });
+
+  it('describes the play button with the topic and the reason', () => {
+    render(<VideoCard {...props} />);
+
+    expect(screen.getByRole('button', { name: 'Duraklat' })).toHaveAccessibleDescription(
+      'Olasılık Son denemende Olasılık: 3 soruda 0 doğru',
+    );
   });
 });

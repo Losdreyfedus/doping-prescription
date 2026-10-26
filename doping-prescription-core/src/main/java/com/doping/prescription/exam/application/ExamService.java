@@ -18,9 +18,11 @@ import com.doping.prescription.exam.persistence.ExamAttemptRepository;
 import com.doping.prescription.exam.persistence.ExamQuestion;
 import com.doping.prescription.exam.persistence.ExamQuestionRepository;
 import com.doping.prescription.exam.persistence.ExamRepository;
+import com.doping.prescription.exam.persistence.QuestionCount;
 import com.doping.prescription.shared.error.NotFoundException;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,10 +30,10 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,15 +73,27 @@ public class ExamService {
         this.clock = clock;
     }
 
+    /** The active exams with the learner's attempt in progress and latest result; three queries for any number. */
     @Transactional(readOnly = true)
     public List<ExamSummary> listExams(UUID userId) {
+        Map<Integer, Long> questionCounts = questions.countPerExam().stream()
+                .collect(Collectors.toMap(QuestionCount::examId, QuestionCount::questions));
+        Map<Integer, List<ExamAttempt>> attemptsByExam =
+                attempts.findByUserId(userId).stream().collect(Collectors.groupingBy(ExamAttempt::getExamId));
         return exams.findByActiveTrueOrderById().stream()
-                .map(exam -> views.summary(
-                        exam,
-                        Math.toIntExact(questions.countByExamId(exam.getId())),
-                        attempts.findFirstByUserIdAndExamIdAndStatus(userId, exam.getId(), AttemptStatus.IN_PROGRESS),
-                        attempts.findFirstByUserIdAndExamIdAndStatusOrderBySubmittedAtDesc(
-                                userId, exam.getId(), AttemptStatus.SUBMITTED)))
+                .map(exam -> {
+                    List<ExamAttempt> own = attemptsByExam.getOrDefault(exam.getId(), List.of());
+                    return views.summary(
+                            exam,
+                            Math.toIntExact(questionCounts.getOrDefault(exam.getId(), 0L)),
+                            own.stream()
+                                    .filter(attempt -> attempt.getStatus() == AttemptStatus.IN_PROGRESS)
+                                    .findFirst(),
+                            own.stream()
+                                    .filter(attempt -> attempt.getStatus() == AttemptStatus.SUBMITTED)
+                                    .max(Comparator.comparing(
+                                            attempt -> attempt.getSubmittedAt().orElseThrow())));
+                })
                 .toList();
     }
 
@@ -88,9 +102,10 @@ public class ExamService {
     public AttemptView startOrResume(UUID userId, Integer examId) {
         Exam exam =
                 exams.findById(examId).filter(Exam::isActive).orElseThrow(() -> new NotFoundException(EXAM_NOT_FOUND));
+        // A concurrent second start inserts nothing and then reads the attempt the first one opened
+        attempts.insertIfNoneInProgress(UUID.randomUUID(), userId, examId, clock.instant());
         ExamAttempt attempt = attempts.findFirstByUserIdAndExamIdAndStatus(userId, examId, AttemptStatus.IN_PROGRESS)
-                .orElseGet(() ->
-                        attempts.saveAndFlush(new ExamAttempt(UUID.randomUUID(), userId, examId, clock.instant())));
+                .orElseThrow(() -> new IllegalStateException("No attempt in progress right after opening one"));
         return attemptView(exam, attempt);
     }
 
@@ -100,11 +115,18 @@ public class ExamService {
         return attemptView(exam(attempt.getExamId()), attempt);
     }
 
-    /** Saves or clears ({@code selectedKey} empty) one answer of an attempt in progress. */
+    /**
+     * Saves or clears ({@code selectedKey} null) one answer of an attempt in progress. The attempt stays locked until the
+     * answer is stored, so concurrent saves of one question and a concurrent submit apply one after another.
+     */
     @Transactional
     public void saveAnswer(
-            UUID userId, UUID attemptId, Integer questionId, Optional<String> selectedKey, Integer timeSpentSec) {
-        ExamAttempt attempt = inProgress(owned(userId, attemptId));
+            UUID userId,
+            UUID attemptId,
+            Integer questionId,
+            @Nullable String selectedKey,
+            @Nullable Integer timeSpentSec) {
+        ExamAttempt attempt = inProgress(ownedForUpdate(userId, attemptId));
         ExamQuestion question = questions
                 .findById(questionId)
                 .filter(candidate -> candidate.getExamId().equals(attempt.getExamId()))
@@ -113,28 +135,25 @@ public class ExamService {
         Instant now = clock.instant();
         answers.findById(id)
                 .ifPresentOrElse(
-                        answer -> answer.change(selectedKey.orElse(null), timeSpentSec, now),
-                        () -> answers.save(new ExamAnswer(id, selectedKey.orElse(null), timeSpentSec, now)));
+                        answer -> answer.change(selectedKey, timeSpentSec, now),
+                        () -> answers.save(new ExamAnswer(id, selectedKey, timeSpentSec, now)));
     }
 
     /**
      * Grades the attempt, closes it and publishes {@link ExamResultPublished} through the outbox in the same
-     * transaction. A second submit, also a concurrent one, fails with {@link AttemptAlreadySubmittedException}.
+     * transaction. A second submit, also a concurrent one, fails with {@link AttemptAlreadySubmittedException}: the
+     * attempt is locked, so a concurrent submit waits and then finds it submitted.
      */
     @Transactional
     public ExamResult submit(UUID userId, UUID attemptId) {
-        ExamAttempt attempt = inProgress(owned(userId, attemptId));
+        ExamAttempt attempt = inProgress(ownedForUpdate(userId, attemptId));
         List<ExamQuestion> examQuestions = questions.findByExamIdOrderByOrderNo(attempt.getExamId());
         Map<Integer, ExamAnswer> saved = answersByQuestion(attempt.getId());
         GradedExam graded = ExamGrader.grade(views.keys(examQuestions), selections(saved));
         Instant now = clock.instant();
         storeGrades(attempt.getId(), graded, saved, now);
         attempt.submit(graded.score(), now);
-        try {
-            attempts.saveAndFlush(attempt);
-        } catch (ObjectOptimisticLockingFailureException concurrentSubmit) {
-            throw new AttemptAlreadySubmittedException();
-        }
+        attempts.saveAndFlush(attempt);
         events.publishEvent(resultEvent(attempt, graded, saved, now));
         log.info("Exam submitted attemptId={} examId={}", attempt.getId(), attempt.getExamId());
         return views.result(exam(attempt.getExamId()), attempt, examQuestions, answersByQuestion(attempt.getId()));
@@ -193,6 +212,13 @@ public class ExamService {
     /** A record of another learner answers 404, exactly like a missing one (docs/mimari.md §6). */
     private ExamAttempt owned(UUID userId, UUID attemptId) {
         return attempts.findById(attemptId)
+                .filter(attempt -> attempt.getUserId().equals(userId))
+                .orElseThrow(() -> new NotFoundException(ATTEMPT_NOT_FOUND));
+    }
+
+    /** Like {@link #owned}, with the attempt locked until the transaction ends. */
+    private ExamAttempt ownedForUpdate(UUID userId, UUID attemptId) {
+        return attempts.findByIdForUpdate(attemptId)
                 .filter(attempt -> attempt.getUserId().equals(userId))
                 .orElseThrow(() -> new NotFoundException(ATTEMPT_NOT_FOUND));
     }

@@ -5,6 +5,7 @@ import com.doping.prescription.learner.api.LearnerSignalRecorder.MasteryChange;
 import com.doping.prescription.points.api.PointsLedger;
 import com.doping.prescription.points.api.PointsLedger.Award;
 import com.doping.prescription.quiz.api.QuizAnswered;
+import com.doping.prescription.quiz.domain.AnswerPolicy;
 import com.doping.prescription.quiz.domain.GradedAnswer;
 import com.doping.prescription.quiz.persistence.MicroQuizAttempt;
 import com.doping.prescription.quiz.persistence.MicroQuizAttemptRepository;
@@ -12,12 +13,14 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.UUID;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * The single transaction of an answer (docs/api.md, POST /api/quiz/:id/answer): claim the answer, record the signal,
- * award the points, publish the event. A duplicate answer fails at the claim and rolls everything back.
+ * award the points, publish the event. A duplicate answer fails at the claim with {@link AlreadyAnswered} and rolls
+ * everything back.
  */
 @Component
 class QuizAnswering {
@@ -26,7 +29,7 @@ class QuizAnswering {
     private final LearnerSignalRecorder signals;
     private final PointsLedger points;
     private final ApplicationEventPublisher events;
-    private final QuizProperties properties;
+    private final AnswerPolicy policy;
     private final Clock clock;
 
     QuizAnswering(
@@ -40,27 +43,21 @@ class QuizAnswering {
         this.signals = signals;
         this.points = points;
         this.events = events;
-        this.properties = properties;
+        this.policy = new AnswerPolicy(properties.minResponseMs());
         this.clock = clock;
     }
 
     /**
-     * @throws org.springframework.dao.DataIntegrityViolationException if the learner already answered the question
+     * @throws AlreadyAnswered if the learner already answered the question
      */
     @Transactional
-    Outcome answerOnce(Answer answer) {
+    public Outcome answerOnce(Answer answer) {
         Instant now = clock.instant();
         UUID attemptId = UUID.randomUUID();
-        MicroQuizAttempt attempt = attempts.saveAndFlush(new MicroQuizAttempt(
-                attemptId,
-                answer.userId(),
-                answer.microQuestionId(),
-                answer.impressionId(),
-                new GradedAnswer(answer.storedKey(), answer.correct(), answer.responseMs()),
-                0));
+        MicroQuizAttempt attempt = claim(attemptId, answer);
 
         Outcome outcome;
-        if (answer.responseMs() < properties.minResponseMs()) {
+        if (!policy.counts(answer.responseMs())) {
             // too fast to have read the question: no signal, no points (docs/algoritma.md §1)
             outcome = unchanged(answer.userId(), answer.topicId());
         } else {
@@ -84,9 +81,26 @@ class QuizAnswering {
         return outcome;
     }
 
+    private MicroQuizAttempt claim(UUID attemptId, Answer answer) {
+        try {
+            return attempts.saveAndFlush(new MicroQuizAttempt(
+                    attemptId,
+                    answer.userId(),
+                    answer.microQuestionId(),
+                    answer.impressionId(),
+                    new GradedAnswer(answer.storedKey(), answer.correct(), answer.responseMs()),
+                    0));
+        } catch (DataIntegrityViolationException failure) {
+            if (MicroQuizAttempt.isSecondAnswer(failure)) {
+                throw new AlreadyAnswered(failure);
+            }
+            throw failure;
+        }
+    }
+
     /** The learner's current state, for answers that change nothing. */
     @Transactional(readOnly = true)
-    Outcome unchanged(UUID userId, Integer topicId) {
+    public Outcome unchanged(UUID userId, Integer topicId) {
         return new Outcome(signals.unchanged(userId, topicId), points.current(userId));
     }
 
@@ -105,4 +119,14 @@ class QuizAnswering {
             boolean weakTopic) {}
 
     record Outcome(MasteryChange change, Award award) {}
+
+    /** The learner already answered the question; the answer earns nothing (docs/api.md). */
+    static final class AlreadyAnswered extends RuntimeException {
+
+        private static final long serialVersionUID = 1L;
+
+        AlreadyAnswered(Throwable cause) {
+            super("Micro-question already answered", cause);
+        }
+    }
 }

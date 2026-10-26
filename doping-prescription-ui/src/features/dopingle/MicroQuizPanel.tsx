@@ -4,6 +4,7 @@ import { tr } from '@/shared/i18n/tr';
 import { AnswerBubble, type BubbleState } from '@/shared/ui/AnswerBubble';
 
 import { type MicroQuiz, type QuizResult, useAnswerQuiz } from './quiz';
+import { useQuizTimer } from './useQuizTimer';
 
 interface Props {
   quiz: MicroQuiz;
@@ -11,36 +12,38 @@ interface Props {
   onContinue: () => void;
 }
 
-const SECOND_MS = 1000;
-
 /**
  * The micro-question panel next to the video card (docs/arayuz.md, Mikro-soru penceresi): clicking an option sends
- * the answer at once; the result shows the solution, the points and the mastery change.
+ * the answer at once; the result shows the solution, the points and the mastery change. It takes focus when it opens,
+ * and Escape does not close the Dopingle layer behind it (the question is left with Devam).
  */
 export function MicroQuizPanel({ quiz, topicName, onContinue }: Props) {
   const answer = useAnswerQuiz();
   const [selected, setSelected] = useState<string | null>(null);
-  const [secondsLeft, setSecondsLeft] = useState(quiz.timeLimitSec);
+  // Once an option is chosen the clock stops: the answer is in flight, answered or failed, never "timed out".
+  const { secondsLeft, timedOut } = useQuizTimer(quiz.timeLimitSec, selected === null);
   const shownAt = useRef(0);
+  const panelRef = useRef<HTMLElement>(null);
   const result = answer.data;
-  const timedOut = secondsLeft === 0 && !result;
   const finished = result !== undefined || timedOut || answer.isError;
 
   useEffect(() => {
     shownAt.current = Date.now();
+    panelRef.current?.focus();
   }, []);
 
   useEffect(() => {
-    if (result || secondsLeft === 0) {
-      return;
-    }
-    const timer = setTimeout(() => {
-      setSecondsLeft((seconds) => seconds - 1);
-    }, SECOND_MS);
-    return () => {
-      clearTimeout(timer);
+    // Runs in the capture phase, before the layer's own Escape handler, which skips handled events.
+    const keepLayerOpen = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+      }
     };
-  }, [result, secondsLeft]);
+    window.addEventListener('keydown', keepLayerOpen, { capture: true });
+    return () => {
+      window.removeEventListener('keydown', keepLayerOpen, { capture: true });
+    };
+  }, []);
 
   const choose = (key: string) => {
     if (selected || timedOut) {
@@ -52,13 +55,16 @@ export function MicroQuizPanel({ quiz, topicName, onContinue }: Props) {
 
   return (
     <section
+      ref={panelRef}
+      tabIndex={-1}
       aria-label={tr.quiz.title}
-      className="flex w-[26.25rem] flex-col gap-4 rounded-[1.25rem] bg-surface p-6 text-ink shadow-xl"
+      className="flex w-[26.25rem] flex-col gap-4 rounded-[1.25rem] bg-surface p-6 text-ink shadow-xl focus-visible:outline-2 focus-visible:outline-select"
     >
       <header className="flex items-center justify-between">
         <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-bold">{topicName}</span>
-        {!result && (
-          <span aria-label={tr.quiz.timeLeft} className="font-display text-xl font-bold">
+        {selected === null && !timedOut && (
+          <span className="font-display text-xl font-bold">
+            <span className="sr-only">{tr.quiz.timeLeft}: </span>
             {secondsLeft}
           </span>
         )}

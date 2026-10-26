@@ -8,7 +8,6 @@
   --brand-blue: #3167be;
   --brand-blue-ink: #375f99;
   --brand-red: #eb353d;
-  --accent-pink: #f14a8b;
   --navy: #2b3e51;
   --navy-end: #25384b;
   --navy-deep: #0b304c;
@@ -37,19 +36,16 @@
   --band-unknown: #c0c7ca;
 
   /* Menu icon tiles (docs/arayuz.md, Uygulama kabuğu) */
-  --menu-dopingle: #e23b4a;
   --menu-exams: #2ec27e;
   --menu-home: #8098f4;
   --menu-lessons: #e39648;
-  --menu-way: #a58cf2;
   --menu-guidance: #4fb8e6;
   --menu-stats: #f6c344;
-  --menu-panel: #4a5fe0;
   --menu-one-to-one: #b8336a;
   --menu-help: #1fae8c;
   --menu-live: #e23b4a;
   --menu-stories: #29a9f0;
-  --menu-weak-topics: #f6c344;
+  --menu-progress: #f6c344;
   /* Dopingle card backgrounds, one hue per topic (docs/arayuz.md, Simüle oynatıcı) */
   --topic-1: #3d5a98;
   --topic-2: #2f7d6d;
@@ -61,11 +57,8 @@
   --topic-8: #6b4fbf;
   --topic-9: #c0392b;
   --topic-10: #1f8a9e;
-  /* Home page decorations, drawn with CSS instead of images (AGENTS.md rule 11) */
+  /* Home page accents next to Doping's own images (docs/adr/0006-doping-gorsel-varliklari.md) */
   --task-blue: #1590e0;
-  --sky: #e6f3fb;
-  --grass: #4cae3c;
-  --grass-dark: #2f8a2c;
   --sun: #f9c623;
   --text-muted: #6b7a85;
   --border: #e3e8ea;
@@ -75,7 +68,6 @@
   --color-brand-blue: var(--brand-blue);
   --color-brand-blue-ink: var(--brand-blue-ink);
   --color-brand-red: var(--brand-red);
-  --color-accent-pink: var(--accent-pink);
   --color-navy: var(--navy);
   --color-navy-end: var(--navy-end);
   --color-navy-deep: var(--navy-deep);
@@ -100,15 +92,12 @@
   --color-band-medium: var(--band-medium);
   --color-band-strong: var(--band-strong);
   --color-band-unknown: var(--band-unknown);
-  --color-menu-dopingle: var(--menu-dopingle);
   --color-menu-exams: var(--menu-exams);
-  --color-menu-weak-topics: var(--menu-weak-topics);
+  --color-menu-progress: var(--menu-progress);
   --color-menu-home: var(--menu-home);
   --color-menu-lessons: var(--menu-lessons);
-  --color-menu-way: var(--menu-way);
   --color-menu-guidance: var(--menu-guidance);
   --color-menu-stats: var(--menu-stats);
-  --color-menu-panel: var(--menu-panel);
   --color-menu-one-to-one: var(--menu-one-to-one);
   --color-menu-help: var(--menu-help);
   --color-menu-live: var(--menu-live);
@@ -124,9 +113,6 @@
   --color-topic-9: var(--topic-9);
   --color-topic-10: var(--topic-10);
   --color-task-blue: var(--task-blue);
-  --color-sky: var(--sky);
-  --color-grass: var(--grass);
-  --color-grass-dark: var(--grass-dark);
   --color-sun: var(--sun);
   --color-text-muted: var(--text-muted);
   --color-border: var(--border);
@@ -137,7 +123,7 @@
   --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-display: 'Barlow Semi Condensed', 'Plus Jakarta Sans', sans-serif;
 
-  /* Eksiklerim bars fill from zero on page load (docs/arayuz.md). */
+  /* Gelişimim bars fill from zero on page load (docs/arayuz.md). */
   --animate-bar-fill: bar-fill 0.8s ease-out;
 }
 

@@ -27,6 +27,7 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * The admin's demo control (docs/api.md, Admin): reset a student, load a persona, the presenter's answer key and the
@@ -77,11 +78,15 @@ public class DemoControlService {
                         user.displayName(),
                         user.personalizationEnabled(),
                         points.summary(user.userId()).total(),
-                        profiles.profile(user.userId()).lastExamAttemptId().isPresent()))
+                        profiles.profile(user.userId()).lastExamAttemptId() != null))
                 .toList();
     }
 
-    /** Erases the student's attempts, signals, mastery, feed history, quiz answers and points (and Redis keys). */
+    /**
+     * Erases the student's attempts, signals, mastery, feed history, quiz answers and points (and Redis keys). All
+     * modules erase in one transaction: a failing module leaves the student as they were, not half reset.
+     */
+    @Transactional
     public void reset(String slug) {
         UUID userId = student(slug).userId();
         erasers.forEach(eraser -> eraser.erase(userId));
@@ -91,7 +96,11 @@ public class DemoControlService {
                 erasers.stream().map(UserDataEraser::name).toList());
     }
 
-    /** Resets the student, then brings them into the persona's state. */
+    /**
+     * Resets the student, then brings them into the persona's state, in one transaction: a persona that fails leaves the
+     * student as they were. Concurrent loads share one in-progress attempt (ExamSubmission.startOrResume).
+     */
+    @Transactional
     public void loadPersona(String slug, String personaName) {
         DemoPersona persona = personas.get(personaName);
         if (persona == null) {
@@ -111,10 +120,7 @@ public class DemoControlService {
         Map<Integer, TopicView> catalog = topics.topicsById();
         return exams.answerKey(ScriptedInProgressPersona.MINI_EXAM_1).stream()
                 .map(row -> new AnswerKeyRow(
-                        row.orderNo(),
-                        catalog.get(row.topicId()).name(),
-                        row.correctKey(),
-                        row.scenarioKey().orElse(null)))
+                        row.orderNo(), catalog.get(row.topicId()).name(), row.correctKey(), row.scenarioKey()))
                 .toList();
     }
 
@@ -131,7 +137,7 @@ public class DemoControlService {
                         catalog.get(topic.topicId()).name(),
                         topic.effectiveMastery(),
                         topic.confidence(),
-                        topic.band()))
+                        topic.band().name()))
                 .toList();
         return new FeedDebug(slug, weakest, impressions.lastSession(userId));
     }

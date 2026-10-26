@@ -23,7 +23,11 @@ export function ResultSummary({ result }: { result: ExamResult }) {
 
 function StatCard({ label, value, className }: { label: string; value: number; className: string }) {
   return (
-    <div className={`${className} flex w-44 flex-col items-center justify-center gap-1 rounded-card p-5`}>
+    <div
+      role="group"
+      aria-label={label}
+      className={`${className} flex w-44 flex-col items-center justify-center gap-1 rounded-card p-5`}
+    >
       <p className="font-semibold">{label}</p>
       <p className="text-5xl font-bold">{value}</p>
       <p>{tr.result.questions}</p>

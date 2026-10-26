@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router';
 
 import { tr } from '@/shared/i18n/tr';
 import { BookmarkIcon, CloseIcon, FilterIcon } from '@/shared/ui/icons';
@@ -13,18 +13,23 @@ function returnPath(state: unknown): string {
   return '/app';
 }
 
+const PILL = 'flex w-fit items-center gap-2 rounded-full border border-surface/30 px-3 py-1.5 font-bold';
+
 /**
  * Full-screen dark Dopingle layer (docs/arayuz.md, Dopingle): icon rail on the left, keyboard hint and the Filtre /
- * Kaydedilen pills top left, a close button top right. Escape closes it.
+ * Kaydedilen pills top left, a close button top right. Kaydedilen switches between the feed and the saved videos;
+ * Filtre is not part of the demo. Escape closes it unless the micro-question is open.
  */
 export function DopingleLayer() {
   const location = useLocation();
   const navigate = useNavigate();
   const back = returnPath(location.state);
+  const savedOnly = new URLSearchParams(location.search).get('saved') === '1';
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      // An open micro-question handles Escape itself (marks it handled) so the layer stays open behind it.
+      if (event.key === 'Escape' && !event.defaultPrevented) {
         void navigate(back);
       }
     };
@@ -40,19 +45,19 @@ export function DopingleLayer() {
       <div className="relative flex-1">
         <div className="absolute top-5 left-4 z-10 flex flex-col gap-2 text-xs">
           <p className="text-band-unknown">{tr.dopingle.keyboardHint}</p>
-          {[
-            { label: tr.dopingle.filter, icon: <FilterIcon /> },
-            { label: tr.dopingle.saved, icon: <BookmarkIcon /> },
-          ].map((pill) => (
-            <span
-              key={pill.label}
-              aria-disabled="true"
-              className="flex w-fit items-center gap-2 rounded-full border border-surface/30 bg-surface/10 px-3 py-1.5 font-bold"
-            >
-              {pill.icon}
-              {pill.label}
-            </span>
-          ))}
+          <span aria-disabled="true" className={`${PILL} bg-surface/10`}>
+            <FilterIcon />
+            {tr.dopingle.filter}
+          </span>
+          <Link
+            to={savedOnly ? '/app/dopingle' : '/app/dopingle?saved=1'}
+            state={{ from: back }}
+            aria-current={savedOnly ? 'page' : undefined}
+            className={`${PILL} focus-visible:outline-2 focus-visible:outline-select ${savedOnly ? 'bg-surface text-ink' : 'bg-surface/10 hover:bg-surface/20'}`}
+          >
+            <BookmarkIcon filled={savedOnly} />
+            {tr.dopingle.saved}
+          </Link>
         </div>
         <button
           type="button"
@@ -62,7 +67,8 @@ export function DopingleLayer() {
         >
           <CloseIcon />
         </button>
-        <main className="h-full">
+        {/* Switching between the feed and Kaydedilen starts a new session from the first card */}
+        <main key={location.search} className="h-full">
           <Outlet />
         </main>
       </div>

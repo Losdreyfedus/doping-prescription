@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -28,7 +29,7 @@ public final class Pools {
         return new TopicPool(
                 PoolType.REVIEW_DUE,
                 (topic, context) -> (topic.band() == TopicBand.MEDIUM || topic.band() == TopicBand.STRONG)
-                        && topic.lastSignalAt()
+                        && Optional.ofNullable(topic.lastSignalAt())
                                 .map(last -> !last.plus(reviewAfter).isAfter(context.now()))
                                 .orElse(false),
                 Comparator.comparingDouble(TopicState::mastery),

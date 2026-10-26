@@ -6,9 +6,10 @@ import com.doping.prescription.content.api.ContentCatalog;
 import com.doping.prescription.content.api.TopicCatalog;
 import com.doping.prescription.content.api.TopicCatalog.TopicView;
 import com.doping.prescription.learner.api.LearnerProfileQuery;
+import com.doping.prescription.learner.api.LearnerProfileQuery.Band;
 import com.doping.prescription.learner.api.LearnerProfileQuery.LearnerProfile;
 import com.doping.prescription.learner.api.LearnerProfileQuery.TopicProfile;
-import com.doping.prescription.learner.domain.MasteryBand;
+import com.doping.prescription.learner.api.LearnerProfileQuery.Trend;
 import com.doping.prescription.learner.domain.MasteryRounding;
 import com.doping.prescription.shared.error.NotFoundException;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,18 +17,18 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
-/** The Eksiklerim view of a learner's profile (docs/api.md, GET /api/learner/profile). */
+/** The Gelişimim view of a learner's profile (docs/api.md, GET /api/learner/profile). */
 @Service
 public class ProfileViewService {
 
     /** Weakest first; topics without data last (docs/api.md). */
     private static final Comparator<TopicProfileView> DISPLAY_ORDER = Comparator.comparing(
-                    (TopicProfileView topic) -> MasteryBand.UNKNOWN.name().equals(topic.band()))
+                    (TopicProfileView topic) -> topic.band() == Band.UNKNOWN)
             .thenComparingDouble(TopicProfileView::mastery)
             .thenComparing(TopicProfileView::topicId);
 
@@ -55,10 +56,10 @@ public class ProfileViewService {
         return new ProfileView(
                 userId,
                 user.personalizationEnabled(),
-                profile.lastExamAttemptId().orElse(null),
+                profile.lastExamAttemptId(),
                 profile.topics().stream()
                         .map(TopicProfile::lastSignalAt)
-                        .flatMap(Optional::stream)
+                        .filter(Objects::nonNull)
                         .max(Comparator.naturalOrder())
                         .orElse(null),
                 topicViews);
@@ -73,7 +74,7 @@ public class ProfileViewService {
                 MasteryRounding.forApi(topic.confidence()).doubleValue(),
                 topic.band(),
                 topic.trend(),
-                topic.lastSignalAt().orElse(null),
+                topic.lastSignalAt(),
                 readyContent.getOrDefault(topic.topicId(), 0));
     }
 
@@ -96,8 +97,6 @@ public class ProfileViewService {
 
     /**
      * @param mastery           decayed mastery, 3 decimals (HALF_UP)
-     * @param band              UNKNOWN, WEAK, MEDIUM or STRONG
-     * @param trend             UP, DOWN or FLAT
      * @param readyContentCount LIVE videos whose primary topic this is
      */
     public record TopicProfileView(
@@ -106,13 +105,8 @@ public class ProfileViewService {
             String name,
             double mastery,
             double confidence,
-
-            @Schema(allowableValues = {"UNKNOWN", "WEAK", "MEDIUM", "STRONG"})
-            String band,
-
-            @Schema(allowableValues = {"UP", "DOWN", "FLAT"})
-            String trend,
-
+            Band band,
+            Trend trend,
             @Schema(nullable = true) @Nullable Instant lastSignalAt,
             int readyContentCount) {}
 }

@@ -1,6 +1,10 @@
 import { tr } from '@/shared/i18n/tr';
+import { useFocusTrap } from '@/shared/ui/useFocusTrap';
 
-/** Confirmation before submitting: "1 soru boş. Denemeyi bitirmek istiyor musun?" (docs/arayuz.md). */
+/**
+ * Confirmation before submitting: "1 soru boş. Denemeyi bitirmek istiyor musun?" (docs/arayuz.md). A modal: focus
+ * starts on Vazgeç and stays inside, Escape cancels, and focus returns to the button that opened it.
+ */
 export function FinishDialog({
   blank,
   busy,
@@ -12,9 +16,16 @@ export function FinishDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  // While the submit is in flight the dialog stays open; Escape then does nothing.
+  const dialogRef = useFocusTrap<HTMLDivElement>(() => {
+    if (!busy) {
+      onCancel();
+    }
+  });
   return (
     <div className="fixed inset-0 z-10 flex items-center justify-center bg-ink/50">
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="finish-title"

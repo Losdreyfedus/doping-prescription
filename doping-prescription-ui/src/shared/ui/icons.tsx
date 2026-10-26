@@ -209,9 +209,9 @@ export function FilterIcon() {
   );
 }
 
-export function BookmarkIcon() {
+export function BookmarkIcon({ filled = false }: { filled?: boolean }) {
   return (
-    <Icon>
+    <Icon fill={filled ? 'currentColor' : 'none'}>
       <path d="M6 3h12v18l-6-4-6 4z" />
     </Icon>
   );
@@ -233,10 +233,16 @@ export function HeartIcon({ filled = false }: { filled?: boolean }) {
   );
 }
 
-export function SpeakerIcon() {
+/** A speaker with sound waves, or crossed out when muted. */
+export function SpeakerIcon({ muted = false }: { muted?: boolean }) {
   return (
     <Icon>
-      <path d="M4 9v6h4l5 4V5L8 9zM17 9l4 6M21 9l-4 6" />
+      <path d="M4 9v6h4l5 4V5L8 9z" />
+      {muted ? (
+        <path d="M17 9l4 6M21 9l-4 6" />
+      ) : (
+        <path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" />
+      )}
     </Icon>
   );
 }

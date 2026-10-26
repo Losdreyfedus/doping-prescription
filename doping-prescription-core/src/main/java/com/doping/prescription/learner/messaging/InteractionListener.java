@@ -29,9 +29,9 @@ class InteractionListener {
     @KafkaListener(topics = TOPIC, groupId = "learner")
     void onInteraction(ConsumerRecord<String, byte[]> record) {
         Interaction event = json.readValue(record.value(), Interaction.class);
-        mastery.recordServed(event.eventId(), event.userId(), event.topicId(), event.occurredAt());
+        mastery.recordServed(event.eventId(), event.userId(), event.topicId(), event.interaction(), event.occurredAt());
     }
 
     /** The fields of feed.interaction-recorded the learner uses (docs/api.md). */
-    record Interaction(UUID eventId, UUID userId, Integer topicId, Instant occurredAt) {}
+    record Interaction(UUID eventId, UUID userId, Integer topicId, String interaction, Instant occurredAt) {}
 }

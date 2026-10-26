@@ -41,7 +41,7 @@ class PointsLedgerService implements PointsLedger {
     public PointsLedger.Award award(UUID userId, String refId, boolean correct, boolean weakTopic) {
         Instant now = clock.instant();
         String answerRef = "quiz:" + refId;
-        PointsStreak streak = streaks.findById(userId).orElseGet(() -> new PointsStreak(userId, now));
+        PointsStreak streak = streaks.findForUpdate(userId).orElseGet(() -> new PointsStreak(userId, now));
         if (ledger.existsByRefId(answerRef)) {
             return new PointsLedger.Award(0, total(userId), streak.getCurrent(), rules.streakLength());
         }

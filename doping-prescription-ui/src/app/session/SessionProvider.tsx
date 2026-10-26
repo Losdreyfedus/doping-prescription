@@ -2,8 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { type ReactNode, useCallback, useMemo, useState } from 'react';
 
 import { clearSession, readSession, type Session, writeSession } from '@/shared/lib/session';
-
-import { SessionContext, type SessionState } from './sessionContext';
+import { SessionContext, type SessionState } from '@/shared/session/sessionContext';
 
 /** Keeps the session in sessionStorage so a reload keeps the user logged in. */
 export function SessionProvider({ children }: { children: ReactNode }) {

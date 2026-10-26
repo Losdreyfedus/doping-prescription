@@ -1,24 +1,13 @@
-import { Outlet, useLocation } from 'react-router';
+import { Outlet } from 'react-router';
 
-import { DopingleLayer } from './DopingleLayer';
-import { PanelLayout } from './PanelLayout';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 
 /**
- * Student layout (docs/arayuz.md, Uygulama kabuğu). Dopingle is not a menu page: the lightning button opens it as a
- * full-screen layer with an icon rail, and closing it returns to the page it was opened from. Gelişimim uses the
- * dark panel layout.
+ * Student layout (docs/arayuz.md, Uygulama kabuğu): Doping Hafıza's menu on the left and the top bar. Dopingle (a
+ * full-screen layer) and Gelişimim (the dark panel layout) have their own layouts in the route tree (routes.tsx).
  */
 export function AppShell() {
-  const { pathname } = useLocation();
-
-  if (pathname.startsWith('/app/dopingle')) {
-    return <DopingleLayer />;
-  }
-  if (pathname.startsWith('/app/gelisimim')) {
-    return <PanelLayout />;
-  }
   return (
     <div className="flex min-h-screen bg-surface">
       <Sidebar />

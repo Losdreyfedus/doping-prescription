@@ -8,6 +8,7 @@ import com.doping.prescription.content.api.TopicCatalog;
 import com.doping.prescription.feed.api.ImpressionQuery;
 import com.doping.prescription.feed.api.ImpressionQuery.ImpressionView;
 import com.doping.prescription.points.api.PointsLedger;
+import com.doping.prescription.quiz.application.QuizAnswering.AlreadyAnswered;
 import com.doping.prescription.quiz.application.QuizAnswering.Answer;
 import com.doping.prescription.quiz.application.QuizAnswering.Outcome;
 import com.doping.prescription.quiz.application.QuizTokens.QuizClaims;
@@ -20,7 +21,6 @@ import com.doping.prescription.quiz.domain.OptionShuffle;
 import com.doping.prescription.quiz.domain.OptionShuffle.Shuffled;
 import com.doping.prescription.quiz.persistence.MicroQuizAttemptRepository;
 import com.doping.prescription.shared.error.NotFoundException;
-import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.HashSet;
@@ -28,6 +28,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.random.RandomGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -35,8 +39,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class QuizService {
 
-    private static final String WEAK_TOPIC_POOL = "WEAK_TOPIC";
     private static final Duration RATE_WINDOW = Duration.ofMinutes(1);
+    private static final int ANSWER_ATTEMPTS = 2;
+    private static final Logger log = LoggerFactory.getLogger(QuizService.class);
 
     private final ImpressionQuery impressions;
     private final ContentCatalog content;
@@ -49,7 +54,7 @@ public class QuizService {
     private final QuizAnswering answering;
     private final QuizProperties properties;
     private final Clock clock;
-    private final SecureRandom random = new SecureRandom();
+    private final RandomGenerator random;
 
     @SuppressWarnings("checkstyle:ParameterNumber") // one collaborator per module and per step of the answer
     QuizService(
@@ -63,7 +68,8 @@ public class QuizService {
             QuizTokenRegistry usedTokens,
             QuizAnswering answering,
             QuizProperties properties,
-            Clock clock) {
+            Clock clock,
+            RandomGenerator random) {
         this.impressions = impressions;
         this.content = content;
         this.questions = questions;
@@ -75,6 +81,7 @@ public class QuizService {
         this.answering = answering;
         this.properties = properties;
         this.clock = clock;
+        this.random = random;
     }
 
     /**
@@ -126,7 +133,7 @@ public class QuizService {
                         storedKey,
                         correct,
                         responseMs,
-                        WEAK_TOPIC_POOL.equals(impression.pool())));
+                        impression.weakTopic()));
         return result(correct, claims, question, outcome);
     }
 
@@ -145,15 +152,43 @@ public class QuizService {
                         outcome.change().after()));
     }
 
-    /** The answer counts only on the token's first use and the question's first answer; otherwise it earns nothing. */
+    /**
+     * The answer counts only on the token's first use and the question's first answer; otherwise it earns nothing. An
+     * answer that fails before it is stored gives the token back, so the learner can send it again.
+     */
     private Outcome grade(QuizClaims claims, Answer answer) {
         if (!usedTokens.firstUse(claims.tokenId(), properties.tokenTtl())) {
             return answering.unchanged(answer.userId(), answer.topicId());
         }
+        boolean settled = false;
         try {
-            return answering.answerOnce(answer);
-        } catch (DataIntegrityViolationException alreadyAnswered) {
+            Outcome outcome = answerRetryingConflicts(answer);
+            settled = true;
+            return outcome;
+        } catch (AlreadyAnswered alreadyAnswered) {
+            settled = true;
             return answering.unchanged(answer.userId(), answer.topicId());
+        } finally {
+            if (!settled) {
+                usedTokens.release(claims.tokenId());
+            }
+        }
+    }
+
+    /**
+     * A concurrent answer of the same learner can create the same mastery or streak row first (unique key) or change it
+     * (version); the transaction rolls back and one retry reads the committed row.
+     */
+    private Outcome answerRetryingConflicts(Answer answer) {
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return answering.answerOnce(answer);
+            } catch (ConcurrencyFailureException | DataIntegrityViolationException conflict) {
+                if (attempt >= ANSWER_ATTEMPTS) {
+                    throw conflict;
+                }
+                log.warn("Retrying a quiz answer after a concurrent update userId={}", answer.userId());
+            }
         }
     }
 
@@ -177,7 +212,7 @@ public class QuizService {
                         .map(entry -> new OptionView(entry.getKey(), entry.getValue()))
                         .toList(),
                 properties.timeLimitSec(),
-                points.pointsAvailable(WEAK_TOPIC_POOL.equals(impression.pool())),
+                points.pointsAvailable(impression.weakTopic()),
                 token);
     }
 

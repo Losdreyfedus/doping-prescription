@@ -10,10 +10,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.random.RandomGenerator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Builds feed pages from the pools (docs/algoritma.md §2-4): quotas per page, ranking, then the diversity rules applied
@@ -34,13 +35,24 @@ public final class FeedComposer {
         this.ranker = Objects.requireNonNull(ranker, "ranker");
         this.templates = templates.stream().collect(Collectors.toMap(ReasonTemplate::pool, Function.identity()));
         this.maxSameTopicInRow = maxSameTopicInRow;
+        // fail at startup, not on every request (which would silently serve the fallback feed)
+        Stream.concat(this.pools.keySet().stream(), Stream.of(PoolType.FALLBACK))
+                .filter(type -> !this.templates.containsKey(type))
+                .findFirst()
+                .ifPresent(type -> {
+                    throw new IllegalArgumentException("No reason template for pool " + type);
+                });
     }
 
     public String algoVersion() {
         return ranker.version();
     }
 
-    /** {@code pages} consecutive pages; a video appears at most once, and rule 1 holds across page boundaries. */
+    /**
+     * {@code pages} consecutive pages; a video appears at most once, and rule 1 holds across page boundaries. Topics
+     * deferred by rule 3 are left out of the first page only and come back from the second page on (docs/algoritma.md
+     * §4: deferred to the next page).
+     */
     public List<Card> compose(FeedContext context, Map<PoolType, Double> quotas, int pageSize, int pages) {
         return compose(context, quotas, pageSize, pages, List.of());
     }
@@ -60,7 +72,8 @@ public final class FeedComposer {
             if (size <= 0) {
                 continue;
             }
-            List<Card> next = page(context, quotas, size, chosen, cards);
+            Set<Integer> deferred = page == 0 ? context.deferredTopics() : Set.of();
+            List<Card> next = page(context, quotas, size, chosen, deferred, cards);
             if (next.isEmpty()) {
                 break;
             }
@@ -76,6 +89,13 @@ public final class FeedComposer {
             if (cards.size() == limit || context.excluded().contains(contentId)) {
                 continue;
             }
+            // pinned videos open the first page, where deferred topics (rule 3) wait for the next one
+            boolean deferred = context.videos().stream()
+                    .anyMatch(video -> video.contentId().equals(contentId)
+                            && context.deferredTopics().contains(video.topicId()));
+            if (deferred) {
+                continue;
+            }
             // the first pool (in quota order) that offers the video decides its pool and reason
             quotas.keySet().stream()
                     .map(pools::get)
@@ -89,14 +109,9 @@ public final class FeedComposer {
         return cards;
     }
 
-    /** All cards of a single topic, best first (Eksiklerim → Çalış); the diversity rule does not apply. */
+    /** All cards of a single topic, best first (Gelişimim → Çalış); the diversity rule does not apply. */
     public List<Card> topicOnly(FeedContext context, Integer topicId, int size) {
-        FeedContext.TopicState topic = context.topic(topicId);
-        PoolType pool = switch (topic.band()) {
-            case WEAK -> PoolType.WEAK_TOPIC;
-            case UNKNOWN -> PoolType.EXPLORE;
-            default -> PoolType.POPULAR;
-        };
+        PoolType pool = poolOf(context.topic(topicId));
         return context.videos().stream()
                 .filter(video -> video.topicId().equals(topicId))
                 .filter(video -> !context.excluded().contains(video.contentId()))
@@ -107,11 +122,43 @@ public final class FeedComposer {
                 .toList();
     }
 
-    /** Personalization off: every LIVE video in an order seeded by the session (docs/algoritma.md §2). */
-    public List<Card> fallback(FeedContext context, long seed, int size) {
+    /**
+     * The given videos in the given order (Kaydedilen, newest saved first); the diversity rule does not apply. Each card
+     * takes the pool of its topic's band, like {@link #topicOnly}; videos that are not LIVE or were already shown in the
+     * session are skipped.
+     */
+    public List<Card> chosen(FeedContext context, List<Integer> contentIds, int size) {
+        Map<Integer, FeedContext.Video> live =
+                context.videos().stream().collect(Collectors.toMap(FeedContext.Video::contentId, Function.identity()));
+        return contentIds.stream()
+                .filter(contentId -> !context.excluded().contains(contentId))
+                .map(live::get)
+                .filter(Objects::nonNull)
+                .limit(size)
+                .map(video -> {
+                    Candidate candidate = new Candidate(video, poolOf(context.topic(video.topicId())), video.topicId());
+                    return card(ranker.rank(candidate, context), List.of(), context);
+                })
+                .toList();
+    }
+
+    /** The pool a card of a single, chosen topic belongs to: what the learner's band would have offered it from. */
+    private static PoolType poolOf(FeedContext.TopicState topic) {
+        return switch (topic.band()) {
+            case WEAK -> PoolType.WEAK_TOPIC;
+            case UNKNOWN -> PoolType.EXPLORE;
+            default -> PoolType.POPULAR;
+        };
+    }
+
+    /**
+     * Personalization off: every LIVE video in a shuffled order (docs/algoritma.md §2). The caller seeds {@code random}
+     * by the session, so a session keeps its order.
+     */
+    public List<Card> fallback(FeedContext context, RandomGenerator random, int size) {
         List<FeedContext.Video> videos = new ArrayList<>(context.videos());
         videos.removeIf(video -> context.excluded().contains(video.contentId()));
-        Collections.shuffle(videos, new Random(seed));
+        Collections.shuffle(videos, random);
         ScoreBreakdown none = new ScoreBreakdown(0, 0, 0, 0, 0, List.of());
         return videos.stream()
                 .limit(size)
@@ -123,13 +170,19 @@ public final class FeedComposer {
     }
 
     private List<Card> page(
-            FeedContext context, Map<PoolType, Double> quotas, int size, Set<Integer> chosen, List<Card> before) {
+            FeedContext context,
+            Map<PoolType, Double> quotas,
+            int size,
+            Set<Integer> chosen,
+            Set<Integer> deferredTopics,
+            List<Card> before) {
         Map<PoolType, List<Ranked>> rankedByPool = new LinkedHashMap<>();
         Map<PoolType, Integer> available = new EnumMap<>(PoolType.class);
         for (PoolType type : quotas.keySet()) {
             CandidatePool pool = Objects.requireNonNull(pools.get(type), () -> "no pool for " + type);
             List<Ranked> ranked = pool.candidates(context).stream()
                     .filter(candidate -> !chosen.contains(candidate.video().contentId()))
+                    .filter(candidate -> !deferredTopics.contains(candidate.targetTopicId()))
                     .filter(candidate -> type == PoolType.REVIEW_DUE
                             || !context.completedRecently()
                                     .contains(candidate.video().contentId()))
@@ -147,19 +200,19 @@ public final class FeedComposer {
                 .filter(candidate -> onPage.add(candidate.candidate().video().contentId()))
                 .limit(counts.getOrDefault(type, 0))
                 .forEach(picked::add));
-        picked.removeIf(
-                ranked -> context.deferredTopics().contains(ranked.candidate().targetTopicId()));
         picked.sort(Comparator.comparingDouble(Ranked::score).reversed());
         return arrange(picked, before, context);
     }
 
-    /** Rule 1, greedily: the best card that does not make a topic appear too often in a row. */
+    /**
+     * Rule 1, greedily: the best card that does not make a topic appear too often in a row. The row continues from the
+     * cards the session already served, so a queue rebuilt mid-session does not start with a third card of a topic.
+     */
     private List<Card> arrange(List<Ranked> pending, List<Card> before, FeedContext context) {
         List<Card> arranged = new ArrayList<>();
         Map<Ranked, List<String>> notes = new LinkedHashMap<>();
-        List<Integer> recentTopics = new ArrayList<>(before.stream()
-                .map(card -> card.ranked().candidate().targetTopicId())
-                .toList());
+        List<Integer> recentTopics = new ArrayList<>(context.recentTopics());
+        before.forEach(card -> recentTopics.add(card.ranked().candidate().targetTopicId()));
         List<Ranked> remaining = new ArrayList<>(pending);
         while (!remaining.isEmpty()) {
             Ranked next = remaining.stream()

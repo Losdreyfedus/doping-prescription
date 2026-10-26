@@ -24,10 +24,23 @@ class RedisQuizTokenRegistry implements QuizTokenRegistry {
     @Override
     public boolean firstUse(UUID tokenId, Duration ttl) {
         try {
-            return Boolean.TRUE.equals(redis.opsForValue().setIfAbsent("quiz:token-used:" + tokenId, "1", ttl));
+            return Boolean.TRUE.equals(redis.opsForValue().setIfAbsent(key(tokenId), "1", ttl));
         } catch (DataAccessException e) {
             log.warn("Quiz token registry unavailable, relying on the database constraint: {}", e.getMessage());
             return true;
         }
+    }
+
+    @Override
+    public void release(UUID tokenId) {
+        try {
+            redis.delete(key(tokenId));
+        } catch (DataAccessException e) {
+            log.warn("Quiz token registry unavailable, token not released: {}", e.getMessage());
+        }
+    }
+
+    private static String key(UUID tokenId) {
+        return "quiz:token-used:" + tokenId;
     }
 }

@@ -48,7 +48,8 @@ export function ProgressPage() {
         </div>
         {profile.isPending && <p>{tr.progress.loading}</p>}
         {profile.isError && <p role="alert">{tr.errors.loadFailed}</p>}
-        {profile.isSuccess && (
+        {profile.isSuccess && profile.data.topics.length === 0 && <p>{tr.progress.empty}</p>}
+        {profile.isSuccess && profile.data.topics.length > 0 && (
           <ul aria-label={tr.progress.listLabel} className="flex flex-col gap-2">
             {profile.data.topics.map((topic) => (
               <TopicMasteryRow key={topic.topicId} topic={topic} />

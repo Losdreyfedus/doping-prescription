@@ -1,7 +1,7 @@
 import { useParams } from 'react-router';
 
-import { useSession } from '@/app/session/sessionContext';
 import { tr } from '@/shared/i18n/tr';
+import { useSession } from '@/shared/session/sessionContext';
 import { Avatar } from '@/shared/ui/Avatar';
 
 import { useExamResult } from './api';

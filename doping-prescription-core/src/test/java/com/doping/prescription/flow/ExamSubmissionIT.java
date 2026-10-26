@@ -100,8 +100,12 @@ class ExamSubmissionIT {
                 .extractingPath("$.byTopic[?(@.topicId == 9)].name")
                 .asArray()
                 .containsExactly("Olasılık");
-        assertThat(post(token, "/api/exam-attempts/" + attemptId + "/submit")).hasStatus(409);
-        assertThat(saveAnswer(token, attemptId, 108, "A")).hasStatus(409);
+        MvcTestResult secondSubmit = post(token, "/api/exam-attempts/" + attemptId + "/submit");
+        assertThat(secondSubmit).hasStatus(409);
+        assertThat(secondSubmit).bodyJson().extractingPath("$.code").isEqualTo("ATTEMPT_ALREADY_SUBMITTED");
+        MvcTestResult lateAnswer = saveAnswer(token, attemptId, 108, "A");
+        assertThat(lateAnswer).hasStatus(409);
+        assertThat(lateAnswer).bodyJson().extractingPath("$.code").isEqualTo("ATTEMPT_ALREADY_SUBMITTED");
 
         List<ConsumerRecord<String, String>> events = eventsFor(attemptId);
         assertThat(events).singleElement().satisfies(event -> {

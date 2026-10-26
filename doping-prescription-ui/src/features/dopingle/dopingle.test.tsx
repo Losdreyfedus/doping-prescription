@@ -29,6 +29,7 @@ const card = (
   reasonText,
   hasMicroQuiz: true,
   pointsAvailable: 15,
+  saved: false,
 });
 
 const page: Schemas['FeedPage'] = {
@@ -73,11 +74,109 @@ describe('Dopingle', () => {
     expect(JSON.stringify(recorded)).toContain('"event":"VIEW_START"');
   });
 
+  it('saves a video from its bookmark and opens the saved videos from Kaydedilen', async () => {
+    const saved: string[] = [];
+    const feedRequests: URL[] = [];
+    server.use(
+      http.get(`${API}/api/feed`, ({ request }) => {
+        const url = new URL(request.url);
+        feedRequests.push(url);
+        if (url.searchParams.has('cursor')) {
+          return HttpResponse.json({ ...page, cards: [] });
+        }
+        return HttpResponse.json(
+          url.searchParams.get('saved') === 'true'
+            ? { ...page, cards: [{ ...page.cards[0], saved: true }] }
+            : page,
+        );
+      }),
+      http.put(`${API}/api/feed/saved/:contentId`, ({ params }) => {
+        saved.push(String(params.contentId));
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    writeSession({ token: 'token-deniz', user: meOf('deniz') });
+    renderApp('/app/dopingle');
+
+    const bookmark = await screen.findByRole('button', { name: 'Kaydet' });
+    expect(bookmark).toHaveAttribute('aria-pressed', 'false');
+    await userEvent.click(bookmark);
+
+    expect(await screen.findByRole('button', { name: 'Kaydedilenlerden çıkar' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(saved).toEqual(['30']);
+
+    await userEvent.click(screen.getByRole('link', { name: 'Kaydedilen' }));
+
+    expect(await screen.findByRole('link', { name: 'Kaydedilen' })).toHaveAttribute('aria-current', 'page');
+    await expect.poll(() => feedRequests.at(-1)?.searchParams.get('saved')).toBe('true');
+    expect(await screen.findByRole('button', { name: 'Kaydedilenlerden çıkar' })).toBeInTheDocument();
+  });
+
+  it('puts the bookmark back when saving fails', async () => {
+    server.use(
+      http.get(`${API}/api/feed`, ({ request }) =>
+        HttpResponse.json(new URL(request.url).searchParams.has('cursor') ? { ...page, cards: [] } : page),
+      ),
+      http.put(`${API}/api/feed/saved/:contentId`, () =>
+        HttpResponse.json({ status: 500, detail: 'Sunucu hatası' }, { status: 500 }),
+      ),
+    );
+    writeSession({ token: 'token-deniz', user: meOf('deniz') });
+    renderApp('/app/dopingle');
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Kaydet' }));
+
+    expect(await screen.findByText('Video kaydedilemedi, tekrar dene.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Kaydet' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('has no sound to turn on for a simulated video', async () => {
+    server.use(
+      http.get(`${API}/api/feed`, ({ request }) =>
+        HttpResponse.json(new URL(request.url).searchParams.has('cursor') ? { ...page, cards: [] } : page),
+      ),
+    );
+    writeSession({ token: 'token-deniz', user: meOf('deniz') });
+    renderApp('/app/dopingle');
+
+    expect(await screen.findByRole('button', { name: 'Bu videoda ses yok' })).toBeDisabled();
+  });
+
+  it('shows how to save when there are no saved videos', async () => {
+    server.use(http.get(`${API}/api/feed`, () => HttpResponse.json({ ...page, cards: [] })));
+    writeSession({ token: 'token-deniz', user: meOf('deniz') });
+    renderApp('/app/dopingle?saved=1');
+
+    expect(await screen.findByText(/Henüz kaydettiğin video yok/)).toBeInTheDocument();
+  });
+
   it('says so when there is nothing to show', async () => {
     server.use(http.get(`${API}/api/feed`, () => HttpResponse.json({ ...page, cards: [] })));
     writeSession({ token: 'token-deniz', user: meOf('deniz') });
     renderApp('/app/dopingle');
 
     expect(await screen.findByText('Şu an gösterilecek video yok.')).toBeInTheDocument();
+  });
+
+  it('offers a retry when the feed cannot be loaded', async () => {
+    let calls = 0;
+    server.use(
+      http.get(`${API}/api/feed`, () => {
+        calls += 1;
+        return calls === 1
+          ? HttpResponse.json({ status: 500, detail: 'Sunucu hatası' }, { status: 500 })
+          : HttpResponse.json(page);
+      }),
+    );
+    writeSession({ token: 'token-deniz', user: meOf('deniz') });
+    renderApp('/app/dopingle');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Akış yüklenemedi.');
+    await userEvent.click(screen.getByRole('button', { name: 'Tekrar dene' }));
+
+    expect(await screen.findByText('Son denemende Olasılık: 3 soruda 0 doğru')).toBeInTheDocument();
   });
 });

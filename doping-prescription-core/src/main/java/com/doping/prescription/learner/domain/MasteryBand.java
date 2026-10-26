@@ -1,7 +1,7 @@
 package com.doping.prescription.learner.domain;
 
 /**
- * The single band definition shared by the Eksiklerim colours and the feed's weak-topic pool (docs/algoritma.md §1):
+ * The single band definition shared by the Gelişimim colours and the feed's weak-topic pool (docs/algoritma.md §1):
  * a red topic is exactly a topic the feed prescribes.
  */
 public enum MasteryBand {
