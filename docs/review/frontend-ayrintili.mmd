@@ -1,0 +1,29 @@
+flowchart TB
+    OAS["openapi.json<br/>(backend springdoc'tan,<br/>OpenApiContractIT sapmayı yakalar)"]
+    GEN["npm run gen:api<br/>openapi-typescript"]
+    SCHEMA["shared/api/generated/schema.ts"]
+    CLIENT["shared/api/client.ts<br/>openapi-fetch + JWT + ProblemDetail"]
+
+    subgraph APPL["app/"]
+        ROUTES["routes.tsx · App.tsx"]
+        LAYOUT["layout/ (menü, üst çubuk)"]
+        SESSION["session/"]
+    end
+
+    subgraph FEAT["features/ (birbirini import edemez)"]
+        HOME["home<br/>Ana Sayfa"]
+        EXAMS["exams<br/>liste · çözme · sonuç"]
+        DOP["dopingle<br/>akış · oynatıcı · mikro-soru"]
+        LEARN["learner<br/>Gelişimim"]
+        ADM["admin<br/>demo kontrolü · video etkinliği"]
+        AUTHF["auth<br/>giriş"]
+    end
+
+    SHAREDUI["shared/ui · i18n · session · lib"]
+
+    OAS --> GEN --> SCHEMA --> CLIENT
+    ROUTES --> FEAT
+    LAYOUT --> SHAREDUI
+    FEAT --> CLIENT
+    FEAT --> SHAREDUI
+    CLIENT -->|"TanStack Query"| API["Spring Boot API"]

@@ -1,0 +1,40 @@
+sequenceDiagram
+    autonumber
+    actor Ö as Öğrenci
+    participant UI as React
+    participant EX as exam
+    participant DB as PostgreSQL<br/>(outbox)
+    participant K as Kafka
+    participant LE as learner
+    participant FE as feed
+    participant QZ as quiz
+    participant PT as points
+
+    Ö->>UI: "Sınavı Bitir"
+    UI->>EX: POST /api/exam-attempts/{id}/submit
+    EX->>DB: notlandır + ExamResultPublished (aynı transaction)
+    EX-->>UI: 8 D · 3 Y · 1 B · 7,25 net
+    DB-->>K: outbox → exam.result-published
+    K->>LE: tüketir (eventId ile idempotent)
+    LE->>LE: ustalık hesabı (Olasılık %17)
+    LE->>DB: skor + MasteryChanged (aynı transaction)
+    DB-->>K: learner.mastery-changed
+    K->>FE: tüketir → Redis kuyruğunu sil
+    UI->>LE: GET /api/learner/profile (bant: "akışın güncellendi")
+    Ö->>UI: "Reçeteni gör"
+    UI->>FE: GET /api/feed
+    FE->>LE: profili oku (Redis önbellekli)
+    FE-->>UI: kartlar + "neden bu video"
+    Note over UI: video izlenir (≥ %70)
+    UI->>QZ: GET /api/feed/cards/{id}/quiz
+    QZ-->>UI: soru + imzalı token (cevap yok)
+    Ö->>UI: cevap
+    UI->>QZ: POST /api/quiz/{id}/answer
+    rect rgb(235, 243, 255)
+        Note over QZ,PT: tek transaction, senkron
+        QZ->>LE: sinyal yaz → %17 → %27
+        QZ->>PT: +15 puan (refId ile tekil)
+    end
+    QZ-->>UI: Doğru · +15 · %17 → %27
+    Ö->>UI: Gelişimim
+    UI->>LE: GET /api/learner/profile

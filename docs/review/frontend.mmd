@@ -1,0 +1,7 @@
+flowchart TB
+    OAS["openapi.json (backend sözleşmesi)"] -->|"npm run gen:api"| SCHEMA["Üretilen TypeScript tipleri"]
+    SCHEMA --> CLIENT["API istemcisi<br/>openapi-fetch + TanStack Query"]
+    CLIENT --> FEAT["features/<br/>home · exams · dopingle<br/>learner · admin · auth"]
+    SHARED["shared/ui · i18n"] --> FEAT
+    FEAT --> APPL["app/: rotalar · menü · oturum"]
+    CLIENT <-->|"REST + JWT"| API["Spring Boot API"]

@@ -1,0 +1,17 @@
+flowchart LR
+    UI["React<br/>uygulaması"]
+    EXAM["exam<br/>deneme"]
+    LEARNER["learner<br/>ustalık skoru"]
+    FEED["feed<br/>kişisel akış"]
+    QUIZ["quiz<br/>mikro-soru"]
+    POINTS["points<br/>puan"]
+    STORE[("PostgreSQL: veri + outbox<br/>Redis: önbellek")]
+
+    UI -->|"Sınavı Bitir"| EXAM
+    EXAM ==>|"Kafka<br/>sonuç yayınlandı"| LEARNER
+    LEARNER ==>|"Kafka<br/>ustalık değişti"| FEED
+    FEED -->|"reçete"| UI
+    UI -->|"cevap"| QUIZ
+    QUIZ -->|"anında"| LEARNER
+    QUIZ -->|"anında"| POINTS
+    LEARNER -.- STORE

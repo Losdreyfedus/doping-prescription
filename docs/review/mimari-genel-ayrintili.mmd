@@ -1,0 +1,32 @@
+flowchart LR
+    UI["React 19 + Vite"]
+    AUTH["auth<br/>JWT"]
+    CONTENT["content<br/>video, konu"]
+    EXAM["exam"]
+    LEARNER["learner"]
+    FEED["feed"]
+    QUIZ["quiz"]
+    POINTS["points"]
+    ADMIN["admin<br/>demo, feed-debug,<br/>video etkinliği"]
+    T1(["exam.result-published"])
+    T2(["learner.mastery-changed"])
+    T3(["feed.interaction-recorded"])
+    T4(["quiz.answered<br/>(tüketicisi yok)"])
+    PG[("PostgreSQL 16<br/>outbox = event_publication")]
+    REDIS[("Redis 7<br/>profil, kuyruk, token")]
+
+    UI -->|"REST + JWT"| AUTH
+    EXAM -. outbox .-> T1 --> LEARNER
+    LEARNER -. outbox .-> T2 --> FEED
+    FEED -. outbox .-> T3 --> LEARNER
+    QUIZ -. outbox .-> T4
+    QUIZ -->|senkron| LEARNER
+    QUIZ -->|senkron| POINTS
+    QUIZ -->|senkron| FEED
+    FEED -->|senkron profil| LEARNER
+    FEED -->|kart puanı| POINTS
+    EXAM --> CONTENT
+    FEED --> CONTENT
+    ADMIN -->|"yalnız api"| FEED
+    LEARNER --- PG
+    FEED --- REDIS
