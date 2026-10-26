@@ -29,3 +29,5 @@ test-results/
 
 # Generated from doping-prescription-ui/openapi.json by npm run gen:api
 doping-prescription-ui/src/shared/api/generated/
+
+docs/sunum/
