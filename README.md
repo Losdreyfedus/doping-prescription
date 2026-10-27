@@ -33,7 +33,7 @@ Windows PowerShell'de `-D` argümanı tırnak içinde verilmelidir: `.\mvnw.cmd 
 | http://localhost:8080/actuator/health | Sağlık durumu; postgres, redis ve kafka ayrıntıları yalnızca ADMIN'e görünür |
 | http://localhost:8090 | Kafka UI (isteğe bağlı: `docker compose --profile tools up -d`) |
 
-## Demoyu oynatmak
+## Demoyu oynatmak için:
 
 1. http://localhost:5173 → **Admin** → Deniz kartında **Sıfırla**, sonra `SCRIPTED_IN_PROGRESS` ile **Persona yükle**. Sunum cevap anahtarı ve video etkinliği aynı sayfada.
 2. Avatar → **Çıkış Yap** → **Deniz**. Ana Sayfa'daki pembe şimşek Dopingle'ı açar (genel akış).
